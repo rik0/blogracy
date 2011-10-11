@@ -36,11 +36,11 @@ public class DdbListenerWrite implements DistributedDatabaseListener {
         //if the plugin start to write
         if (type == DistributedDatabaseEvent.ET_OPERATION_STARTS) //i start to write
         {
-            System.out.println("i'm starting write on DDB");
+            // System.out.println("i'm starting write on DDB");
         } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {//timeout Error
-            System.out.println("Timeout error!\n 1000 seconds elapsed without any response from server.");
+            // System.out.println("Timeout error!\n 1000 seconds elapsed without any response from server.");
         } else if (event.getType() == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {//write successful
-            System.out.println("Data correctly write on DDB");
+            // System.out.println("Data correctly write on DDB");
         }
     }
 }

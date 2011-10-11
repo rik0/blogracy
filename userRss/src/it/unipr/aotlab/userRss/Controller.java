@@ -142,18 +142,16 @@ public class Controller {
      */
 
     protected Torrent publishContent(String feed_name, String feed_location, String hash, String type) {
-        //guardo se esiste e se è un file
         try {
             File test_file = new File(feed_location);
 
             if (test_file.exists() && test_file.isDirectory()) {
 
-                System.out.println("Feed location '" + feed_location + "' must not be a directory");
+                // System.out.println("Feed location '" + feed_location + "' must not be a directory");
 
                 return (null);
             }
         } catch (Throwable e) {
-            //ignore
         }
 
 
@@ -178,13 +176,13 @@ public class Controller {
 
                 } catch (Throwable e) {
 
-                    System.out.println(e);
+                    // System.out.println(e);
                 }
             }
 
         } catch (Throwable e) {
 
-            System.out.println("Failed to download feed from '" + feed_location + "'");
+            // System.out.println("Failed to download feed from '" + feed_location + "'");
 
             return (null);
 
@@ -203,7 +201,7 @@ public class Controller {
     DownloadDetails downloadResource(String resource)
 
             throws Exception {
-        System.out.println("Download of " + resource + " starts");
+        // System.out.println("Download of " + resource + " starts");
 
         ResourceDownloader rd;
 
@@ -225,7 +223,7 @@ public class Controller {
                     reportActivity(
                             ResourceDownloader downloader,
                             String activity) {
-                        System.out.println(activity);
+                        // System.out.println(activity);
                     }
                 });
 
@@ -234,7 +232,7 @@ public class Controller {
 
         DownloadDetails result = new DownloadDetails(is, (String) rd.getProperty(ResourceDownloader.PR_STRING_CONTENT_TYPE));
 
-        System.out.println("Download of " + resource + " completed");
+        // System.out.println("Download of " + resource + " completed");
 
         return (result);
     }
@@ -278,7 +276,7 @@ public class Controller {
 
             if (old_torrent != null) {
 
-                System.out.println("Torrent already running for " + log_str + " (identical torrent)");
+                // System.out.println("Torrent already running for " + log_str + " (identical torrent)");
 
                 file_tmp.delete();
 
@@ -314,7 +312,7 @@ public class Controller {
                 //if i checked the same file, don't do anithings
                 if (same) {
 
-                    System.out.println("Torrent already running for " + log_str + " (identical pieces)");
+                    // System.out.println("Torrent already running for " + log_str + " (identical pieces)");
 
                     file_tmp.delete();
 
@@ -350,12 +348,12 @@ public class Controller {
             d.setAttribute(torrent_attribute, feed_name);
             d.setAttribute(ta_category, cModel.getUserId() + "_userRssPluginCategory");
 
-            System.out.println("-------------------->Ho condiviso questa categoria  " + d.getAttribute(ta_category));
+            // System.out.println("-------------------->Ho condiviso questa categoria  " + d.getAttribute(ta_category));
             return (t);
 
         } catch (Throwable e) {
 
-            System.out.println(e);
+            // System.out.println(e);
 
             return (null);
 
@@ -368,7 +366,7 @@ public class Controller {
 
                 } catch (Throwable e) {
 
-                    System.out.println(e);
+                    // System.out.println(e);
                 }
             }
         }
@@ -394,11 +392,11 @@ public class Controller {
             download.remove(true, true);
             original_torrent.delete();
 
-            System.out.println("Removed torrent '" + download.getName() + "' for " + log_str);
+            // System.out.println("Removed torrent '" + download.getName() + "' for " + log_str);
 
         } catch (Throwable e) {
 
-            System.out.println("Failed to remove existing torrent '" + download.getName() + "' for " + log_str);
+            // System.out.println("Failed to remove existing torrent '" + download.getName() + "' for " + log_str);
         }
     }
 
@@ -472,7 +470,7 @@ public class Controller {
         //add content to the file
         makeXml(temp_data_dir + "\\" + fileName + ".rss", hash, id);
 
-        System.out.println("Create The Rss (xml) file " + temp_data_dir + "\\" + fileName + ".rss  " + hash + id);
+        // System.out.println("Create The Rss (xml) file " + temp_data_dir + "\\" + fileName + ".rss  " + hash + id);
         //make the torrent
         Torrent content_torrent = publishContent(fileName, temp_data_dir + "\\" + fileName + ".rss", hash, type);
 
@@ -482,7 +480,7 @@ public class Controller {
 
             writeXmlOnFile("Feed", ByteFormatter.encodeString(content_torrent.getHash()), id);
 
-            System.out.println("====>" + ByteFormatter.encodeString(content_torrent.getHash()));
+            // System.out.println("====>" + ByteFormatter.encodeString(content_torrent.getHash()));
         }
         //if i'm making the principal Rss, publish the user id on the DDB
         if (type.equals("Feed")) {
@@ -537,16 +535,16 @@ public class Controller {
                     found = false;
                     //... match the file hash
                     for (int kw = 0; kw < a.length; kw++) {
-                        System.out.println("rss :" + getTagValue("description", eElement));
+                        // System.out.println("rss :" + getTagValue("description", eElement));
                         if (!(a[kw].endsWith(".torrent")) && (!a[kw].equals(cModel.getUserId() + ".rss"))) {
                             //make the file torrent
                             Torrent t;
                             t = pluginInterface.getTorrentManager().createFromDataFile(new File(dir + "\\" + a[kw]), new URL("dht:"));
-                            System.out.println("file :" + ByteFormatter.encodeString(t.getHash()));
+                            // System.out.println("file :" + ByteFormatter.encodeString(t.getHash()));
                             if (getTagValue("description", eElement).equals(ByteFormatter.encodeString(t.getHash()))) {
-                                System.out.println("---------------------------------trovato");
+                                // System.out.println("---------------------------------trovato");
                                 found = true;
-                                System.out.println("I found the corrispondance file hash :" + getTagValue("description", eElement) + "<=OK");
+                                // System.out.println("I found the corrispondance file hash :" + getTagValue("description", eElement) + "<=OK");
                                 break;
                             }
 
@@ -554,7 +552,7 @@ public class Controller {
                     }//end for
                     //if i didn't found the file, put it in download
                     if (found == false) {
-                        System.out.println("---------------------------------da scaricare");
+                        // System.out.println("---------------------------------da scaricare");
                         pluginInterface.getDownloadManager().addDownload(new URL("magnet:?xt=urn:btih:" + getTagValue("description", eElement)), true);
                     }//end if: non ho trovato il file corrispondente al torrent4
                 }//end if: se ho un elemento valido
@@ -568,7 +566,7 @@ public class Controller {
         } catch (SAXException e) {
             e.printStackTrace();
         } catch (IOException e) {
-            System.out.println("ERRORE-file non trovato--->Riscarica il Main File dell'amico " + friend);
+            // System.out.println("ERRORE-file non trovato--->Riscarica il Main File dell'amico " + friend);
         } catch (DownloadException e) {
             e.printStackTrace();
         } catch (DistributedDatabaseException e) {
@@ -657,7 +655,7 @@ public class Controller {
 
                             nameFile = new File(friends_feed_dir + "\\" + strLine + "\\" + a[kw]);
                             if (nameFile.isFile()) {
-                                System.out.println("I'm opening the content " + a[kw]);
+                                // System.out.println("I'm opening the content " + a[kw]);
                                 //if the file exists, and i select all/current friend
                                 if ((nameFile.exists()) && ((user.equals(allStr))) || (user.equals(strLine))) {
                                     DocumentBuilderFactory dbFactory = DocumentBuilderFactory.newInstance();
@@ -797,7 +795,7 @@ public class Controller {
                     contentLink = "magnet:?xt=urn:btih:" + hash;
                 }
                 //create the content
-                System.out.println("I'm updating the rss");
+                // System.out.println("I'm updating the rss");
 
                 DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
                 DocumentBuilder docBuilder = docFactory.newDocumentBuilder();
@@ -932,7 +930,7 @@ public class Controller {
 
             transformer.transform(source, result);
 
-            System.out.println("File created!");
+            // System.out.println("File created!");
             result = null;
         } catch (ParserConfigurationException e) {
             e.printStackTrace();
@@ -1006,7 +1004,7 @@ public class Controller {
             type = tmpRss.getRssType();
             link = tmpRss.getRssLink();
         }
-        System.out.println(id);
+        // System.out.println(id);
         if ((cView.textTxt.getText().length() > 0) && ((cView.titoloTxt.getText().length() > 0) || (Integer.parseInt(id) > 1))) {
             Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), cView.titoloTxt.getText(), "", type, link, 10);
             userContentMap.put(id + "", contentRss);
@@ -1113,7 +1111,7 @@ public class Controller {
      * @param key1 the key to write on dbb
      */
     public void testWrite(String key1) {
-        System.out.println("----- controller     inizio write");
+        // System.out.println("----- controller     inizio write");
         /*
 
 
@@ -1154,7 +1152,7 @@ public class Controller {
                           // TODO Auto-generated catch block
                           e1.printStackTrace();
                       }
-                      System.out.println( step + ") chiave: " + fileKey + " - fileName: "+fileName+ " - MagnetLink: " + magnetURI +"  --  step:"+step);
+                      // System.out.println( step + ") chiave: " + fileKey + " - fileName: "+fileName+ " - MagnetLink: " + magnetURI +"  --  step:"+step);
 
           */
         //Preparo l'oggetto che dovrò salvare sul DDB
@@ -1178,20 +1176,20 @@ public class Controller {
                                 DistributedDatabaseValue ddbValueHash=ddb.createValue(torrentHash);
                                 DistributedDatabaseValue ddbValueTorrent=null;
 
-                                System.out.println("1q"+torrentMagnet);
-                                System.out.println("1q"+torrentHash);
-                                System.out.println("1q"+torrent.getHash());
+                                // System.out.println("1q"+torrentMagnet);
+                                // System.out.println("1q"+torrentHash);
+                                // System.out.println("1q"+torrent.getHash());
 
-                                System.out.println("1"+ddbKeyHash.hashCode());
-                                System.out.println("2"+ddbKeyHash.toString());
-                                //System.out.println("3"+ByteFormatter.encodeString(ddbKeyHash));
-                                System.out.println("4"+ddbKeyHash);
-                                System.out.println("5"+ddbKeyHash);
-                                System.out.println("6"+ddbValueHash.hashCode());
-                                System.out.println("7"+ddbValueHash.toString());
-                                //System.out.println("8"+ByteFormatter.encodeString(ddbValueHash));
-                                System.out.println("9"+ddbValueHash);
-                                System.out.println("10"+ddbValueHash);
+                                // System.out.println("1"+ddbKeyHash.hashCode());
+                                // System.out.println("2"+ddbKeyHash.toString());
+                                //// System.out.println("3"+ByteFormatter.encodeString(ddbKeyHash));
+                                // System.out.println("4"+ddbKeyHash);
+                                // System.out.println("5"+ddbKeyHash);
+                                // System.out.println("6"+ddbValueHash.hashCode());
+                                // System.out.println("7"+ddbValueHash.toString());
+                                //// System.out.println("8"+ByteFormatter.encodeString(ddbValueHash));
+                                // System.out.println("9"+ddbValueHash);
+                                // System.out.println("10"+ddbValueHash);
 
 
                                 Object object2Serailize = (Object)new DdbFile(torrentHash,publish_data_dir+"\\"+user+".feed.rss.torrent", torrentMagnet);
@@ -1202,7 +1200,7 @@ public class Controller {
                                 objectOutputStream.close();
                                 ddbValueTorrent= ddb.createValue(serializedObject);
 
-                                System.out.println(ddbValueTorrent);
+                                // System.out.println(ddbValueTorrent);
 
 
 
@@ -1221,7 +1219,7 @@ public class Controller {
                             }
         */
 
-        System.out.println("----- controller     fine write");
+        // System.out.println("----- controller     fine write");
         /*NON CANCELLARE*/
 
 
@@ -1231,13 +1229,13 @@ public class Controller {
                           reportProgress(
                               int		p )
                           {
-                              System.out.println( "" + p );
+                              // System.out.println( "" + p );
                           }
                           public void
                           reportCurrentTask(
                               String	task_description )
                           {
-                              System.out.println( "task = " + task_description );
+                              // System.out.println( "task = " + task_description );
                           }
                       };
                       */
@@ -1344,7 +1342,7 @@ public class Controller {
          */
 
 
-        //System.out.println((i + 1) + ") Name: " + torrentName + " - MagnetLink: " + magnetURI.toString());
+        //// System.out.println((i + 1) + ") Name: " + torrentName + " - MagnetLink: " + magnetURI.toString());
 
 
         //Serializzo l'oggetto che descriverà il torrent per poter essere salvato nel DDB
@@ -1355,7 +1353,7 @@ public class Controller {
                               oos.writeObject(obj);
                               byte[] serializedObject = baos.toByteArray();
                               oos.close();
-                              //System.out.println("SERIALIZZATO! --> " + obj.toString());
+                              //// System.out.println("SERIALIZZATO! --> " + obj.toString());
 
                               //Carico il vettore che conterrà i torrent appena serializzati
                               valueList= ddb.createValue(serializedObject);
@@ -1385,16 +1383,16 @@ public class Controller {
      *
      * @param key the key-identificator in the DDB
      */
-    public void testRead(String key1) {
+    public void testRead(String key) {
         String newPath;
         TorrentAttribute ta_category = Controller.pluginInterface.getTorrentManager().getAttribute(TorrentAttribute.TA_CATEGORY);
         //String category= download.getAttribute(ta_category);
-        //System.out.println("categoria "+category);
+        //// System.out.println("categoria "+category);
         String name = "alan_feed.rss";
         String path = "C:\\Users\\Phobos\\AppData\\Roaming\\Azureus\\Documents\\Vuze Downloads\\alan_feed.rss";
-        //System.out.println(newState);
+        //// System.out.println(newState);
 
-        System.out.println("old path" + path);
+        // System.out.println("old path" + path);
         //check the file
         File myFile = new File(path);
         //extract the friends name
@@ -1414,7 +1412,7 @@ public class Controller {
         }
         newPath += "\\" + name;
 
-        System.out.println("new path" + newPath);
+        // System.out.println("new path" + newPath);
         //move the original file in the correct Dir
         myFile.renameTo(new File(newPath));/*
 			    	
@@ -1517,7 +1515,7 @@ public class Controller {
 
                               transformer.transform(source, result);
 
-                              System.out.println("File saved!");
+                              // System.out.println("File saved!");
                        } catch (TransformerException e) {
                           // TODO Auto-generated catch block
                           e.printStackTrace();
@@ -1531,7 +1529,7 @@ public class Controller {
 
                        try{
 
-                       System.out.println("Sto iniziando a moddare");
+                       // System.out.println("Sto iniziando a moddare");
 
                        String filepath = "c:\\file.rss";
                        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -1625,7 +1623,7 @@ public class Controller {
 
 
 
-                               System.out.println("Sto iniziando a leggere");
+                               // System.out.println("Sto iniziando a leggere");
 
                        try {
 
@@ -1635,9 +1633,9 @@ public class Controller {
                               Document doc = dBuilder.parse(fXmlFile);
                               doc.getDocumentElement().normalize();
 
-                              System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
+                              // System.out.println("Root element :" + doc.getDocumentElement().getNodeName());
                               NodeList nList = doc.getElementsByTagName("item");
-                              System.out.println("-----------------------");
+                              // System.out.println("-----------------------");
 
                               for (int temp = 0; temp < nList.getLength(); temp++) {
 
@@ -1646,13 +1644,13 @@ public class Controller {
 
                                     Element eElement = (Element) nNode;
 
-                                    System.out.println("author : " + getTagValue("author", eElement));
-                                    System.out.println("description : " + getTagValue("description", eElement));
-                                    System.out.println("title : " + getTagValue("title", eElement));
-                                    System.out.println("timestamp : " + getTagValue("timestamp", eElement));	    		          System.out.println("title : " + getTagValue("title", eElement));
-                                    System.out.println("pubDate : " + getTagValue("pubDate", eElement));
-                                    System.out.println("typeAttr : " + getTagValue("typeAttr", eElement));
-                                    System.out.println("type : " + getTagValue("type", eElement));
+                                    // System.out.println("author : " + getTagValue("author", eElement));
+                                    // System.out.println("description : " + getTagValue("description", eElement));
+                                    // System.out.println("title : " + getTagValue("title", eElement));
+                                    // System.out.println("timestamp : " + getTagValue("timestamp", eElement));	    		          // System.out.println("title : " + getTagValue("title", eElement));
+                                    // System.out.println("pubDate : " + getTagValue("pubDate", eElement));
+                                    // System.out.println("typeAttr : " + getTagValue("typeAttr", eElement));
+                                    // System.out.println("type : " + getTagValue("type", eElement));
 
 
                                  }

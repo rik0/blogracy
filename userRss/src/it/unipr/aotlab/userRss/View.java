@@ -547,7 +547,7 @@ public class View implements UISWTViewEventListener, Observer {
             if (rssItem.getRssType().equals("link")) {
                 str += "<p><a href='" + rssItem.getRssLink() + "' />" + rssItem.getRssText() + "</a></p>";
             }
-            System.out.println(rssItem.getRssLink());
+            // System.out.println(rssItem.getRssLink());
 
 
         }
@@ -587,7 +587,7 @@ public class View implements UISWTViewEventListener, Observer {
             case UISWTViewEvent.TYPE_REFRESH:
                 //refresh(); // Remove if not defined
                 contRefresh++;
-                //System.out.println(contRefresh);
+                //// System.out.println(contRefresh);
                 if ((contRefresh > 60) && (cModel.getUpdateContentFlag())) {
                     //cControl.viewRSS(0,"");
                     contRefresh = 0;

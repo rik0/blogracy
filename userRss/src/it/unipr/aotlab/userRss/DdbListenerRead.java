@@ -38,26 +38,26 @@ public class DdbListenerRead implements DistributedDatabaseListener {
         int type = event.getType();
         //finish to read the DDB
         if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
-            System.out.println("End read DDB");
+            // System.out.println("End read DDB");
             return;
         } else if (type == DistributedDatabaseEvent.ET_OPERATION_STARTS) { //I start read
-            System.out.println("Start to read");//\n evento: "+event +";  type: "+type
+            // System.out.println("Start to read");//\n evento: "+event +";  type: "+type
         } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) { //timeout error
-            System.out.println("Timeout error!\n 1000 seconds elapsed without any response from server.");
+            // System.out.println("Timeout error!\n 1000 seconds elapsed without any response from server.");
         } else if (type == DistributedDatabaseEvent.ET_VALUE_READ) { // found the searched key
 
             try {
-                System.out.println("Found the key on the DDB");
+                // System.out.println("Found the key on the DDB");
                 DistributedDatabaseValue value = event.getValue();
 
-                System.out.println("Value found ->" + value.getValue(String.class));
+                // System.out.println("Value found ->" + value.getValue(String.class));
 
                 String magnet = (String) "magnet:?xt=urn:btih:" + value.getValue(String.class);
                 PluginInterface pluginInterface = Controller.pluginInterface;
                 //add the URI to download
                 pluginInterface.getDownloadManager().addDownload(new URL(magnet), true);
             } catch (Throwable e) {
-                System.out.println("Errore nella lettura del DDB!");
+                // System.out.println("Errore nella lettura del DDB!");
             }
         }
 

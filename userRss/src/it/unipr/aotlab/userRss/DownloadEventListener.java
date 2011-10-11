@@ -48,23 +48,23 @@ class DownloadEventListener implements DownloadListener {
      */
     public void stateChanged(Download download, int oldState, int newState) {
 
-        System.out.println("evento--------------------------------------------------------------");
+        // System.out.println("evento--------------------------------------------------------------");
         TorrentAttribute att = pluginInterface.getTorrentManager().getAttribute(TorrentAttribute.TA_CATEGORY);
         String category = download.getAttribute(att);
-        System.out.println(category);
+        // System.out.println(category);
         //String category= "alan_userRssPluginCategory";//download.getAttribute(ta_category);
-        //System.out.println("asdasdads "+category);
+        //// System.out.println("asdasdads "+category);
 
         // TODO Auto-generated catch block  LEGGERE CATEGORIA
 
         //if a download end, and that download is a plugin download
         if ((newState == 5) && (category.endsWith("userRssPluginCategory"))) {
-            //System.out.println("categoria "+category);
+            //// System.out.println("categoria "+category);
             String name = download.getName();
             String path = download.getSavePath();
             String newPath;
 
-            System.out.println("----->da qui: " + path);
+            // System.out.println("----->da qui: " + path);
 
             //if the file doesn't end with .rss, it's a file, so put it in friend_file dir
             if (!name.endsWith(".rss")) {
@@ -85,7 +85,7 @@ class DownloadEventListener implements DownloadListener {
             }
 
 
-            System.out.println("----->dovrei metterlo qui ... " + newPath);
+            // System.out.println("----->dovrei metterlo qui ... " + newPath);
 
             //move the original file in the correct Dir
             try {
