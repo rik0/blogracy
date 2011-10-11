@@ -16,7 +16,7 @@ To run Vuze in an IDE, simply create a new configuration which adds the Vuze lib
 classpath.
 
 Vuze main class to run is: org.gudy.azureus2.ui.swt.Main
-Useful configuration parameters are:
+Options to be passed to the JVM are:
 
 -d32 -Dazureus.config.path=config  -Djava.library.path="lib/dll"  -Xmx128m -XstartOnFirstThread
 
