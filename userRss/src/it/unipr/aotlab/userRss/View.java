@@ -83,6 +83,9 @@ public class View implements UISWTViewEventListener, Observer {
         this.pluginInterface = pluginInterface;
 
         //set model and controller
+        /*
+            TODO: This is so going to change... MVC is done plainly and utterly wrong.
+         */
         cModel = new Model();
         cControl = new Controller(this, cModel, this.plugin, this.pluginInterface, messages.getString("allUsersMessage"));
         contRefresh = cModel.getRefreshMaxCount();
