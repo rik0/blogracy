@@ -708,7 +708,7 @@ public class Controller {
                                             map.put(rssKey, newRss);
                                         }//end if se il nodo letto ha senso
                                     }//ciclo for che scorre i nodi
-                                }//enf if "è un file"
+                                }//enf if "ï¿½ un file"
                             }
                         }//end if file corretto
                     }//end for dei file
@@ -1005,8 +1005,8 @@ public class Controller {
             link = tmpRss.getRssLink();
         }
         // System.out.println(id);
-        if ((cView.textTxt.getText().length() > 0) && ((cView.titoloTxt.getText().length() > 0) || (Integer.parseInt(id) > 1))) {
-            Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), cView.titoloTxt.getText(), "", type, link, 10);
+        if ((cView.textTxt.getText().length() > 0) && ((cView.titleTxt.getText().length() > 0) || (Integer.parseInt(id) > 1))) {
+            Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), cView.titleTxt.getText(), "", type, link, 10);
             userContentMap.put(id + "", contentRss);
             cModel.setUserContentmap(userContentMap);
             changeLblNContent(0);
@@ -1155,7 +1155,7 @@ public class Controller {
                       // System.out.println( step + ") chiave: " + fileKey + " - fileName: "+fileName+ " - MagnetLink: " + magnetURI +"  --  step:"+step);
 
           */
-        //Preparo l'oggetto che dovrò salvare sul DDB
+        //Preparo l'oggetto che dovrï¿½ salvare sul DDB
         /*
 
                             String user="alan";
@@ -1345,7 +1345,7 @@ public class Controller {
         //// System.out.println((i + 1) + ") Name: " + torrentName + " - MagnetLink: " + magnetURI.toString());
 
 
-        //Serializzo l'oggetto che descriverà il torrent per poter essere salvato nel DDB
+        //Serializzo l'oggetto che descriverï¿½ il torrent per poter essere salvato nel DDB
         /*try {
                               Object obj = (Object)new TorrentDescriptor(torrentName, magnetURI);
                               ByteArrayOutputStream baos = new ByteArrayOutputStream();
@@ -1355,7 +1355,7 @@ public class Controller {
                               oos.close();
                               //// System.out.println("SERIALIZZATO! --> " + obj.toString());
 
-                              //Carico il vettore che conterrà i torrent appena serializzati
+                              //Carico il vettore che conterrï¿½ i torrent appena serializzati
                               valueList= ddb.createValue(serializedObject);
                           }
                           catch (IOException e) {

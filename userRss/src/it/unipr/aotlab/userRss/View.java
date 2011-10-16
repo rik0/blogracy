@@ -45,8 +45,8 @@ public class View implements UISWTViewEventListener, Observer {
     int contRefresh = 0;
     Label lblNContent;
     Button updateBtn, addFriend, updateRSSBtn, deleteFriend;
-    Text titoloTxt, textTxt, idTxt, privateKeyTxt, rssTxt, friendIdTxt;
-    Label lblDinamicState;
+    Text titleTxt, textTxt, idTxt, privateKeyTxt, rssTxt, friendIdTxt;
+    Label lblDynamicState;
     Group compositeDxAllRss;
     Combo friendsCmb, deleteFriendsCmb;
     Browser browser;
@@ -68,7 +68,6 @@ public class View implements UISWTViewEventListener, Observer {
     private Composite compositeOptionSx;
     private Button browseFileFile;
     private Button browseFileImage;
-    private Locale locale;
     private ResourceBundle messages;
 
 
@@ -78,17 +77,15 @@ public class View implements UISWTViewEventListener, Observer {
      * @param plugin
      * @param pluginInterface set the current plugin interface
      */
-    public View(UserRSS plgn, PluginInterface plgnInterface) {
-        locale = new Locale("en", "EN");
-        messages = ResourceBundle.getBundle("messages.Messages", locale);
-        plugin = plgn;
-        pluginInterface = plgnInterface;
+    public View(UserRSS plugin, PluginInterface pluginInterface) {
+        messages = ResourceBundle.getBundle("messages.Messages");
+        this.plugin = plugin;
+        this.pluginInterface = pluginInterface;
 
         //set model and controller
         cModel = new Model();
-        cControl = new Controller(this, cModel, plugin, pluginInterface, messages.getString("allUsersMessage"));
+        cControl = new Controller(this, cModel, this.plugin, this.pluginInterface, messages.getString("allUsersMessage"));
         contRefresh = cModel.getRefreshMaxCount();
-
     }
 
     /**
@@ -161,10 +158,10 @@ public class View implements UISWTViewEventListener, Observer {
         Label titoloLbl = new Label(compositeDx, SWT.NULL);
         titoloLbl.setText(messages.getString("titleContentMessage") + ":");
 
-        //create the titoloTxt textbox
-        titoloTxt = new Text(compositeDx, SWT.BORDER | SWT.SINGLE);
-        titoloTxt.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-        titoloTxt.setText("");
+        //create the titleTxt textbox
+        titleTxt = new Text(compositeDx, SWT.BORDER | SWT.SINGLE);
+        titleTxt.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        titleTxt.setText("");
 
 
         //create the content button group
@@ -288,10 +285,10 @@ public class View implements UISWTViewEventListener, Observer {
         Label lblStaticState = new Label(compositeDx, SWT.NULL);
         lblStaticState.setText(messages.getString("statusContentMessage"));
 
-        //create the lblDinamicState label
-        lblDinamicState = new Label(compositeDx, SWT.NULL);
-        lblDinamicState.setText(messages.getString(cModel.getStatus()));
-        lblDinamicState.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+        //create the lblDynamicState label
+        lblDynamicState = new Label(compositeDx, SWT.NULL);
+        lblDynamicState.setText(messages.getString(cModel.getStatus()));
+        lblDynamicState.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 //--------- make the UPDATE THE RSS VIEW on the left------------------------------------------------//
         //create the Rss option  filter composite
         Group compositeDxRss = new Group(compositeMainDx, SWT.SHADOW_IN);
@@ -383,30 +380,6 @@ public class View implements UISWTViewEventListener, Observer {
                 cControl.manageFriend(2, deleteFriendsCmb.getText());
             }
         });
-
-
-        /*	//create the addFriend button
-            Button testRead = new Button(compositeDxFriend, SWT.PUSH);
-            testRead.setText("TEST READ");
-            testRead.addListener(SWT.MouseDown, new Listener()
-                {
-                    public void handleEvent(Event arg0)
-                    {
-                            cControl.testRead("alanUser");
-                    }
-                });
-
-            Button testWrite = new Button(compositeDxFriend, SWT.PUSH);
-            testWrite.setText("TEST WRITE");
-            testWrite.addListener(SWT.MouseDown, new Listener()
-                {
-                     public void handleEvent(Event arg0)
-                     {
-                        cControl.testWrite("alanUser");
-                    }
-                });*/
-
-
     }
 
     /**
@@ -460,14 +433,14 @@ public class View implements UISWTViewEventListener, Observer {
      */
     public void update(Observable obs, Object obj) {
 
-        lblDinamicState.setText(messages.getString(cModel.getStatus()));
+        lblDynamicState.setText(messages.getString(cModel.getStatus()));
         compositeDxAllRss.setText(messages.getString("yourRssGroupMessage") + ": (" + cModel.getNOfRss() + ")  [" + cModel.getNameUserRss() + "]");
         this.lblNContent.setText(cModel.getUserNContent());
-        this.titoloTxt.setEnabled(cModel.getTitoloTxtEnabled());
+        this.titleTxt.setEnabled(cModel.getTitoloTxtEnabled());
         this.browseFileImage.setEnabled(!cModel.getTitoloTxtEnabled());
         this.browseFileFile.setEnabled(!cModel.getTitoloTxtEnabled());
 
-        this.titoloTxt.setText(cModel.getTitoloTxt());
+        this.titleTxt.setText(cModel.getTitoloTxt());
         this.textTxt.setText(cModel.getTextTxtText());
         if (cModel.getUserContentMapSize() > 0) {
             this.updateBtn.setEnabled(true);
@@ -535,7 +508,6 @@ public class View implements UISWTViewEventListener, Observer {
             if (rssItem.getRssType().equals("img")) {
                 String srcStr = "";
                 if (normal) {
-                    //srcStr=pluginInterface.getPluginDirectoryName()+"\\friends_dir\\file\\"+rssItem.getRssTitle();
                     srcStr = pluginInterface.getPluginDirectoryName() + "\\friends_dir\\" + rssItem.getRssAuthor() + "_file\\" + rssItem.getRssTitle();
                 } else {
                     srcStr = rssItem.getRssLink();
@@ -547,9 +519,6 @@ public class View implements UISWTViewEventListener, Observer {
             if (rssItem.getRssType().equals("link")) {
                 str += "<p><a href='" + rssItem.getRssLink() + "' />" + rssItem.getRssText() + "</a></p>";
             }
-            // System.out.println(rssItem.getRssLink());
-
-
         }
         if (cont > 1) {
             str += "<p style='font-size:10; text-align:right;'>" + rssItem.getRssDate() + "</p>";

@@ -35,8 +35,6 @@ public class UserRSS implements Plugin {
 
     private PluginInterface plugin;
 
-
-
     final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
     final String PLUGIN_NAME = "blogracy.name";
 
