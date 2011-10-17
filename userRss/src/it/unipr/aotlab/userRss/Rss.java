@@ -32,54 +32,54 @@ public class Rss {
     private String author;
     private String type;
     private String link;
-    private int idRss;
+    private int rssId;
 
     /**
      * Constructor of the Rss
      *
      * @param timestamp set the Rss timestamp
-     * @param s_author  set the Rss author
-     * @param s_text    set the Rss text
-     * @param s_title   set the Rss Title
-     * @param s_date    set the Rss date
+     * @param author  set the Rss author
+     * @param text    set the Rss text
+     * @param title   set the Rss Title
+     * @param date    set the Rss date
      */
-    public Rss(Long timestamp, String s_author, String s_text, String s_title, String s_date, String s_type, String s_link, int s_idRss) {
-        setRssAuthor(s_author);
-        setRssId(timestamp);
-        setRssTitle(s_text);
-        setRssText(s_title);
-        setRssDate(s_date);
-        setRssType(s_type);
-        setRssLink(s_link);
-        setIdRss(s_idRss);
+    public Rss(Long timestamp, String author, String text, String title, String date, String type, String link, int rssId) {
+        setAuthor(author);
+        setId(timestamp);
+        setTitle(text);
+        setText(title);
+        setDate(date);
+        setType(type);
+        setLink(link);
+        setId(rssId);
     }
 
     /**
      * set the rss id
      *
-     * @param s_idRss the rss id
+     * @param rssId the rss id
      */
-    private void setIdRss(int s_idRss) {
-        idRss = s_idRss;
+    private void setId(int rssId) {
+        this.rssId = rssId;
 
     }
 
     /**
      * set the Rss link
      *
-     * @param s_link the Rss link
+     * @param link the Rss link
      */
-    private void setRssLink(String s_link) {
-        link = s_link;
+    private void setLink(String link) {
+        this.link = link;
     }
 
     /**
      * set the Rss type
      *
-     * @param s_type the Rss type
+     * @param type the Rss type
      */
-    private void setRssType(String s_type) {
-        type = s_type;
+    private void setType(String type) {
+        this.type = type;
     }
 
     /**
@@ -87,44 +87,44 @@ public class Rss {
      *
      * @param timestamp the Rss timestamp
      */
-    public void setRssId(Long timestamp) {
+    public void setId(Long timestamp) {
         id = timestamp;
     }
 
     /**
      * set the rss text
      *
-     * @param s_text the Rss text
+     * @param text the Rss text
      */
-    public void setRssTitle(String s_text) {
-        text = s_text;
+    public void setTitle(String text) {
+        this.text = text;
     }
 
     /**
      * set the rss title
      *
-     * @param s_title the Rss title
+     * @param title the Rss title
      */
-    public void setRssText(String s_title) {
-        title = s_title;
+    public void setText(String title) {
+        this.title = title;
     }
 
     /**
      * set the rss date
      *
-     * @param s_date the Rss date
+     * @param date the Rss date
      */
-    public void setRssDate(String s_date) {
-        date = s_date;
+    public void setDate(String date) {
+        this.date = date;
     }
 
     /**
      * set the rss author
      *
-     * @param s_author the Rss author
+     * @param author the Rss author
      */
-    public void setRssAuthor(String s_author) {
-        author = s_author;
+    public void setAuthor(String author) {
+        this.author = author;
     }
 
 
@@ -133,7 +133,7 @@ public class Rss {
      *
      * @return author the Rss author
      */
-    public String getRssAuthor() {
+    public String getAuthor() {
         return author;
     }
 
@@ -142,7 +142,7 @@ public class Rss {
      *
      * @return id the Rss id
      */
-    public long getRssId() {
+    public long getId() {
         return id;
     }
 
@@ -151,7 +151,7 @@ public class Rss {
      *
      * @return title the Rss title
      */
-    public String getRssTitle() {
+    public String getTitle() {
         return title;
     }
 
@@ -160,7 +160,7 @@ public class Rss {
      *
      * @return text the Rss text
      */
-    public String getRssText() {
+    public String getText() {
         return text;
     }
 
@@ -170,7 +170,7 @@ public class Rss {
      *
      * @return date the Rss date
      */
-    public String getRssDate() {
+    public String getDate() {
         return date;
     }
 
@@ -188,7 +188,7 @@ public class Rss {
      *
      * @return link the rss link
      */
-    public String getRssLink() {
+    public String getLink() {
         return link;
     }
 
@@ -197,8 +197,8 @@ public class Rss {
      *
      * @return isRss the rss id
      */
-    public int getIdRss() {
-        return idRss;
+    public int getRssId() {
+        return rssId;
     }
 
 }

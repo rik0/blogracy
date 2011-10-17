@@ -489,42 +489,42 @@ public class View implements UISWTViewEventListener, Observer {
             key = iterator.next();
             rssItem = mapRss.get(key);
             //if we have a new Rss
-            if ((rssItem.getIdRss() != lastIdOpened)) {
+            if ((rssItem.getRssId() != lastIdOpened)) {
                 c++;
                 if (cont > 1) {
-                    str += "<p style='font-size:10; text-align:right;'>" + rssItem.getRssDate() + "</p>";
+                    str += "<p style='font-size:10; text-align:right;'>" + rssItem.getDate() + "</p>";
                     str += "<br /></div>";
                 }
                 str += "<hr>";
                 str += "<div style=' font-size:12;background-color:" + strColor[c % 2] + "'><br />";
-                str += "<p style='color:#ff0000;'>" + rssItem.getRssAuthor() + "</p>";
-                str += "<p style='text-align:CENTER;' ><b>" + rssItem.getRssTitle() + "</b></p>";
-                lastIdOpened = rssItem.getIdRss();
+                str += "<p style='color:#ff0000;'>" + rssItem.getAuthor() + "</p>";
+                str += "<p style='text-align:CENTER;' ><b>" + rssItem.getTitle() + "</b></p>";
+                lastIdOpened = rssItem.getRssId();
             }
 
             //check type, and append the output
             if (rssItem.getRssType().equals("text")) {
-                str += "<p>" + rssItem.getRssText() + "</p>";
+                str += "<p>" + rssItem.getText() + "</p>";
             }
 
 
             if (rssItem.getRssType().equals("img")) {
                 String srcStr = "";
                 if (normal) {
-                    srcStr = pluginInterface.getPluginDirectoryName() + "\\friends_dir\\" + rssItem.getRssAuthor() + "_file\\" + rssItem.getRssTitle();
+                    srcStr = pluginInterface.getPluginDirectoryName() + "\\friends_dir\\" + rssItem.getAuthor() + "_file\\" + rssItem.getTitle();
                 } else {
-                    srcStr = rssItem.getRssLink();
+                    srcStr = rssItem.getLink();
                 }
                 str += "<div style='text-align:center;'><img  src='" + srcStr + "' />";
-                str += "<p>" + rssItem.getRssText() + "</p></div>";
+                str += "<p>" + rssItem.getText() + "</p></div>";
             }
 
             if (rssItem.getRssType().equals("link")) {
-                str += "<p><a href='" + rssItem.getRssLink() + "' />" + rssItem.getRssText() + "</a></p>";
+                str += "<p><a href='" + rssItem.getLink() + "' />" + rssItem.getText() + "</a></p>";
             }
         }
         if (cont > 1) {
-            str += "<p style='font-size:10; text-align:right;'>" + rssItem.getRssDate() + "</p>";
+            str += "<p style='font-size:10; text-align:right;'>" + rssItem.getDate() + "</p>";
             str += "<br /></div>";
         }
         //output the content

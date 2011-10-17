@@ -757,13 +757,13 @@ public class Controller {
                     //if i'm updating a content get all the stat from the map
                     nItem = userContentMap.size();
                     tempRss = userContentMap.get(k + "");
-                    descriptionStr = tempRss.getRssText();
-                    if (tempRss.getRssText().equals("")) {
+                    descriptionStr = tempRss.getText();
+                    if (tempRss.getText().equals("")) {
                         descriptionStr = "";
                     }
-                    titleStr = tempRss.getRssTitle();
+                    titleStr = tempRss.getTitle();
                     contentType = tempRss.getRssType();
-                    contentLink = tempRss.getRssLink();
+                    contentLink = tempRss.getLink();
                     if (!contentType.equals("text")) {
                         //if i'm not  inserting a text
                         //create the torrent from the file
@@ -1002,7 +1002,7 @@ public class Controller {
         if (userContentMap.containsKey(id + "")) {
             Rss tmpRss = userContentMap.get(id + "");
             type = tmpRss.getRssType();
-            link = tmpRss.getRssLink();
+            link = tmpRss.getLink();
         }
         // System.out.println(id);
         if ((cView.textTxt.getText().length() > 0) && ((cView.titleTxt.getText().length() > 0) || (Integer.parseInt(id) > 1))) {
@@ -1067,8 +1067,8 @@ public class Controller {
 
                 if (b) {
                     Rss tmpRss = userContentMap.get(val + "");
-                    text = tmpRss.getRssText();
-                    title = tmpRss.getRssTitle();
+                    text = tmpRss.getText();
+                    title = tmpRss.getTitle();
                 }
 
                 cModel.setTextTxtText(text);
