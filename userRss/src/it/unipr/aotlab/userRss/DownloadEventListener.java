@@ -71,7 +71,7 @@ class DownloadEventListener implements DownloadListener {
                 String[] dirSpli = category.split("_");
                 newPath = Controller.pluginInterface.getPluginDirectoryName() + "\\friends_dir\\" + dirSpli[0] + "_file";//+namePart[0];
 
-            } else {//questo else si può togliere perchè leggo l'utente dalla categoria
+            } else {// can be removed
                 //extract the friends name
                 String[] namePart = name.split("_");
                 newPath = Controller.pluginInterface.getPluginDirectoryName() + "\\friends_dir\\" + namePart[0];
