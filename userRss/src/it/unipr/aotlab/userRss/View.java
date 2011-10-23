@@ -54,7 +54,7 @@ public class View {
     }
 
     static boolean createView(Composite composite) {
-        if(theView == null) {
+        if(theView != null) {
             return false;
         } else {
             theView = new View(composite);
