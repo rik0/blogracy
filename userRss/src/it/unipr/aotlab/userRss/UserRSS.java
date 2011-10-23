@@ -22,10 +22,12 @@
 package it.unipr.aotlab.userRss;
 
 
+import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
 import org.gudy.azureus2.plugins.Plugin;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.logging.Logger;
+import org.gudy.azureus2.plugins.logging.LoggerChannel;
 import org.gudy.azureus2.plugins.ui.UIInstance;
 import org.gudy.azureus2.plugins.ui.UIManagerListener;
 import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
@@ -33,12 +35,12 @@ import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
 
 public class UserRSS implements Plugin {
 
-    private PluginInterface plugin;
+    static private PluginInterface plugin;
 
-    final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
+    static final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
     final String PLUGIN_NAME = "blogracy.name";
 
-    private OldView cView = null;
+    private ViewListener viewListener = null;
     private UISWTInstance swtInstance = null;
 
     public Logger getLogger() {
@@ -50,19 +52,22 @@ public class UserRSS implements Plugin {
 
     @Override
     public void initialize(PluginInterface pluginInterface) throws PluginException {
-        this.plugin = pluginInterface;
-        cView = new OldView(this, this.plugin);
+        plugin = pluginInterface;
+        viewListener = new ViewListener();
 
         logger = pluginInterface.getLogger();
 
-        this.plugin.getUIManager().addUIListener(new UIManagerListener() {
+        plugin.getUIManager().addUIListener(new UIManagerListener() {
             public void UIAttached(UIInstance instance) {
                 if (instance instanceof UISWTInstance) {
+                    logError("1");
                     swtInstance = ((UISWTInstance) instance);
+                    logError("2");
 
-                    if (cView != null) {
-                        swtInstance.addView(UISWTInstance.VIEW_MAIN, PLUGIN_NAME, cView);
-                        swtInstance.openMainView(PLUGIN_NAME, cView, null);
+                    if (viewListener != null) {
+                        logError("3");
+                        swtInstance.addView(UISWTInstance.VIEW_MAIN, PLUGIN_NAME, viewListener);
+                        swtInstance.openMainView(PLUGIN_NAME, viewListener, null);
                     }
                 }
             }
@@ -75,6 +80,44 @@ public class UserRSS implements Plugin {
             }
         });
 
+    }
+
+    static LoggerChannel getCurrentChannel() throws InvalidPluginStateException {
+        if (plugin != null) {
+            Logger logger = plugin.getLogger();
+            return logger.getChannel(UserRSS.DSNS_PLUGIN_CHANNEL_NAME);
+        } else {
+            throw new InvalidPluginStateException();
+        }
+    }
+
+    static ClassLoader getCurrentClassLoader() throws InvalidPluginStateException {
+        if (plugin != null) {
+            return plugin.getPluginClassLoader();
+        } else {
+            throw new InvalidPluginStateException();
+        }
+    }
+
+    static void logInfo(String msg) throws InvalidPluginStateException {
+        getCurrentChannel().logAlert(
+                LoggerChannel.LT_INFORMATION,
+                msg
+        );
+    }
+
+    static void logWarning(String msg) throws InvalidPluginStateException {
+        getCurrentChannel().logAlert(
+                LoggerChannel.LT_WARNING,
+                msg
+        );
+    }
+
+    static void logError(String msg) throws InvalidPluginStateException {
+        getCurrentChannel().logAlert(
+                LoggerChannel.LT_ERROR,
+                msg
+        );
     }
 }
 
