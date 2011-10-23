@@ -38,7 +38,7 @@ public class UserRSS implements Plugin {
     final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
     final String PLUGIN_NAME = "blogracy.name";
 
-    private View cView = null;
+    private OldView cView = null;
     private UISWTInstance swtInstance = null;
 
     public Logger getLogger() {
@@ -51,7 +51,7 @@ public class UserRSS implements Plugin {
     @Override
     public void initialize(PluginInterface pluginInterface) throws PluginException {
         this.plugin = pluginInterface;
-        cView = new View(this, this.plugin);
+        cView = new OldView(this, this.plugin);
 
         logger = pluginInterface.getLogger();
 
