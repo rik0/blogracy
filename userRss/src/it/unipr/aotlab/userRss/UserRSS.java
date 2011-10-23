@@ -24,6 +24,7 @@ package it.unipr.aotlab.userRss;
 
 import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
 import it.unipr.aotlab.userRss.logging.Logger;
+import it.unipr.aotlab.userRss.view.ViewListener;
 import org.gudy.azureus2.plugins.Plugin;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;

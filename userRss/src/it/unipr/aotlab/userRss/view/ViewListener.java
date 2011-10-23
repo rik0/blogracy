@@ -1,4 +1,4 @@
-package it.unipr.aotlab.userRss;
+package it.unipr.aotlab.userRss.view;
 
 import org.eclipse.swt.widgets.Composite;
 import org.gudy.azureus2.ui.swt.plugins.UISWTViewEvent;

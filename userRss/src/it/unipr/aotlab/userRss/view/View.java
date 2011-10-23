@@ -19,23 +19,19 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package it.unipr.aotlab.userRss;
+package it.unipr.aotlab.userRss.view;
 
 
 import it.unipr.aotlab.userRss.errors.BlogracyError;
-import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
 import it.unipr.aotlab.userRss.util.FileUtils;
 import it.unipr.aotlab.userRss.util.HTMLUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
-import org.gudy.azureus2.core3.util.FileUtil;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
-import java.net.URL;
-import java.util.Formatter;
 import java.util.Locale;
 
 /**
@@ -57,7 +53,6 @@ public class View {
     }
 
     private void buildUI(Composite parent) {
-        System.out.println("Building data!");
         buildBrowser(parent);
     }
 
