@@ -45,8 +45,6 @@ public class View {
     static View theView = null;
     private Browser browser;
     private static final String MAIN_PAGE = "view.html";
-    private Text text;
-
 
     public View(Composite parent) {
         buildUI(parent);
