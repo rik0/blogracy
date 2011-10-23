@@ -1,20 +1,17 @@
 package it.unipr.aotlab.userRss;
 
 
-import com.sun.tools.internal.xjc.Language;
 import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
+import it.unipr.aotlab.userRss.util.FileUtils;
+import it.unipr.aotlab.userRss.util.HTMLUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
-import org.gudy.azureus2.plugins.logging.LoggerChannel;
-import org.pf.file.FileUtil;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
 import java.net.URL;
-import java.nio.Buffer;
-import java.text.Format;
 import java.util.Formatter;
 import java.util.Locale;
 
@@ -28,7 +25,7 @@ import java.util.Locale;
 public class View {
     static View theView = null;
     private Browser browser;
-    private static final String MAIN_PAGE = "view.html";
+    private static final String MAIN_PAGE = "viw.html";
     private Text text;
 
 
@@ -45,7 +42,6 @@ public class View {
         browser = new Browser(parent, SWT.NULL);
         browser.setJavascriptEnabled(true);
         browser.setText(getPage(), true);
-        browser.setSize(600, 600);
     }
 
     static boolean createView(Composite composite) {
@@ -80,11 +76,11 @@ public class View {
             String fileName = getMainPagePath();
             return getLocalFileContent(fileName);
         } catch (InvalidPluginStateException e) {
-            return errorString(e);
+            return HTMLUtil.errorString(e);
         } catch (FileNotFoundException e) {
-            return errorString(e);
+            return HTMLUtil.errorString(e);
         } catch (IOException e) {
-            return errorString(e);
+            return HTMLUtil.errorString(e);
         }
 
     }
@@ -102,22 +98,5 @@ public class View {
         return resourceUrl.getPath();
     }
 
-    public String errorString(Exception e) {
-        // TODO: make page more beautiful!
-        Formatter formatter = new Formatter();
-        String headerPage = "<html><head><title>Error!</title></head><body>";
-        String pageTitle = "<h1>Error: %s<h1>";
-        String pageMessage = "<p>%s</p>";
-        String pageTrace = "<p>%s</p>";
-        String pageFooter = "</body></html>";
 
-        formatter.format(headerPage);
-        formatter.format(pageTitle, e.toString());
-        formatter.format(pageMessage, e.getMessage());
-
-        PrintWriter ost = new PrintWriter(new StringWriter(512));
-        e.printStackTrace(ost);
-        formatter.format(pageTrace, ost.toString());
-        return formatter.toString();
-    }
 }

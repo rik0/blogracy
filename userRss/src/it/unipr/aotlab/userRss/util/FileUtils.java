@@ -1,4 +1,4 @@
-package it.unipr.aotlab.userRss;
+package it.unipr.aotlab.userRss.util;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
