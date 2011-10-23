@@ -16,7 +16,6 @@ public class ViewListener implements UISWTViewEventListener {
 
     @Override
     public boolean eventOccurred(UISWTViewEvent uiswtViewEvent) {
-        UserRSS.logError("4: " + uiswtViewEvent.getType());
         switch (uiswtViewEvent.getType()) {
             case UISWTViewEvent.TYPE_CREATE:
                 return View.shouldCreateView();

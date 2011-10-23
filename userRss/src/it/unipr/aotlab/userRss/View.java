@@ -33,11 +33,6 @@ public class View {
 
 
     public View(Composite parent) {
-        try {
-            UserRSS.logError("View!");
-        } catch (InvalidPluginStateException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-        }
         buildUI(parent);
     }
 
