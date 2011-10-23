@@ -1,6 +1,7 @@
 package it.unipr.aotlab.userRss;
 
 
+import it.unipr.aotlab.userRss.errors.BlogracyError;
 import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
 import it.unipr.aotlab.userRss.util.FileUtils;
 import it.unipr.aotlab.userRss.util.HTMLUtil;
@@ -75,7 +76,7 @@ public class View {
         try {
             String fileName = getMainPagePath();
             return getLocalFileContent(fileName);
-        } catch (InvalidPluginStateException e) {
+        } catch (BlogracyError e) {
             return HTMLUtil.errorString(e);
         } catch (FileNotFoundException e) {
             return HTMLUtil.errorString(e);
@@ -92,10 +93,14 @@ public class View {
         return outString.toString();
     }
 
-    private String getMainPagePath() throws InvalidPluginStateException {
+    private String getMainPagePath() throws  BlogracyError {
         ClassLoader cl = UserRSS.getCurrentClassLoader();
         URL resourceUrl = cl.getResource(MAIN_PAGE);
-        return resourceUrl.getPath();
+        if(resourceUrl != null) {
+            return resourceUrl.getPath();
+        } else {
+            throw new BlogracyError("Could not find resource " + MAIN_PAGE);
+        }
     }
 
 

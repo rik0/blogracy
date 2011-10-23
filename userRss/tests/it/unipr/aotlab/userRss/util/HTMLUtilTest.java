@@ -1,5 +1,7 @@
 package it.unipr.aotlab.userRss.util;
 
+import org.junit.Assert;
+
 /**
  * Created by IntelliJ IDEA.
  * User: enrico
@@ -10,6 +12,10 @@ package it.unipr.aotlab.userRss.util;
 public class HTMLUtilTest {
     @org.junit.Test
     public void testErrorString() throws Exception {
-        System.out.println(HTMLUtil.errorString(new Exception("foo")));
+        String errorPage = HTMLUtil.errorString(new Exception("foo"));
+
+        Assert.assertTrue(
+                errorPage.indexOf("foo") > 0
+        );
     }
 }

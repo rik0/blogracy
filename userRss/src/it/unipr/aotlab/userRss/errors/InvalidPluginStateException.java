@@ -7,6 +7,6 @@ package it.unipr.aotlab.userRss.errors;
  * Time: 6:45 PM
  * To change this template use File | Settings | File Templates.
  */
-public class InvalidPluginStateException extends RuntimeException {
+public class InvalidPluginStateException extends BlogracyError {
     
 }

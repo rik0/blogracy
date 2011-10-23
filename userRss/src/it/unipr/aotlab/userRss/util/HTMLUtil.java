@@ -16,18 +16,19 @@ public class HTMLUtil {
         // TODO: make page more beautiful!
         Formatter formatter = new Formatter();
         String headerPage = "<html><head><title>Error!</title></head><body>";
-        String pageTitle = "<h1>Error: %s<h1>";
+        String pageTitle = "<h1>Error: %s</h1>";
         String pageMessage = "<p>%s</p>";
-        String pageTrace = "<p>%s</p>";
+        String pageTrace = "<pre>%s</pre>";
         String pageFooter = "</body></html>";
 
         formatter.format(headerPage);
         formatter.format(pageTitle, e.toString());
         formatter.format(pageMessage, e.getMessage());
 
-        PrintWriter ost = new PrintWriter(new StringWriter(512));
+        StringWriter stringWriter = new StringWriter(512);
+        PrintWriter ost = new PrintWriter(stringWriter);
         e.printStackTrace(ost);
-        formatter.format(pageTrace, ost.toString());
+        formatter.format(pageTrace, stringWriter.toString());
         formatter.format(pageFooter);
 
         return formatter.toString();
