@@ -9,6 +9,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
+import org.gudy.azureus2.core3.util.FileUtil;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
@@ -26,7 +27,7 @@ import java.util.Locale;
 public class View {
     static View theView = null;
     private Browser browser;
-    private static final String MAIN_PAGE = "viw.html";
+    private static final String MAIN_PAGE = "view.html";
     private Text text;
 
 
@@ -46,7 +47,7 @@ public class View {
     }
 
     static boolean createView(Composite composite) {
-        if(theView != null) {
+        if (theView != null) {
             return false;
         } else {
             theView = new View(composite);
@@ -74,33 +75,32 @@ public class View {
 
     public String getPage() {
         try {
-            String fileName = getMainPagePath();
-            return getLocalFileContent(fileName);
-        } catch (BlogracyError e) {
-            return HTMLUtil.errorString(e);
+            return getLocalFileContent(MAIN_PAGE);
+
         } catch (FileNotFoundException e) {
             return HTMLUtil.errorString(e);
         } catch (IOException e) {
             return HTMLUtil.errorString(e);
+        } catch (BlogracyError e) {
+            return HTMLUtil.errorString(e);
+
         }
 
     }
 
-    public String getLocalFileContent(String fileName) throws IOException {
-        BufferedWriter outString = new BufferedWriter(new StringWriter(512));
-        BufferedReader fileReader = new BufferedReader(new FileReader(fileName));
-        FileUtils.copyTextualFile(outString, fileReader);
-        return outString.toString();
-    }
+    public String getLocalFileContent(String fileName) throws IOException, BlogracyError {
+        Class<View> cl = View.class;
+        InputStream is = cl.getResourceAsStream(fileName);
 
-    private String getMainPagePath() throws  BlogracyError {
-        ClassLoader cl = UserRSS.getCurrentClassLoader();
-        URL resourceUrl = cl.getResource(MAIN_PAGE);
-        if(resourceUrl != null) {
-            return resourceUrl.getPath();
+        if (is == null) {
+            throw new BlogracyError("Could not find " + fileName + " file");
         } else {
-            throw new BlogracyError("Could not find resource " + MAIN_PAGE);
+            StringWriter stringWriter = new StringWriter(512);
+            FileUtils.copyCompletely(new InputStreamReader(is), stringWriter);
+            return stringWriter.toString();
         }
+
+
     }
 
 
