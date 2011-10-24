@@ -3,59 +3,10 @@
 <html>
 <head>
     <title>Blogracy</title>
-    <script type="text/javascript">
-        var filter = null;
-
-        var updateFollowees = function() {
-            return [];
-        }
-
-        var updateFollowers = function() {
-            return [];
-        }
-
-        var updateMessages = function(filter) {
-            if (filter === null) {
-                return [];
-            } else {
-                return [];
-            }
-        }
-
-        var appendFollower = function(follower) {
-
-        }
-
-        var appendFollowee = function(follower) {
-
-        }
-
-        var appendMessage = function(follower) {
-
-        }
-
-        var extractTags = function(messages) {
-            return []
-        }
-
-        var update = function() {
-            var tags;
-            var followees = updateFollowees();
-            var followers = updateFollowers();
-            var messages = updateMessages(filter);
-
-            for(var follower in followers) {
-                appendFollower(follower);
-            }
-            for(var followee in followees) {
-                appendFollowee(followee);
-            }
-            for(var message in messages) {
-                appendMessage(message);
-            }
-            tags = extractTags(messages);
-        }
-    </script>
+    <link type="text/css" href="main.css" />
+    <!--
+    <script type="text/javascript" src="view.js" />
+    -->
 </head>
 <body>
 <div id="page">
@@ -71,19 +22,19 @@
         <h2>Messages</h2>
     </div>
     <div id="followees">
-        <h2>Followees</h2>
+        <h2><a href="view.html" name="followees">Followees</a></h2>
         <ul id="followees-ul">
 
         </ul>
     </div>
     <div id="followers">
-        <h2>Followers</h2>
+        <h2><a href="boom.html">Followers</a></h2>
         <ul id="followers-ul">
             
         </ul>
     </div>
     <div id="tags">
-        <h2>Tags</h2>
+        <h2><a href="#followees">Tags</a></h2>
         <ul id="tags-ul">
 
         </ul>

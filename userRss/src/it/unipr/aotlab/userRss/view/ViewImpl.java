@@ -27,6 +27,8 @@ import it.unipr.aotlab.userRss.util.FileUtils;
 import it.unipr.aotlab.userRss.util.HTMLUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.LocationAdapter;
+import org.eclipse.swt.browser.LocationEvent;
 import org.eclipse.swt.widgets.Composite;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -59,6 +61,14 @@ public class ViewImpl implements View {
         browser = new Browser(parent, SWT.NULL);
         browser.setJavascriptEnabled(true);
         browser.setText(getPage(), true);
+        browser.addLocationListener(new LocationAdapter() {
+            @Override
+            public void changing(final LocationEvent event) {
+                String location = event.location;
+                System.out.println("Going to... " + location);
+            }
+
+        });
     }
 
     /**
