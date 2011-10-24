@@ -23,6 +23,7 @@ package it.unipr.aotlab.userRss.view;
 
 
 import it.unipr.aotlab.userRss.errors.BlogracyError;
+import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
 import it.unipr.aotlab.userRss.util.FileUtils;
 import it.unipr.aotlab.userRss.util.HTMLUtil;
 import org.eclipse.swt.SWT;
@@ -34,19 +35,12 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 import java.io.*;
 import java.util.Locale;
 
-/**
- * Created by IntelliJ IDEA.
- * User: enrico
- * Date: 10/23/11
- * Time: 6:14 PM
- * To change this template use File | Settings | File Templates.
- */
 public class View {
     static View theView = null;
     private Browser browser;
     private static final String MAIN_PAGE = "view.html";
 
-    public View(Composite parent) {
+    protected View(Composite parent) {
         buildUI(parent);
     }
 
@@ -60,7 +54,7 @@ public class View {
         browser.setText(getPage(), true);
     }
 
-    static boolean createView(Composite composite) {
+    public static boolean createView(Composite composite) {
         if (theView != null) {
             return false;
         } else {
@@ -70,19 +64,23 @@ public class View {
 
     }
 
-    static View getView() {
-        return theView;
+    public static View getView() throws InvalidPluginStateException {
+        if(theView == null) {
+            throw new InvalidPluginStateException("View not instantiated.");
+        } else {
+            return theView;
+        }
     }
 
-    static boolean shouldCreateView() {
+    public static boolean shouldCreateView() {
         return (theView == null);
     }
 
-    static void destroyView() {
+    public static void destroyView() {
         theView = null;
     }
 
-    void changeLanguage() {
+    public void changeLanguage() {
         Locale lang = Locale.getDefault();
         throw new NotImplementedException();
     }
