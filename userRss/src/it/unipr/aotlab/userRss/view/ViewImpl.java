@@ -33,6 +33,8 @@ import org.eclipse.swt.widgets.Composite;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URL;
 import java.util.Locale;
 
 public class ViewImpl implements View {
@@ -60,7 +62,8 @@ public class ViewImpl implements View {
     private void buildBrowser(Composite parent) {
         browser = new Browser(parent, SWT.NULL);
         browser.setJavascriptEnabled(true);
-        browser.setText(getPage(), true);
+        browser.setUrl(getLocalFileName(MAIN_PAGE));
+
         browser.addLocationListener(new LocationAdapter() {
             @Override
             public void changing(final LocationEvent event) {
@@ -129,6 +132,12 @@ public class ViewImpl implements View {
         } else {
             return inputStream;
         }
+    }
+
+    private String getLocalFileName(final String fileName) {
+        Class<ViewImpl> cl = ViewImpl.class;
+        URL url = cl.getResource(fileName);
+        return url.getPath();
     }
 
 

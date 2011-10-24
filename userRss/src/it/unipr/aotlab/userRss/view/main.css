@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-div {
-    border-bottom-width: 1
+div#messages {
+    background-color: gray;
 }
 
