@@ -23,22 +23,18 @@ package it.unipr.aotlab.userRss.view;
 
 
 import it.unipr.aotlab.userRss.errors.BlogracyError;
-import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
 import it.unipr.aotlab.userRss.util.FileUtils;
 import it.unipr.aotlab.userRss.util.HTMLUtil;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Text;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
-import java.util.Locale;
 
 public class View {
-    static View theView = null;
     private Browser browser;
     private static final String MAIN_PAGE = "view.html";
+    private final ViewFactory viewFactory = new ViewFactory();
 
     protected View(Composite parent) {
         buildUI(parent);
@@ -54,35 +50,8 @@ public class View {
         browser.setText(getPage(), true);
     }
 
-    public static boolean createView(Composite composite) {
-        if (theView != null) {
-            return false;
-        } else {
-            theView = new View(composite);
-            return true;
-        }
-
-    }
-
-    public static View getView() throws InvalidPluginStateException {
-        if(theView == null) {
-            throw new InvalidPluginStateException("View not instantiated.");
-        } else {
-            return theView;
-        }
-    }
-
-    public static boolean shouldCreateView() {
-        return (theView == null);
-    }
-
-    public static void destroyView() {
-        theView = null;
-    }
-
     public void changeLanguage() {
-        Locale lang = Locale.getDefault();
-        throw new NotImplementedException();
+        viewFactory.changeLanguage();
     }
 
     public String getPage() {

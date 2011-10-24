@@ -21,7 +21,7 @@
  */
 package it.unipr.aotlab.userRss.fakes;
 
-import it.unipr.aotlab.userRss.view.View;
+import it.unipr.aotlab.userRss.view.ViewFactory;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
@@ -39,7 +39,7 @@ public class UILoader {
        Shell shell = new Shell(display);
        shell.setLayout(new FillLayout());
 
-       View.createView(shell);
+        ViewFactory.createView(shell);
 
        shell.open();
        while (!shell.isDisposed()) {
