@@ -38,7 +38,7 @@ public class ViewFactory {
         if (theView != null) {
             return false;
         } else {
-            theView = new View(composite);
+            theView = new ViewImpl(composite);
             return true;
         }
 
@@ -58,10 +58,5 @@ public class ViewFactory {
 
     public static void destroyView() {
         theView = null;
-    }
-
-    public void changeLanguage() {
-        Locale lang = Locale.getDefault();
-        throw new NotImplementedException();
     }
 }
