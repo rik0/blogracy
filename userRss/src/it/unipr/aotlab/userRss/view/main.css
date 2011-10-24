@@ -20,7 +20,22 @@
  * THE SOFTWARE.
  */
 
-div#messages {
-    background-color: gray;
+div#page {
+    margin-left: 10%;
+    margin-right: 10%;
+}
+
+div#main {
+    width: 80%;
+    float: left;
+}
+
+div#sidebar {
+    width: 15%;
+    float: right;
+}
+
+div {
+    border: black dashed thin;
 }
 
