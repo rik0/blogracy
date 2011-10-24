@@ -22,10 +22,13 @@
 package it.unipr.aotlab.userRss;
 
 
+import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
+import it.unipr.aotlab.userRss.logging.Logger;
+import it.unipr.aotlab.userRss.view.ViewListener;
 import org.gudy.azureus2.plugins.Plugin;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
-import org.gudy.azureus2.plugins.logging.Logger;
+import org.gudy.azureus2.plugins.logging.LoggerChannel;
 import org.gudy.azureus2.plugins.ui.UIInstance;
 import org.gudy.azureus2.plugins.ui.UIManagerListener;
 import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
@@ -33,48 +36,57 @@ import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
 
 public class UserRSS implements Plugin {
 
-    private PluginInterface plugin;
+    static private PluginInterface plugin;
 
-    final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
+    public static final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
     final String PLUGIN_NAME = "blogracy.name";
 
-    private View cView = null;
+    private ViewListener viewListener = null;
     private UISWTInstance swtInstance = null;
-
-    public Logger getLogger() {
-        return logger;
-    }
-
-    private Logger logger;
-
 
     @Override
     public void initialize(PluginInterface pluginInterface) throws PluginException {
-        this.plugin = pluginInterface;
-        cView = new View(this, this.plugin);
+        plugin = pluginInterface;
+        Logger.initialize(plugin);
+        viewListener = new ViewListener();
 
-        logger = pluginInterface.getLogger();
-
-        this.plugin.getUIManager().addUIListener(new UIManagerListener() {
+        plugin.getUIManager().addUIListener(new UIManagerListener() {
             public void UIAttached(UIInstance instance) {
                 if (instance instanceof UISWTInstance) {
                     swtInstance = ((UISWTInstance) instance);
 
-                    if (cView != null) {
-                        swtInstance.addView(UISWTInstance.VIEW_MAIN, PLUGIN_NAME, cView);
-                        swtInstance.openMainView(PLUGIN_NAME, cView, null);
+                    if (viewListener != null) {
+                        swtInstance.addView(UISWTInstance.VIEW_MAIN, PLUGIN_NAME, viewListener);
+                        swtInstance.openMainView(PLUGIN_NAME, viewListener, null);
                     }
                 }
             }
 
             public void UIDetached(UIInstance instance) {
                 if (instance instanceof UISWTInstance) {
-                    logger.getChannel("info").log("Unloaded plugin.");
+                    Logger.info("Destroyed plugin.");
                 }
 
             }
         });
 
+    }
+
+    static LoggerChannel getCurrentChannel() throws InvalidPluginStateException {
+        if (plugin != null) {
+            org.gudy.azureus2.plugins.logging.Logger logger = plugin.getLogger();
+            return logger.getChannel(UserRSS.DSNS_PLUGIN_CHANNEL_NAME);
+        } else {
+            throw new InvalidPluginStateException();
+        }
+    }
+
+    static ClassLoader getCurrentClassLoader() throws InvalidPluginStateException {
+        if (plugin != null) {
+            return plugin.getPluginClassLoader();
+        } else {
+            throw new InvalidPluginStateException();
+        }
     }
 }
 

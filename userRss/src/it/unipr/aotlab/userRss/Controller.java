@@ -64,7 +64,7 @@ import java.util.*;
 public class Controller {
     static PluginInterface pluginInterface = null;
     private static SortedMap<String, Rss> userContentMap = new TreeMap<String, Rss>();
-    private View cView;
+    private OldView cView;
     static Model cModel;
     private static DistributedDatabase ddb;
     private UserRSS plugin = null;
@@ -85,7 +85,7 @@ public class Controller {
      * @param plgn
      * @param s_allStr
      */
-    public Controller(View view, Model model, UserRSS plgn, PluginInterface plgnInterface, String s_allStr) {
+    public Controller(OldView view, Model model, UserRSS plgn, PluginInterface plgnInterface, String s_allStr) {
         cView = view;
         cModel = model;
         plugin = plgn;

@@ -37,7 +37,7 @@ import org.gudy.azureus2.ui.swt.plugins.UISWTViewEventListener;
 import java.util.*;
 
 
-public class View implements UISWTViewEventListener, Observer {
+public class OldView implements UISWTViewEventListener, Observer {
 
 
     boolean isCreated = false;
@@ -77,7 +77,7 @@ public class View implements UISWTViewEventListener, Observer {
      * @param plugin
      * @param pluginInterface set the current plugin interface
      */
-    public View(UserRSS plugin, PluginInterface pluginInterface) {
+    public OldView(UserRSS plugin, PluginInterface pluginInterface) {
         messages = ResourceBundle.getBundle("messages.Messages");
         this.plugin = plugin;
         this.pluginInterface = pluginInterface;

@@ -1,0 +1,93 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+    <title>Blogracy</title>
+    <script type="text/javascript">
+        var filter = null;
+
+        var updateFollowees = function() {
+            return [];
+        }
+
+        var updateFollowers = function() {
+            return [];
+        }
+
+        var updateMessages = function(filter) {
+            if (filter === null) {
+                return [];
+            } else {
+                return [];
+            }
+        }
+
+        var appendFollower = function(follower) {
+
+        }
+
+        var appendFollowee = function(follower) {
+
+        }
+
+        var appendMessage = function(follower) {
+
+        }
+
+        var extractTags = function(messages) {
+            return []
+        }
+
+        var update = function() {
+            var tags;
+            var followees = updateFollowees();
+            var followers = updateFollowers();
+            var messages = updateMessages(filter);
+
+            for(var follower in followers) {
+                appendFollower(follower);
+            }
+            for(var followee in followees) {
+                appendFollowee(followee);
+            }
+            for(var message in messages) {
+                appendMessage(message);
+            }
+            tags = extractTags(messages);
+        }
+    </script>
+</head>
+<body>
+<div id="page">
+    <h1>Blogracy</h1>
+    <div id="entry-div">
+        <h2>Send Message</h2>
+        <form id="entry-form">
+            <input type="text" />
+            <input type="button" name="send" value="send" onclick="send_message()"/>
+        </form>
+    </div>
+    <div id="messages">
+        <h2>Messages</h2>
+    </div>
+    <div id="followees">
+        <h2>Followees</h2>
+        <ul id="followees-ul">
+
+        </ul>
+    </div>
+    <div id="followers">
+        <h2>Followers</h2>
+        <ul id="followers-ul">
+            
+        </ul>
+    </div>
+    <div id="tags">
+        <h2>Tags</h2>
+        <ul id="tags-ul">
+
+        </ul>
+    </div>
+</div>
+</body>
+</html>
