@@ -27,25 +27,22 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
 
 /**
- * User: enrico
- * Package: it.unipr.aotlab.userRss.fakes
- * Date: 10/24/11
- * Time: 10:54 AM
+ * An UILoader is used to manually try the HTML/Javascript part of the application
+ * without having to run Vuze. Only SWT is needed.
  */
 public class UILoader {
-    public static void main(String [] args) {
-       /* Relative links: use the HTML base tag */
-       Display display = new Display();
-       Shell shell = new Shell(display);
-       shell.setLayout(new FillLayout());
+    public static void main(String[] args) {
+        Display display = new Display();
+        Shell shell = new Shell(display);
+        shell.setLayout(new FillLayout());
 
         ViewFactory.createView(shell);
 
-       shell.open();
-       while (!shell.isDisposed()) {
-           if (!display.readAndDispatch())
-               display.sleep();
-       }
-       display.dispose();
-   }
+        shell.open();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch())
+                display.sleep();
+        }
+        display.dispose();
+    }
 }
