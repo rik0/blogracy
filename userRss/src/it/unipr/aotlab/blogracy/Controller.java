@@ -19,7 +19,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package it.unipr.aotlab.userRss;
+package it.unipr.aotlab.blogracy;
 
 import org.gudy.azureus2.core3.util.ByteFormatter;
 import org.gudy.azureus2.core3.util.SystemTime;
@@ -1144,7 +1144,7 @@ public class Controller {
                       DistributedDatabaseValue coupleValue = null;
                       try
                       {
-                          magnetURI = "magnet:?xt=urn:btih:"+SHA1("userRss"+fileName);
+                          magnetURI = "magnet:?xt=urn:btih:"+SHA1("blogracy"+fileName);
                       } catch (NoSuchAlgorithmException e1){
                           // TODO Auto-generated catch block
                           e1.printStackTrace();

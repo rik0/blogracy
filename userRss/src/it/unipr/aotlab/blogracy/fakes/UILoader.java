@@ -19,27 +19,30 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+package it.unipr.aotlab.blogracy.fakes;
 
-package it.unipr.aotlab.userRss.errors;
+import it.unipr.aotlab.blogracy.view.ViewFactory;
+import org.eclipse.swt.layout.FillLayout;
+import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 /**
- * This exception should be used to indicate that some object from the platform was called before
- * the system was fully initialized.
+ * An UILoader is used to manually try the HTML/Javascript part of the application
+ * without having to run Vuze. Only SWT is needed.
  */
-public class InvalidPluginStateException extends BlogracyError {
+public class UILoader {
+    public static void main(String[] args) {
+        Display display = new Display();
+        Shell shell = new Shell(display);
+        shell.setLayout(new FillLayout());
 
-    public InvalidPluginStateException() {
-    }
+        ViewFactory.createView(shell);
 
-    public InvalidPluginStateException(final String s) {
-        super(s);
-    }
-
-    public InvalidPluginStateException(final String s, final Throwable throwable) {
-        super(s, throwable);
-    }
-
-    public InvalidPluginStateException(final Throwable throwable) {
-        super(throwable);
+        shell.open();
+        while (!shell.isDisposed()) {
+            if (!display.readAndDispatch())
+                display.sleep();
+        }
+        display.dispose();
     }
 }

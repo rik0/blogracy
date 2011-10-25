@@ -20,21 +20,39 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.userRss.errors;
+package it.unipr.aotlab.blogracy.util;
 
-public class BlogracyError extends Exception {
-    public BlogracyError() {
-    }
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.Formatter;
 
-    public BlogracyError(String s) {
-        super(s);
-    }
+/**
+ * Created by IntelliJ IDEA.
+ * User: enrico
+ * Date: 10/23/11
+ * Time: 11:54 PM
+ * To change this template use File | Settings | File Templates.
+ */
+public class HTMLUtil {
+    static public String errorString(Exception e) {
+        // TODO: make page more beautiful!
+        Formatter formatter = new Formatter();
+        String headerPage = "<html><head><title>Error!</title></head><body>";
+        String pageTitle = "<h1>Error: %s</h1>";
+        String pageMessage = "<p>%s</p>";
+        String pageTrace = "<pre>%s</pre>";
+        String pageFooter = "</body></html>";
 
-    public BlogracyError(String s, Throwable throwable) {
-        super(s, throwable);
-    }
+        formatter.format(headerPage);
+        formatter.format(pageTitle, e.toString());
+        formatter.format(pageMessage, e.getMessage());
 
-    public BlogracyError(Throwable throwable) {
-        super(throwable);
+        StringWriter stringWriter = new StringWriter(512);
+        PrintWriter ost = new PrintWriter(stringWriter);
+        e.printStackTrace(ost);
+        formatter.format(pageTrace, stringWriter.toString());
+        formatter.format(pageFooter);
+
+        return formatter.toString();
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Alan Nonnato, Enrico Franchi, Michele Tomaiuolo and University of Parma.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,43 +20,28 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.userRss.view;
+package it.unipr.aotlab.blogracy;
 
-import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
-import org.eclipse.swt.widgets.Composite;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
+import java.io.InputStream;
 
-import java.util.Locale;
 
-public class ViewFactory {
-    static View theView = null;
+class
+        DownloadDetails {
+    private InputStream is;
+    private String content_type;
 
-    public ViewFactory() {
+    protected DownloadDetails(InputStream _is, String _content_type) {
+        is = _is;
+        content_type = _content_type;
     }
 
-    public static boolean createView(Composite composite) {
-        if (theView != null) {
-            return false;
-        } else {
-            theView = new ViewImpl(composite);
-            return true;
-        }
-
+    protected String
+    getContentType() {
+        return (content_type);
     }
 
-    public static View getView() throws InvalidPluginStateException {
-        if (theView == null) {
-            throw new InvalidPluginStateException("View not instantiated.");
-        } else {
-            return theView;
-        }
-    }
-
-    public static boolean shouldCreateView() {
-        return (theView == null);
-    }
-
-    public static void destroyView() {
-        theView = null;
+    protected InputStream
+    getInputStream() {
+        return (is);
     }
 }

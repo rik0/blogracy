@@ -17,11 +17,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
-package it.unipr.aotlab.userRss;
+package it.unipr.aotlab.blogracy;
 
 
-import it.unipr.aotlab.userRss.logging.Logger;
-import it.unipr.aotlab.userRss.view.ViewListener;
+import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.view.ViewListener;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
 import org.gudy.azureus2.core3.util.SystemProperties;

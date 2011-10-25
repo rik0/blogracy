@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2011  Enrico Franchi and University of Parma.
+ * Copyright (c)  2011 Alan Nonnato, Enrico Franchi, Michele Tomaiuolo and University of Parma.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -19,30 +19,51 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package it.unipr.aotlab.userRss.fakes;
 
-import it.unipr.aotlab.userRss.view.ViewFactory;
-import org.eclipse.swt.layout.FillLayout;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Shell;
+package it.unipr.aotlab.blogracy;
 
-/**
- * An UILoader is used to manually try the HTML/Javascript part of the application
- * without having to run Vuze. Only SWT is needed.
- */
-public class UILoader {
-    public static void main(String[] args) {
-        Display display = new Display();
-        Shell shell = new Shell(display);
-        shell.setLayout(new FillLayout());
+import java.io.Serializable;
+import java.net.URL;
 
-        ViewFactory.createView(shell);
 
-        shell.open();
-        while (!shell.isDisposed()) {
-            if (!display.readAndDispatch())
-                display.sleep();
-        }
-        display.dispose();
+public class DdbFile implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+    private String fileName;
+    private URL magnetLink;
+    private String fileKey;
+
+    public DdbFile() {
+    }
+
+    public DdbFile(String torrentHash, String s_fileName, URL torrentMagnet) {
+        fileKey = torrentHash;
+        fileName = s_fileName;
+        magnetLink = torrentMagnet;
+
+    }
+
+    public String getfileName() {
+        return fileName;
+    }
+
+
+    public URL getMagnetLink() {
+        return magnetLink;
+    }
+
+
+    public void setfileName(String s_fileName) {
+        fileName = s_fileName;
+    }
+
+
+    public void setMagnetLink(URL s_magnetLink) {
+        magnetLink = s_magnetLink;
+    }
+
+    @Override
+    public String toString() {
+        return "key=" + fileKey + "  --  fileName=" + fileName + "  --  magnetLink=" + magnetLink + "";
     }
 }

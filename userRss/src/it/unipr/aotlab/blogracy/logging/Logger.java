@@ -19,9 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package it.unipr.aotlab.userRss.logging;
+package it.unipr.aotlab.blogracy.logging;
 
-import it.unipr.aotlab.userRss.Blogracy;
+import it.unipr.aotlab.blogracy.Blogracy;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.logging.LoggerChannel;
 

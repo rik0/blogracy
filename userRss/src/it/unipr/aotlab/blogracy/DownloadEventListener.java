@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.userRss;
+package it.unipr.aotlab.blogracy;
 
 
 import org.gudy.azureus2.plugins.PluginInterface;

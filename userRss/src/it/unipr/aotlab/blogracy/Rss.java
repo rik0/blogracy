@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.userRss;
+package it.unipr.aotlab.blogracy;
 
 
 public class Rss {
@@ -38,10 +38,10 @@ public class Rss {
      * Constructor of the Rss
      *
      * @param timestamp set the Rss timestamp
-     * @param author  set the Rss author
-     * @param text    set the Rss text
-     * @param title   set the Rss Title
-     * @param date    set the Rss date
+     * @param author    set the Rss author
+     * @param text      set the Rss text
+     * @param title     set the Rss Title
+     * @param date      set the Rss date
      */
     public Rss(Long timestamp, String author, String text, String title, String date, String type, String link, int rssId) {
         setAuthor(author);

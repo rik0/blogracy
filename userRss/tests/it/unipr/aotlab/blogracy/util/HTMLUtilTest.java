@@ -1,4 +1,4 @@
-package it.unipr.aotlab.userRss.util;
+package it.unipr.aotlab.blogracy.util;
 
 import org.junit.Assert;
 

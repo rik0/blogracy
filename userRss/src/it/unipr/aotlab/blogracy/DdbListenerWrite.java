@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Alan Nonnato, Enrico Franchi, Michele Tomaiuolo and University of Parma.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,14 +20,27 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.userRss.view;
+package it.unipr.aotlab.blogracy;
 
-/**
- * User: enrico
- * Package: it.unipr.aotlab.userRss.view
- * Date: 10/24/11
- * Time: 11:07 AM
- */
-public interface View {
-    void changeLanguage();
+
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
+
+public class DdbListenerWrite implements DistributedDatabaseListener {
+
+
+    @Override
+    public void event(DistributedDatabaseEvent event) {
+        //get the event type
+        int type = event.getType();
+        //if the plugin start to write
+        if (type == DistributedDatabaseEvent.ET_OPERATION_STARTS) //i start to write
+        {
+            // System.out.println("i'm starting write on DDB");
+        } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {//timeout Error
+            // System.out.println("Timeout error!\n 1000 seconds elapsed without any response from server.");
+        } else if (event.getType() == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {//write successful
+            // System.out.println("Data correctly write on DDB");
+        }
+    }
 }

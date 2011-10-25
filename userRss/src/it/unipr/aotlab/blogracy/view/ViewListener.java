@@ -20,10 +20,10 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.userRss.view;
+package it.unipr.aotlab.blogracy.view;
 
-import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
-import it.unipr.aotlab.userRss.logging.Logger;
+import it.unipr.aotlab.blogracy.errors.InvalidPluginStateException;
+import it.unipr.aotlab.blogracy.logging.Logger;
 import org.eclipse.swt.widgets.Composite;
 import org.gudy.azureus2.ui.swt.plugins.UISWTViewEvent;
 import org.gudy.azureus2.ui.swt.plugins.UISWTViewEventListener;
@@ -40,7 +40,7 @@ public class ViewListener implements UISWTViewEventListener {
                 ViewFactory.destroyView();
                 return true;
             case UISWTViewEvent.TYPE_INITIALIZE:
-                Composite composite = (Composite)uiswtViewEvent.getData();
+                Composite composite = (Composite) uiswtViewEvent.getData();
                 return ViewFactory.createView(composite);
             case UISWTViewEvent.TYPE_LANGUAGEUPDATE:
                 try {
