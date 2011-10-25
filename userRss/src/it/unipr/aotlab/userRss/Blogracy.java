@@ -67,7 +67,6 @@ public class Blogracy extends WebPlugin {
 
     public static final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
 
-    private final static String PLUGIN_NAME = "blogracy.name";
     private static final String PLUGIN_NAME_KEY = "blogracy.name";
 
     final static int DEFAULT_PORT = 32674;
@@ -109,11 +108,6 @@ public class Blogracy extends WebPlugin {
     public static void load(PluginInterface pluginInterface) {
         Integer blogracy_port;
         String blogracy_access;
-
-        Properties properties = pluginInterface.getPluginProperties();
-
-        properties.setProperty("plugin.name", PLUGIN_NAME);
-        properties.setProperty("plugin.version", "0.2");
 
         synchronized (Blogracy.class) {
             if (loaded) {
@@ -211,7 +205,6 @@ public class Blogracy extends WebPlugin {
 
         singleton = this;
 
-        pluginInterface.getPluginProperties().setProperty("plugin.name", PLUGIN_NAME);
         super.initialize(pluginInterface);
     }
 }
