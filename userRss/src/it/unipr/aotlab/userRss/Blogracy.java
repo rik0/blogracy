@@ -42,22 +42,24 @@ import java.util.Properties;
 public class Blogracy extends WebPlugin {
 
     private static final String BLOGRACY = "blogracy";
-    private static final String DEVICE_RSS_ENABLE_KEY = "Plugin.default.device.rss.enable";
     private HyperlinkParameter test_param;
     static private Blogracy singleton;
-    private final String INTERNAL_URL_KEY = "blogracy.internal.test.url";
 
     static class Accesses {
+
         static String ALL = "all";
         static String LOCAL = "local";
     }
 
     static private PluginInterface plugin;
+
     private static final String CONFIG_ACCESS_KEY = "blogracy.internal.config.access";
     private static final String CONFIG_PORT_KEY = "blogracy.internal.config.port";
     private static final String DEVICE_ACCESS_KEY = "blogracy.internal.config.access";
+    private static final String INTERNAL_URL_KEY = "blogracy.internal.test.url";
     private static final String DEVICE_PORT_KEY = "Plugin.default.device.blogracy.port";
     private static final String DEVICE_LOCALONLY_KEY = "Plugin.default.device.blogracy.localonly";
+    private static final String DEVICE_RSS_ENABLE_KEY = "Plugin.default.device.rss.enable";
     private static final String DID_MIGRATE_KEY = "blogracy.internal.migrated";
 
     private static Properties defaults = new Properties();
@@ -65,7 +67,9 @@ public class Blogracy extends WebPlugin {
 
     public static final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
 
-    final static String PLUGIN_NAME = "blogracy.name";
+    private final static String PLUGIN_NAME = "blogracy.name";
+    private static final String PLUGIN_NAME_KEY = "blogracy.name";
+
     final static int DEFAULT_PORT = 32674;
     final static String DEFAULT_ACCESS = Accesses.ALL;
 
@@ -146,7 +150,7 @@ public class Blogracy extends WebPlugin {
         }
 
         final boolean rssEnable = COConfigurationManager.getBooleanParameter(DEVICE_RSS_ENABLE_KEY);
-        defaults.put(WebPlugin.PR_ENABLE, new Boolean(rssEnable));
+        defaults.put(WebPlugin.PR_ENABLE, rssEnable);
         defaults.put(WebPlugin.PR_DISABLABLE, Boolean.TRUE);
         defaults.put(WebPlugin.PR_PORT, blogracy_port);
         defaults.put(WebPlugin.PR_ACCESS, blogracy_access);
@@ -191,8 +195,8 @@ public class Blogracy extends WebPlugin {
                     swtInstance = ((UISWTInstance) instance);
 
                     if (viewListener != null) {
-                        swtInstance.addView(UISWTInstance.VIEW_MAIN, PLUGIN_NAME, viewListener);
-                        swtInstance.openMainView(PLUGIN_NAME, viewListener, null);
+                        swtInstance.addView(UISWTInstance.VIEW_MAIN, PLUGIN_NAME_KEY, viewListener);
+                        swtInstance.openMainView(PLUGIN_NAME_KEY, viewListener, null);
                     }
                 }
             }
