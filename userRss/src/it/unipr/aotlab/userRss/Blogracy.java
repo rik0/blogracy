@@ -1,23 +1,21 @@
 /*
- * Copyright (c)  2011 Alan Nonnato, Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Created on Oct 25, 2011
+ * Created by Enrico Franchi
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Copyright 2009 Enrico Franchi, Michele Tomaiuolo and University of Parma.  All rights reserved.
  *
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; version 2 of the License only.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
- * THE SOFTWARE.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307, USA.
  */
 package it.unipr.aotlab.userRss;
 
@@ -25,16 +23,16 @@ package it.unipr.aotlab.userRss;
 import it.unipr.aotlab.userRss.errors.InvalidPluginStateException;
 import it.unipr.aotlab.userRss.logging.Logger;
 import it.unipr.aotlab.userRss.view.ViewListener;
-import org.gudy.azureus2.plugins.Plugin;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.logging.LoggerChannel;
 import org.gudy.azureus2.plugins.ui.UIInstance;
 import org.gudy.azureus2.plugins.ui.UIManagerListener;
 import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
+import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
 
-public class UserRSS implements Plugin {
+public class Blogracy extends WebPlugin {
 
     static private PluginInterface plugin;
 
@@ -43,6 +41,8 @@ public class UserRSS implements Plugin {
 
     private ViewListener viewListener = null;
     private UISWTInstance swtInstance = null;
+
+    
 
     @Override
     public void initialize(PluginInterface pluginInterface) throws PluginException {
@@ -75,7 +75,7 @@ public class UserRSS implements Plugin {
     static LoggerChannel getCurrentChannel() throws InvalidPluginStateException {
         if (plugin != null) {
             org.gudy.azureus2.plugins.logging.Logger logger = plugin.getLogger();
-            return logger.getChannel(UserRSS.DSNS_PLUGIN_CHANNEL_NAME);
+            return logger.getChannel(Blogracy.DSNS_PLUGIN_CHANNEL_NAME);
         } else {
             throw new InvalidPluginStateException();
         }
@@ -88,5 +88,7 @@ public class UserRSS implements Plugin {
             throw new InvalidPluginStateException();
         }
     }
+
+    
 }
 
