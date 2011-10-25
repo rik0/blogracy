@@ -46,7 +46,6 @@ public class Blogracy extends WebPlugin {
     static private Blogracy singleton;
 
     static class Accesses {
-
         static String ALL = "all";
         static String LOCAL = "local";
     }
@@ -59,7 +58,7 @@ public class Blogracy extends WebPlugin {
     private static final String INTERNAL_URL_KEY = "blogracy.internal.test.url";
     private static final String DEVICE_PORT_KEY = "Plugin.default.device.blogracy.port";
     private static final String DEVICE_LOCALONLY_KEY = "Plugin.default.device.blogracy.localonly";
-    private static final String DEVICE_RSS_ENABLE_KEY = "Plugin.default.device.rss.enable";
+    private static final String DEVICE_BLOGRACY_ENABLE_KEY = "Plugin.default.device.blogracy.enable";
     private static final String DID_MIGRATE_KEY = "blogracy.internal.migrated";
 
     private static Properties defaults = new Properties();
@@ -81,7 +80,7 @@ public class Blogracy extends WebPlugin {
         ConfigurationDefaults cd = ConfigurationDefaults.getInstance();
         cd.addParameter(DID_MIGRATE_KEY, Boolean.TRUE);
         cd.addParameter(DEVICE_LOCALONLY_KEY, Boolean.TRUE);
-        cd.addParameter(DEVICE_RSS_ENABLE_KEY, Boolean.FALSE);
+        cd.addParameter(DEVICE_BLOGRACY_ENABLE_KEY, Boolean.FALSE);
     }
 
     public static Blogracy getSingleton() {
@@ -120,8 +119,8 @@ public class Blogracy extends WebPlugin {
         File root_dir = new File(SystemProperties.getUserPath() + BLOGRACY);
 
         if (!root_dir.exists()) {
-
-            root_dir.mkdir();
+            boolean createdDir = root_dir.mkdir();
+            assert (createdDir);
         }
 
 
@@ -143,8 +142,8 @@ public class Blogracy extends WebPlugin {
 
         }
 
-        final boolean rssEnable = COConfigurationManager.getBooleanParameter(DEVICE_RSS_ENABLE_KEY);
-        defaults.put(WebPlugin.PR_ENABLE, rssEnable);
+        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(DEVICE_BLOGRACY_ENABLE_KEY);
+        defaults.put(WebPlugin.PR_ENABLE, blogracyEnable);
         defaults.put(WebPlugin.PR_DISABLABLE, Boolean.TRUE);
         defaults.put(WebPlugin.PR_PORT, blogracy_port);
         defaults.put(WebPlugin.PR_ACCESS, blogracy_access);
