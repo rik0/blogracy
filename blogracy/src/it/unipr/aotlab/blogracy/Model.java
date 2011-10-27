@@ -147,7 +147,7 @@ public class Model extends Observable {
     /**
      * set the Rss Map
      *
-     * @param str set the Rss Map
+     * @param rssString set the Rss Map
      */
     public void setPrivateRss(String rssString) {
         myRss = rssString;
