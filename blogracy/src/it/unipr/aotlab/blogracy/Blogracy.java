@@ -44,6 +44,7 @@ public class Blogracy extends WebPlugin {
     private static final String BLOGRACY = "blogracy";
     private HyperlinkParameter test_param;
     static private Blogracy singleton;
+    private final String MESSAGES_BLOGRACY_URL_KEY = "blogracy.url";
 
     static class Accesses {
         static String ALL = "all";
@@ -59,14 +60,14 @@ public class Blogracy extends WebPlugin {
     private static final String DEVICE_PORT_KEY = "Plugin.default.device.blogracy.port";
     private static final String DEVICE_LOCALONLY_KEY = "Plugin.default.device.blogracy.localonly";
     private static final String DEVICE_BLOGRACY_ENABLE_KEY = "Plugin.default.device.blogracy.enable";
+    private static final String PLUGIN_NAME_KEY = "blogracy.name";
+
     private static final String DID_MIGRATE_KEY = "blogracy.internal.migrated";
+
 
     private static Properties defaults = new Properties();
 
-
     public static final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
-
-    private static final String PLUGIN_NAME_KEY = "blogracy.name";
 
     final static int DEFAULT_PORT = 32674;
     final static String DEFAULT_ACCESS = Accesses.ALL;
@@ -93,6 +94,7 @@ public class Blogracy extends WebPlugin {
             BasicPluginConfigModel config = getConfigModel();
             test_param = config.addHyperlinkParameter2(INTERNAL_URL_KEY, "");
             test_param.setEnabled(isPluginEnabled());
+            test_param.setLabelKey(MESSAGES_BLOGRACY_URL_KEY);
         }
     }
 
@@ -116,12 +118,7 @@ public class Blogracy extends WebPlugin {
             }
         }
 
-        File root_dir = new File(SystemProperties.getUserPath() + BLOGRACY);
-
-        if (!root_dir.exists()) {
-            boolean createdDir = root_dir.mkdir();
-            assert (createdDir);
-        }
+        File root_dir = createRootDirectoryIfMissingAndGetPath();
 
 
         if (COConfigurationManager.getBooleanParameter(DID_MIGRATE_KEY)) {
@@ -155,6 +152,16 @@ public class Blogracy extends WebPlugin {
         defaults.put(WebPlugin.PR_CONFIG_MODEL_PARAMS,
                 new String[]{ConfigSection.SECTION_ROOT, BLOGRACY});
 
+    }
+
+    private static File createRootDirectoryIfMissingAndGetPath() {
+        File root_dir = new File(SystemProperties.getUserPath() + BLOGRACY);
+
+        if (!root_dir.exists()) {
+            boolean createdDir = root_dir.mkdir();
+            assert (createdDir);
+        }
+        return root_dir;
     }
 
     public Blogracy() {
