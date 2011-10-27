@@ -7,5 +7,8 @@ package it.unipr.aotlab.userRss.network;
  * Time: 1:09 PM
  */
 public interface Network {
+
+
+    void initialize(Object[] params);
     
 }
