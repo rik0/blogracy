@@ -33,4 +33,18 @@ package it.unipr.aotlab.userRss.errors;
  * Some information could not be retrieved from the DHT
  */
 public class NetworkError extends BlogracyError {
+    public NetworkError() {
+    }
+
+    public NetworkError(String s) {
+        super(s);
+    }
+
+    public NetworkError(String s, Throwable throwable) {
+        super(s, throwable);
+    }
+
+    public NetworkError(Throwable throwable) {
+        super(throwable);
+    }
 }

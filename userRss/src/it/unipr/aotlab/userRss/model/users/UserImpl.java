@@ -23,40 +23,83 @@
 package it.unipr.aotlab.userRss.model.users;
 
 import it.unipr.aotlab.userRss.errors.InformationMissing;
+import it.unipr.aotlab.userRss.errors.InformationNotYetAvailable;
 import it.unipr.aotlab.userRss.model.hashes.Hash;
 
 /**
  * User: enrico
  * Package: it.unipr.aotlab.userRss.model.users
  * Date: 10/27/11
- * Time: 1:11 PM
+ * Time: 1:19 PM
  */
 public class UserImpl implements User {
     String localNick;
-    final Hash hash;
+    Hash hash;
+    Profile profile = null;
+    boolean profileRequested = false;
 
     UserImpl(final String localNick, final Hash hash) {
         this.localNick = localNick;
         this.hash = hash;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public String getLocalNick() {
         return localNick;
     }
 
-    public void setLocalNick(final String nick) {
-        localNick = nick;
+    /**
+     * {@inheritDoc}
+     */
+    public void setLocalNick(final String localNick) {
+        this.localNick = localNick;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Hash getHash() {
         return hash;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     public Profile getProfile() throws InformationMissing {
-        throw new InformationMissing("User profile not downloaded.");
+        // TODO: remember to attach the action downloading the profile to this object
+        if (hasProfile()) {
+            return profile;
+        } else if (profileRequested) {
+            throw new InformationNotYetAvailable("Download of profile not completed.");
+        } else {
+            throw new InformationMissing("Profile not required.");
+        }
     }
 
+    /**
+     * {@inheritDoc}
+     * Notice that this shall be package protected, as can be asynchronously called from
+     * classes of this package.
+     */
+    void setProfile(final Profile profile) {
+        this.profile = profile;
+        setProfileRequested(false);
+    }
+
+    /**
+     * Marks wether we are waiting for a new profile or not
+     * @param profileRequested
+     */
+    void setProfileRequested(boolean profileRequested) {
+        this.profileRequested = profileRequested;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
     public boolean hasProfile() {
-        return false;
+        return (this.profile != null);
     }
 }

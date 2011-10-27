@@ -29,9 +29,12 @@ package it.unipr.aotlab.userRss.model.users;
  * Time: 12:50 PM
  */
 
+import it.unipr.aotlab.userRss.errors.InformationMissing;
 import it.unipr.aotlab.userRss.errors.MissingProfileError;
 import it.unipr.aotlab.userRss.errors.NetworkError;
 import it.unipr.aotlab.userRss.model.hashes.Hash;
+import it.unipr.aotlab.userRss.network.Network;
+import it.unipr.aotlab.userRss.network.NetworkManager;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
@@ -58,19 +61,25 @@ public class Users {
     }
 
     /**
-     * Gets from the network a profile which associates to the user.
+     * Get profile for the specified user.
      *
-     * If no exception is thrown, the user object returned is different from the argument.
-     * {@code user} shall not be used afterwards.
-     *
-     * @param user is the user from whom we want to get the profile.
-     * @return a new @{link User} object containing also the profile
-     * @throws MissingProfileError if such user did not publish a profile
-     * @throws NetworkError if there was an error related to obtaining information from the DHT
+     * @param user for which to return the profile.
+     * @return the user's profile
+     * @throws MissingProfileError
+     * @throws NetworkError
      */
-    public static User fillUserProfile(User user) throws MissingProfileError, NetworkError {
-
-        throw new NotImplementedException();
+    public static Profile getProfile(User user) throws MissingProfileError, NetworkError {
+        Profile profile;
+        try {
+            profile = user.getProfile();
+            return profile;
+        } catch (InformationMissing informationMissing) {
+            Network network = NetworkManager.getNetwork();
+            // network read profile...
+            UserImpl userImpl = (UserImpl)user;
+            userImpl.setProfileRequested(true);
+            throw new NotImplementedException();
+        }
     }
 
     /**
