@@ -32,21 +32,12 @@ package it.unipr.aotlab.userRss.model.users;
 import it.unipr.aotlab.userRss.errors.MissingProfileError;
 import it.unipr.aotlab.userRss.errors.NetworkError;
 import it.unipr.aotlab.userRss.model.hashes.Hash;
-import it.unipr.aotlab.userRss.network.Network;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Utility methods to manipulate the users.
  */
 public class Users {
-    // TODO: add network management, keep in mind that it should work also with a mock
-    private Network network;
-    private Map<Hash, User> users = new HashMap<Hash, User>();
-
-
     /**
      * Creates a new user from given hash. In this case the user is identified in the system by its own hash.
      * @param hash to identify the user

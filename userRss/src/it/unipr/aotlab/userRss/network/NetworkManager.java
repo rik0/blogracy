@@ -2,7 +2,7 @@ package it.unipr.aotlab.userRss.network;
 
 import it.unipr.aotlab.userRss.errors.NetworkConfigurationError;
 
-class NetworkManager {
+public class NetworkManager {
 	private static Network currentNetwork = null;
 	private static String loadedNetworkClassName = null;
 	
@@ -30,11 +30,13 @@ class NetworkManager {
     }
 
 
-    Network getNetwork() throws NetworkConfigurationError {
+    static public Network getNetwork() throws NetworkConfigurationError {
         if(currentNetwork != null) {
 		    return currentNetwork;
         } else {
             throw new NetworkConfigurationError("Network not configured.");
         }
 	}
+
+
 }
