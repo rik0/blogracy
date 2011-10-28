@@ -29,8 +29,7 @@ package it.unipr.aotlab.userRss.model.users;
  * Time: 12:50 PM
  */
 
-import it.unipr.aotlab.userRss.errors.InformationMissing;
-import it.unipr.aotlab.userRss.errors.MissingProfileError;
+import it.unipr.aotlab.userRss.errors.NetworkConfigurationError;
 import it.unipr.aotlab.userRss.errors.NetworkError;
 import it.unipr.aotlab.userRss.model.hashes.Hash;
 import it.unipr.aotlab.userRss.network.Network;
@@ -47,7 +46,7 @@ public class Users {
      * @return a new user
      */
     public static User newUser(Hash hash) {
-        return newUser(hash.getValue(), hash);
+        return newUser(hash.getStringValue(), hash);
     }
 
     /**
@@ -61,25 +60,39 @@ public class Users {
     }
 
     /**
-     * Get profile for the specified user.
+     * Get profile for the specified user. If the profile is cached, it does
+     * not look for a new one.if one is cached.
      *
      * @param user for which to return the profile.
      * @return the user's profile
-     * @throws MissingProfileError
      * @throws NetworkError
      */
-    public static Profile getProfile(User user) throws MissingProfileError, NetworkError {
-        Profile profile;
-        try {
-            profile = user.getProfile();
-            return profile;
-        } catch (InformationMissing informationMissing) {
-            Network network = NetworkManager.getNetwork();
-            // network read profile...
-            UserImpl userImpl = (UserImpl)user;
-            userImpl.setProfileRequested(true);
-            throw new NotImplementedException();
+    public static Profile getProfile(User user) throws NetworkError {
+        Profile p = getCachedProfile(user.getHash());
+        if(p == null) {
+            return updateProfile(user);
+        } else {
+            return p;
         }
+    }
+
+    private static Profile getCachedProfile(Hash hash) {
+        throw new NotImplementedException();
+    }
+
+    /**
+     * Get profile for the specified user.
+     *
+     * The profile is always downloaded from the network.
+     *
+     * @param user for which to return the profile.
+     * @return the user's profile
+     * @throws NetworkError
+     */
+    public static Profile updateProfile(User user) throws NetworkConfigurationError {
+        Network network = NetworkManager.getNetwork();
+        // insert profile in cache.
+        throw new NotImplementedException();
     }
 
     /**
@@ -89,5 +102,8 @@ public class Users {
      */
     public static User searchUser(String query) {
         throw new NotImplementedException();
+    }
+
+    private Users() {
     }
 }

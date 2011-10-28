@@ -22,21 +22,69 @@
 
 package it.unipr.aotlab.userRss.model.hashes;
 
+import org.gudy.azureus2.core3.util.SHA1Hasher;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.security.acl.NotOwnerException;
+import java.util.Arrays;
 
 /**
  * Generic functions to manipulate hashes are defined in this class.
  */
 public class Hashes {
+    private static class HashImpl implements Hash {
+        final byte[] hash;
+
+        HashImpl(final byte[] hash) {
+            this.hash = hash;
+        }
+
+        public String getStringValue() {
+            String stringRepr = new String(hash);
+            return stringRepr;
+        }
+
+        public byte[] getValue() {
+            return Arrays.copyOf(hash, hash.length);
+        }
+
+        @Override
+        public String toString() {
+            final StringBuilder sb = new StringBuilder();
+            sb.append("HashImpl");
+            sb.append("{hash=").append(hash == null ? "null" : "");
+            for (int i = 0; hash != null && i < hash.length; ++i)
+                sb.append(i == 0 ? "" : ", ").append(hash[i]);
+            sb.append('}');
+            return sb.toString();
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            HashImpl hash1 = (HashImpl) o;
+
+            if (!Arrays.equals(hash, hash1.hash)) return false;
+
+            return true;
+        }
+
+        @Override
+        public int hashCode() {
+            return Arrays.hashCode(hash);
+        }
+    }
+
     /**
      * Creates an hash from a {@code String}
      * @param value is the {@code String} to be hashed
      * @return the Hash of {@param value}
      */
     static public Hash newHash(String value) {
-        throw new NotImplementedException();
+        SHA1Hasher hasher = new SHA1Hasher();
+        final byte[] hash =  hasher.calculateHash(value.getBytes());
+        return new HashImpl(hash);
     }
     /**
      * Creates an hash from a generic {@code Object}
@@ -53,7 +101,16 @@ public class Hashes {
      * @return false if we know for sure it is not a valid hash
      */
     static public boolean validateHash(Hash hash) {
-        throw new NotImplementedException();
+        byte[] theHash;
+        if(hash instanceof HashImpl) {
+            theHash = ((HashImpl)hash).hash;
+        } else {
+            theHash = hash.getValue();
+        }
+        if(theHash.length != 20) {
+            return false;
+        }
+        return true;
     }
 
     /**

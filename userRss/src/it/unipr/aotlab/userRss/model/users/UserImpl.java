@@ -22,8 +22,6 @@
 
 package it.unipr.aotlab.userRss.model.users;
 
-import it.unipr.aotlab.userRss.errors.InformationMissing;
-import it.unipr.aotlab.userRss.errors.InformationNotYetAvailable;
 import it.unipr.aotlab.userRss.model.hashes.Hash;
 
 /**
@@ -35,8 +33,6 @@ import it.unipr.aotlab.userRss.model.hashes.Hash;
 public class UserImpl implements User {
     String localNick;
     Hash hash;
-    Profile profile = null;
-    boolean profileRequested = false;
 
     UserImpl(final String localNick, final Hash hash) {
         this.localNick = localNick;
@@ -62,44 +58,22 @@ public class UserImpl implements User {
      */
     public Hash getHash() {
         return hash;
+  }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UserImpl user = (UserImpl) o;
+
+        if (!hash.equals(user.hash)) return false;
+
+        return true;
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    public Profile getProfile() throws InformationMissing {
-        // TODO: remember to attach the action downloading the profile to this object
-        if (hasProfile()) {
-            return profile;
-        } else if (profileRequested) {
-            throw new InformationNotYetAvailable("Download of profile not completed.");
-        } else {
-            throw new InformationMissing("Profile not required.");
-        }
-    }
-
-    /**
-     * {@inheritDoc}
-     * Notice that this shall be package protected, as can be asynchronously called from
-     * classes of this package.
-     */
-    void setProfile(final Profile profile) {
-        this.profile = profile;
-        setProfileRequested(false);
-    }
-
-    /**
-     * Marks wether we are waiting for a new profile or not
-     * @param profileRequested
-     */
-    void setProfileRequested(boolean profileRequested) {
-        this.profileRequested = profileRequested;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    public boolean hasProfile() {
-        return (this.profile != null);
+    @Override
+    public int hashCode() {
+        return hash.hashCode();
     }
 }

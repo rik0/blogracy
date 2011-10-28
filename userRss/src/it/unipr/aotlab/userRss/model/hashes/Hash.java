@@ -30,5 +30,11 @@ public interface Hash {
      * Returns the string representation of the hash
      * @return the string representation of the hash
      */
-    String getValue();
+    String getStringValue();
+
+    /**
+     * Returns the bytes of the hash
+     * @return the bytes of the hash
+     */
+    byte[] getValue();
 }

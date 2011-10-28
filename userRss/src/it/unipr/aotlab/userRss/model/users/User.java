@@ -57,15 +57,6 @@ public interface User {
      */
     Hash getHash();
 
-    /**
-     * Get the user profile if there is one available.
-     *
-     *
-     *
-     * @return the user profile
-     * @throws it.unipr.aotlab.userRss.errors.InformationMissing if no profile is available
-     */
-    Profile getProfile() throws InformationMissing;
-    boolean hasProfile();
+
 
 }
