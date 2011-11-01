@@ -28,6 +28,8 @@ import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
 import org.gudy.azureus2.core3.util.SystemProperties;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.gudy.azureus2.plugins.ui.UIInstance;
 import org.gudy.azureus2.plugins.ui.UIManagerListener;
 import org.gudy.azureus2.plugins.ui.config.ConfigSection;
@@ -36,7 +38,7 @@ import org.gudy.azureus2.plugins.ui.model.BasicPluginConfigModel;
 import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
 import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
-import java.io.File;
+import java.io.*;
 import java.util.Properties;
 
 
@@ -172,6 +174,22 @@ public class Blogracy extends WebPlugin {
     public String getURL() {
         return (getProtocol() + "://127.0.0.1:" + getPort() + "/");
     }
+
+
+    @Override
+    public boolean generateSupport(TrackerWebPageRequest request, TrackerWebPageResponse response) throws IOException {
+
+
+        response.setHeader("Content-Type", "text/text");
+        Writer out = new OutputStreamWriter(response.getOutputStream());
+        out.write(request.getAbsoluteURL().getPath());
+        out.write('\n');
+        out.flush();
+
+        System.out.println(request.getAbsoluteURL().getPath());
+        return true;
+    }
+
 
     @Override
     protected void
