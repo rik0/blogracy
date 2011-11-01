@@ -22,8 +22,9 @@
 
 package it.unipr.aotlab.blogracy.util;
 
-import java.io.*;
-
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
 
 public class FileUtils {
     /*

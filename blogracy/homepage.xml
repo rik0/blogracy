@@ -20,20 +20,79 @@
   ~ THE SOFTWARE.
   -->
 
-<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/" xmlns:admin="Phobos" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0"><language> it</language><lastBuildDate>2011-08-25 13:18:15.899</lastBuildDate><item>
-<title>test</title>
-<description>test</description>
-<author>MIO NOME</author>
-<pubDate>2011-08-25 13:18:15.899</pubDate>
-<timestamp>1314271095</timestamp>
-</item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:15.518</pubDate><timestamp>1314271095</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:15.109</pubDate><timestamp>1314271095</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:14.703</pubDate><timestamp>1314271094</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:14.278</pubDate><timestamp>1314271094</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:13.837</pubDate><timestamp>1314271093</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:13.395</pubDate><timestamp>1314271093</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:12.775</pubDate><timestamp>1314271092</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:10.775</pubDate><timestamp>1314271090</timestamp></item>
-<item><title>test</title><description>test</description><author>MIO NOME</author><pubDate>2011-08-25 13:18:09.21</pubDate><timestamp>1314271089</timestamp></item>
+<rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:sy="http://purl.org/rss/1.0/modules/syndication/"
+     xmlns:admin="Phobos" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:content="http://purl.org/rss/1.0/modules/content/" version="2.0">
+    <language>it</language>
+    <lastBuildDate>2011-08-25 13:18:15.899</lastBuildDate>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:15.899</pubDate>
+        <timestamp>1314271095</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:15.518</pubDate>
+        <timestamp>1314271095</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:15.109</pubDate>
+        <timestamp>1314271095</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:14.703</pubDate>
+        <timestamp>1314271094</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:14.278</pubDate>
+        <timestamp>1314271094</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:13.837</pubDate>
+        <timestamp>1314271093</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:13.395</pubDate>
+        <timestamp>1314271093</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:12.775</pubDate>
+        <timestamp>1314271092</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:10.775</pubDate>
+        <timestamp>1314271090</timestamp>
+    </item>
+    <item>
+        <title>test</title>
+        <description>test</description>
+        <author>MIO NOME</author>
+        <pubDate>2011-08-25 13:18:09.21</pubDate>
+        <timestamp>1314271089</timestamp>
+    </item>
 </channel></rss>
