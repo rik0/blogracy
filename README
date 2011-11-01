@@ -37,9 +37,9 @@ file must be there. Essentially the config directory must be something like
 
 +- config
    +- plugins
-      +- userRss
+      +- blogracy
          - plugin.properties
-         - it/unipr/aotlab/userRss/*.class
+         - it/unipr/aotlab/blogracy/*.class
 
 === Authors ===
 
