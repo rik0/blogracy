@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2011 Alan Nonnato, Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -34,7 +34,7 @@ import org.gudy.azureus2.plugins.ui.UIManagerListener;
 import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
 
 
-public class UserRSS implements Plugin {
+public class Blogracy implements Plugin {
 
     static private PluginInterface plugin;
 
@@ -75,7 +75,7 @@ public class UserRSS implements Plugin {
     static LoggerChannel getCurrentChannel() throws InvalidPluginStateException {
         if (plugin != null) {
             org.gudy.azureus2.plugins.logging.Logger logger = plugin.getLogger();
-            return logger.getChannel(UserRSS.DSNS_PLUGIN_CHANNEL_NAME);
+            return logger.getChannel(Blogracy.DSNS_PLUGIN_CHANNEL_NAME);
         } else {
             throw new InvalidPluginStateException();
         }

@@ -67,7 +67,7 @@ public class Controller {
     private OldView cView;
     static Model cModel;
     private static DistributedDatabase ddb;
-    private UserRSS plugin = null;
+    private Blogracy plugin = null;
     private TorrentAttribute ta_publish_feed_content;
     private File temp_data_dir;
     private File friends_feed_dir;
@@ -85,7 +85,7 @@ public class Controller {
      * @param plgn
      * @param s_allStr
      */
-    public Controller(OldView view, Model model, UserRSS plgn, PluginInterface plgnInterface, String s_allStr) {
+    public Controller(OldView view, Model model, Blogracy plgn, PluginInterface plgnInterface, String s_allStr) {
         cView = view;
         cModel = model;
         plugin = plgn;

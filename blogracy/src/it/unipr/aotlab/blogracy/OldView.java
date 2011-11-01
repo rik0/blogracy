@@ -51,7 +51,7 @@ public class OldView implements UISWTViewEventListener, Observer {
     Combo friendsCmb, deleteFriendsCmb;
     Browser browser;
 
-    UserRSS plugin = null;
+    Blogracy plugin = null;
     //The Plugin interface
     PluginInterface pluginInterface;
     private Composite compositeMain;
@@ -77,7 +77,7 @@ public class OldView implements UISWTViewEventListener, Observer {
      * @param plugin
      * @param pluginInterface set the current plugin interface
      */
-    public OldView(UserRSS plugin, PluginInterface pluginInterface) {
+    public OldView(Blogracy plugin, PluginInterface pluginInterface) {
         messages = ResourceBundle.getBundle("messages.Messages");
         this.plugin = plugin;
         this.pluginInterface = pluginInterface;

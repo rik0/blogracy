@@ -21,7 +21,7 @@
  */
 package it.unipr.aotlab.blogracy.logging;
 
-import it.unipr.aotlab.blogracy.UserRSS;
+import it.unipr.aotlab.blogracy.Blogracy;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.logging.LoggerChannel;
 
@@ -61,7 +61,7 @@ public class Logger {
 
     public static void initialize(PluginInterface pluginInterface) {
         logger = pluginInterface.getLogger();
-        loggerChannel = logger.getChannel(UserRSS.DSNS_PLUGIN_CHANNEL_NAME);
+        loggerChannel = logger.getChannel(Blogracy.DSNS_PLUGIN_CHANNEL_NAME);
         simpleChannel = new SimpleChannel() {
             @Override
             public void info(String msg) {
