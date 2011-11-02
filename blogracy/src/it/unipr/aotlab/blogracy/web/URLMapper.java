@@ -65,7 +65,13 @@ public class URLMapper {
     }
 
     public RequestResolver getResolver(String url) {
-        throw new NotImplementedException();
+        for(Mapping m : lst) {
+            RequestResolver resolver = m.tryAndResolve(url);
+            if(resolver != null) {
+                // todo FIX THE PARAMETERS!
+                return resolver;
+            }
+        }
     }
 
 
@@ -74,14 +80,27 @@ public class URLMapper {
 
     public void configure(String... strings) throws InvalidStringMapError {
         if (checkStringsAreEven(strings)) {
-            lst = new ArrayList<Mapping>(strings.length / 2);
-            for (int i = 0; i < strings.length; ++i) {
-                lst.add(i, new Mapping(strings[i], strings[i + 1]));
-                i++;
-            }
+            prepareList(strings);
+            addMappings(strings);
         } else {
             throw new InvalidStringMapError("Odd number of parameters has been inserted.");
         }
+    }
+
+    private void addMappings(String[] strings) throws InvalidStringMapError {
+        for (int nextIndex = 0; nextIndex < strings.length; ++nextIndex) {
+            nextIndex = addMapping(strings, nextIndex);
+        }
+    }
+
+    private int addMapping(String[] strings, int i) throws InvalidStringMapError {
+        lst.add(i, new Mapping(strings[i], strings[i + 1]));
+        i++;
+        return i;
+    }
+
+    private void prepareList(String[] strings) {
+        lst = new ArrayList<Mapping>(strings.length / 2);
     }
 
     private boolean checkStringsAreEven(String[] strings) {
