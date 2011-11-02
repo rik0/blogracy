@@ -1,5 +1,6 @@
 package it.unipr.aotlab.blogracy.web;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -24,7 +25,10 @@ public class URLMapperTest {
     }
 
     @Test
-    public void testLevel0() throws Exception {
-        //mapper.map()
+    public void testIrrelevantTrailingSlash() throws Exception {
+        RequestResolver withSlash = mapper.getResolver("/profile/");
+        RequestResolver withoutSlash = mapper.getResolver("/profile");
+
+        Assert.assertSame(withoutSlash, withSlash);
     }
 }
