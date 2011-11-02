@@ -24,7 +24,7 @@ package it.unipr.aotlab.blogracy;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.view.ViewListener;
 import it.unipr.aotlab.blogracy.web.RequestResolver;
-import it.unipr.aotlab.blogracy.web.UrlMapper;
+import it.unipr.aotlab.blogracy.web.URLMapper;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
 import org.gudy.azureus2.core3.util.SystemProperties;
@@ -46,7 +46,7 @@ import java.util.Properties;
 
 public class Blogracy extends WebPlugin {
 
-    private UrlMapper mapper;
+    private URLMapper mapper;
 
     private static final String BLOGRACY = "blogracy";
     private HyperlinkParameter test_param;
@@ -217,7 +217,7 @@ public class Blogracy extends WebPlugin {
     public void initialize(PluginInterface pluginInterface) throws PluginException {
         plugin = pluginInterface;
         Logger.initialize(plugin, DSNS_PLUGIN_CHANNEL_NAME);
-        mapper = new UrlMapper(
+        mapper = new URLMapper(
                 "followers", "it.unipr.aotlab.blogracy.web.Followers"
         );
 

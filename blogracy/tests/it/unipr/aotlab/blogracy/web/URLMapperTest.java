@@ -2,9 +2,6 @@ package it.unipr.aotlab.blogracy.web;
 
 import org.junit.Test;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * Enrico Franchi, 2011 (c)
  * <p/>
@@ -14,12 +11,13 @@ import java.util.Map;
  * Date: 11/2/11
  * Time: 12:01 PM
  */
-public class UrlMapperTest {
-    private UrlMapper mapper;
+public class URLMapperTest {
+    private URLMapper mapper;
 
     @org.junit.Before
     public void setUp() throws Exception {
-        mapper = new UrlMapper(
+        mapper = new URLMapper();
+        mapper.configure(
                 "/profile/", "it.unipr.aotlab.blogracy.web.FakeProfile",
                 "/messages/", "it.unipr.aotlab.blogracy.web.FakeMessages"
         );
