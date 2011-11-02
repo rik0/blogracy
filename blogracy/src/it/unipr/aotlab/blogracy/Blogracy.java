@@ -205,7 +205,7 @@ public class Blogracy extends WebPlugin {
     @Override
     public void initialize(PluginInterface pluginInterface) throws PluginException {
         plugin = pluginInterface;
-        Logger.initialize(plugin);
+        Logger.initialize(plugin, DSNS_PLUGIN_CHANNEL_NAME);
         viewListener = new ViewListener();
 
         plugin.getUIManager().addUIListener(new UIManagerListener() {

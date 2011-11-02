@@ -21,7 +21,6 @@
  */
 package it.unipr.aotlab.blogracy.logging;
 
-import it.unipr.aotlab.blogracy.Blogracy;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.logging.LoggerChannel;
 
@@ -59,9 +58,14 @@ public class Logger {
         }
     };
 
-    public static void initialize(PluginInterface pluginInterface) {
+    /**
+     * Initializes the default logger so that it can be used afterwards.
+     * @param pluginInterface is used to get Vuze logger
+     * @param pluginChannelName is the name of the channel for this plugin
+     */
+    public static void initialize(PluginInterface pluginInterface, String pluginChannelName) {
         logger = pluginInterface.getLogger();
-        loggerChannel = logger.getChannel(Blogracy.DSNS_PLUGIN_CHANNEL_NAME);
+        loggerChannel = logger.getChannel(pluginChannelName);
         simpleChannel = new SimpleChannel() {
             @Override
             public void info(String msg) {
