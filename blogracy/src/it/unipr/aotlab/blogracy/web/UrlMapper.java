@@ -1,9 +1,7 @@
 package it.unipr.aotlab.blogracy.web;
 
 import sun.misc.Regexp;
-
-import java.util.HashMap;
-import java.util.Map;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Enrico Franchi, 2011 (mc)a
@@ -15,19 +13,24 @@ import java.util.Map;
  * Time: 11:54 AM
  */
 public class UrlMapper {
-    Map<Regexp, String> mapper = new HashMap<Regexp, String>();
+    public RequestResolver getResolver(String url) {
+        throw new NotImplementedException();
+    }
 
+    static class Mapping {
+        Regexp rex;
 
-    public UrlMapper(Map<String, String> map) {
-        for(Map.Entry<String, String> entry: map.entrySet()) {
-            Regexp rex = new Regexp(entry.getKey());
-            add(rex, entry.getValue());
-        }
+    }
+
+    public UrlMapper(String... strigs) {
+        throw new NotImplementedException();
     }
 
     private void add(Regexp urlMap, String className) {
-        mapper.put(urlMap, className);
+        throw new NotImplementedException();
+
     }
 
+     
 
 }

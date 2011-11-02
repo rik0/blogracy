@@ -19,10 +19,10 @@ public class UrlMapperTest {
 
     @org.junit.Before
     public void setUp() throws Exception {
-        Map<String, String> map = new HashMap<String, String>();
-        map.put("/profile/", "it.unipr.aotlab.blogracy.web.FakeProfile");
-        map.put("/messages/", "it.unipr.aotlab.blogracy.web.FakeMessages");
-        mapper = new UrlMapper(map);
+        mapper = new UrlMapper(
+                "/profile/", "it.unipr.aotlab.blogracy.web.FakeProfile",
+                "/messages/", "it.unipr.aotlab.blogracy.web.FakeMessages"
+        );
     }
 
     @Test
