@@ -41,6 +41,7 @@ public class URLMapper {
      *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
      */
     public RequestResolver getResolver(String url) {
+        url = removeTrailingSlash(url);
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {
                 try {
@@ -51,6 +52,14 @@ public class URLMapper {
             }
         }
         return new MissingPageResolver(url);
+    }
+
+    private String removeTrailingSlash(final String url) {
+        if (url.endsWith("/")) {
+            return url.substring(0, url.length() - 1);
+        } else {
+            return url;
+        }
     }
 
 
