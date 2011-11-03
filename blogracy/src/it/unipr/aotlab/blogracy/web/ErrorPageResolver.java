@@ -27,7 +27,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
 
@@ -47,8 +46,12 @@ public class ErrorPageResolver implements RequestResolver {
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
         String errorPage = HTMLUtil.errorString(exception);
-        OutputStream output = response.getOutputStream();
-        Writer writer = new OutputStreamWriter(output);
+        response.setContentType("text/html");
+        write(response, errorPage);
+    }
+
+    private void write(final TrackerWebPageResponse response, final String errorPage) {
+        Writer writer = new OutputStreamWriter(response.getOutputStream());
         try {
             writer.write(errorPage);
             writer.close();

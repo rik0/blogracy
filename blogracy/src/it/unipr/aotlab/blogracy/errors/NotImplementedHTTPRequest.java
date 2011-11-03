@@ -20,14 +20,27 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web;
+package it.unipr.aotlab.blogracy.errors;
 
 /**
  * User: enrico
- * Package: it.unipr.aotlab.blogracy.web
+ * Package: it.unipr.aotlab.blogracy.errors
  * Date: 11/3/11
- * Time: 10:53 AM
+ * Time: 12:26 PM
  */
-public class Followers extends AbstractRequestResolver {
+public class NotImplementedHTTPRequest extends BlogracyError {
+    public NotImplementedHTTPRequest() {
+    }
 
+    public NotImplementedHTTPRequest(final String s) {
+        super(s);
+    }
+
+    public NotImplementedHTTPRequest(final String s, final Throwable throwable) {
+        super(s, throwable);
+    }
+
+    public NotImplementedHTTPRequest(final Throwable throwable) {
+        super(throwable);
+    }
 }

@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web;
 
+import it.unipr.aotlab.blogracy.errors.NotImplementedHTTPRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
@@ -31,9 +32,50 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
  * Date: 11/3/11
  * Time: 10:37 AM
  */
-public class AbstractRequestHTMLResolver implements RequestResolver {
+public class AbstractRequestResolver implements RequestResolver {
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
-        response.setContentType("text/html");
+        if (isGET(request)) {
+            get(request, response);
+        } else if (isPOST(request)) {
+            post(request, response);
+        } else if (isPUT(request)) {
+            put(request, response);
+        } else if (isDELETE(request)) {
+            delete(request, response);
+        }
+    }
+
+    protected void delete(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
+        throw new NotImplementedHTTPRequest();
+    }
+
+    protected void put(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
+        throw new NotImplementedHTTPRequest();
+    }
+
+    protected void post(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
+        throw new NotImplementedHTTPRequest();
+    }
+
+    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
+        throw new NotImplementedHTTPRequest();
+    }
+
+    private boolean isDELETE(final TrackerWebPageRequest request) {
+        return false;
+    }
+
+
+    private boolean isPUT(final TrackerWebPageRequest request) {
+        return false;
+    }
+
+    private boolean isPOST(final TrackerWebPageRequest request) {
+        return false;
+    }
+
+    private boolean isGET(final TrackerWebPageRequest request) {
+        return false;
     }
 }
