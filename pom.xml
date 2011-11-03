@@ -4,7 +4,7 @@
   <groupId>it.unipr.aotlab.blogracy</groupId>
   <artifactId>blogracy</artifactId>
   <packaging>jar</packaging>
-  <version>0.2</version>
+  <version>0.2-SNAPSHOT</version>
   <name>Blogracy</name>
   <url>http://blogracy.net</url>
   <dependencies>
