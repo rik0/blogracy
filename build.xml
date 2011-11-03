@@ -1,0 +1,23 @@
+<project name="Blogracy" basedir="." default="main">
+
+
+	<property name="src.dir"     value="blogracy/src" />
+    <property name="lib.dir"     value="lib"/>
+    <path id="classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+	<property name="build.dir"   value="build"/>
+	<property name="classes.dir" value="${build.dir}/config/blogracy"/>
+
+	<!-- property name="main-class"  value="oata.HelloWorld"/ -->
+
+	<target name="clean">
+		<delete dir="build"/>
+	</target>
+
+	<target name="compile">
+		<mkdir dir="${classes.dir}"/>
+		<javac srcdir="${src.dir}" destdir="${classes.dir}" classpathref="classpath" />
+	</target>
+
+</project>
