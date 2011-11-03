@@ -148,15 +148,9 @@ public class URLMapper {
     }
 
     private void addMappings(String[] strings) throws URLMappingError {
-        for (int nextIndex = 0; nextIndex < strings.length; ++nextIndex) {
-            nextIndex = addMapping(strings, nextIndex);
+        for (int nextIndex = 0; nextIndex < strings.length; nextIndex += 2) {
+            lst.add(new Mapping(strings[nextIndex], strings[nextIndex + 1]));
         }
-    }
-
-    private int addMapping(String[] strings, int i) throws URLMappingError {
-        lst.add(i, new Mapping(strings[i], strings[i + 1]));
-        i++;
-        return i;
     }
 
     private void prepareList(String[] strings) {
