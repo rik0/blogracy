@@ -22,6 +22,15 @@
 
 package it.unipr.aotlab.blogracy.web;
 
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
+
+import java.io.OutputStreamWriter;
+
+
 /**
  * User: enrico
  * Package: it.unipr.aotlab.blogracy.web
@@ -29,5 +38,11 @@ package it.unipr.aotlab.blogracy.web;
  * Time: 10:53 AM
  */
 public class Followers extends AbstractRequestResolver {
-
+    @Override
+    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
+        response.setContentType("text/text");
+        VelocityContext context = new VelocityContext();
+        Template template = Velocity.getTemplate("exp.vm");
+        template.merge(context, new OutputStreamWriter(response.getOutputStream()));
+    }
 }

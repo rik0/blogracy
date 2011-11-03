@@ -42,14 +42,12 @@ public class AbstractRequestResolver implements RequestResolver {
         GET, POST, PUT, DELETE, INVALID
     }
 
-    ;
-
-    protected Status getRequestStatus() {
+    final protected Status getRequestStatus() {
         return requestStatus;
     }
 
     @Override
-    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
+    final public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
         processHeaders(request);
         switch (requestStatus) {
             case GET:
