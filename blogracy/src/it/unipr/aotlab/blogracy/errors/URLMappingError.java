@@ -9,19 +9,19 @@ package it.unipr.aotlab.blogracy.errors;
  * Date: 11/2/11
  * Time: 6:30 PM
  */
-public class InvalidStringMapError extends BlogracyError {
-    public InvalidStringMapError() {
+public class URLMappingError extends BlogracyError {
+    public URLMappingError() {
     }
 
-    public InvalidStringMapError(String s) {
+    public URLMappingError(String s) {
         super(s);
     }
 
-    public InvalidStringMapError(String s, Throwable throwable) {
+    public URLMappingError(String s, Throwable throwable) {
         super(s, throwable);
     }
 
-    public InvalidStringMapError(Throwable throwable) {
+    public URLMappingError(Throwable throwable) {
         super(throwable);
     }
 }

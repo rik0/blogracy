@@ -21,8 +21,10 @@
  */
 package it.unipr.aotlab.blogracy;
 
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.view.ViewListener;
+import it.unipr.aotlab.blogracy.web.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.RequestResolver;
 import it.unipr.aotlab.blogracy.web.URLMapper;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
@@ -40,13 +42,14 @@ import org.gudy.azureus2.plugins.ui.model.BasicPluginConfigModel;
 import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
 import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
 import java.util.Properties;
 
 
 public class Blogracy extends WebPlugin {
 
-    private URLMapper mapper;
+    private URLMapper mapper = new URLMapper();
 
     private static final String BLOGRACY = "blogracy";
     private HyperlinkParameter test_param;
@@ -187,17 +190,9 @@ public class Blogracy extends WebPlugin {
         try {
             resolver.resolve(request, response);
         } catch (Exception e) {
-            
+            ErrorPageResolver errorResolver = new ErrorPageResolver(e);
+            errorResolver.resolve(request, response);
         }
-
-
-        response.setHeader("Content-Type", "text/text");
-        Writer out = new OutputStreamWriter(response.getOutputStream());
-        out.write(request.getAbsoluteURL().getPath());
-        out.write('\n');
-        out.flush();
-
-        System.out.println(request.getAbsoluteURL().getPath());
         return true;
     }
 
@@ -215,12 +210,19 @@ public class Blogracy extends WebPlugin {
 
     @Override
     public void initialize(PluginInterface pluginInterface) throws PluginException {
-        plugin = pluginInterface;
-        Logger.initialize(plugin, DSNS_PLUGIN_CHANNEL_NAME);
-        mapper = new URLMapper(
-                "followers", "it.unipr.aotlab.blogracy.web.Followers"
-        );
+        initializePluginInterface(pluginInterface);
+        initializeLoggr();
+        initializeURLMapper();
+        initializeViewListener();
+        initializeSingleton();
+        super.initialize(pluginInterface);
+    }
 
+    private void initializeSingleton() {
+        singleton = this;
+    }
+
+    private void initializeViewListener() {
         viewListener = new ViewListener();
 
         plugin.getUIManager().addUIListener(new UIManagerListener() {
@@ -243,10 +245,24 @@ public class Blogracy extends WebPlugin {
 
             }
         });
+    }
 
-        singleton = this;
+    private void initializePluginInterface(final PluginInterface pluginInterface) {
+        plugin = pluginInterface;
+    }
 
-        super.initialize(pluginInterface);
+    private void initializeLoggr() {
+        Logger.initialize(plugin, DSNS_PLUGIN_CHANNEL_NAME);
+    }
+
+    private void initializeURLMapper() throws PluginException {
+        try {
+            mapper.configure(
+                    "/followers", "it.unipr.aotlab.blogracy.web.Followers"
+            );
+        } catch (URLMappingError urlMappingError) {
+            throw new PluginException(urlMappingError);
+        }
     }
 }
 

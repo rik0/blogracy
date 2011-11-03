@@ -29,6 +29,6 @@ public class URLMapperTest {
         RequestResolver withSlash = mapper.getResolver("/profile/");
         RequestResolver withoutSlash = mapper.getResolver("/profile");
 
-        Assert.assertSame(withoutSlash, withSlash);
+        Assert.assertEquals(withoutSlash, withSlash);
     }
 }
