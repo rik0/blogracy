@@ -20,8 +20,8 @@ public class URLMapperTest {
     public void setUp() throws Exception {
         mapper = new URLMapper();
         mapper.configure(
-                "/profile/", "it.unipr.aotlab.blogracy.web.FakeProfile",
-                "/messages/", "it.unipr.aotlab.blogracy.web.FakeMessages"
+                "^/profile/$", "it.unipr.aotlab.blogracy.web.FakeProfile",
+                "^/messages/$", "it.unipr.aotlab.blogracy.web.FakeMessages"
         );
     }
 
@@ -37,5 +37,10 @@ public class URLMapperTest {
         RequestResolver withoutSlash = mapper.getResolver("/profile");
 
         Assert.assertEquals(withoutSlash, withSlash);
+    }
+
+    @Test(expected = URLMappingError.class)
+    public void testRelevantStartingSlash() throws Exception {
+        mapper.getResolver("profile");
     }
 }

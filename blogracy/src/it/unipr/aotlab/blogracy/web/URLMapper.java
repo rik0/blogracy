@@ -1,17 +1,9 @@
 package it.unipr.aotlab.blogracy.web;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import sun.misc.Regexp;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
-import java.lang.reflect.Constructor;
-import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * Enrico Franchi, 2011 (mc)a
@@ -22,105 +14,32 @@ import java.util.regex.PatternSyntaxException;
  * Date: 11/2/11
  * Time: 11:54 AM
  */
+
+/**
+ * URLMapper provides the correct RequestResolver for the specified URL.
+ * <p/>
+ * URLMapper is heavily inspired by <a href="https://docs.djangoproject.com/en/dev/topics/http/urls/">Django URL dispatcher</a>.
+ * <p/>
+ * URLMapper is configured with a list of strings (whose semantics is specified in {@link URLMapper#configure(String...)}.
+ * <p/>
+ * About the individual patterns:
+ * <ol>
+ * <li>Have patterns start and end with ^ and $ such as "^profiles$</li>
+ * <li>Patterns have to start with /: e.g., "^profiles$ is an error</li>
+ * <li>It is irrelevant if patterns end with trailing /: e.g., "^/profiles$" and
+ * "^/profiles/$" do the same thing</li>
+ * </ol>
+ */
 public class URLMapper {
     List<Mapping> lst;
 
-    static private class Mapping {
-        private Pattern rex;
-        private Class<RequestResolver> resolverClass;
-
-        /**
-         * This variable is used to hold stuff after a match. We cache the parameters for performance reasons.
-         */
-        private String[] tempParameters = null;
-
-        public Mapping(String regexpString, String classString) throws URLMappingError {
-            setRex(regexpString);
-            setResolverClass(classString);
-        }
-
-        /**
-         * Return if this is the correct mapping. In case, it changes the state so that buildResolver can
-         * be called without throwing exceptions.
-         *
-         * @param url is checked against the regexp characterizing the current match
-         * @return true if it is a succesful match
-         */
-        public boolean matches(String url) {
-            Matcher m = rex.matcher(url);
-            if (m.matches()) {
-                tempParameters = buildParameters(m);
-                return true;
-            } else {
-                tempParameters = null;
-                return false;
-            }
-        }
-
-        /**
-         * Builds the correct resolver for the url that successfully matched against this mapping
-         *
-         * @return the appropriate resolver
-         * @throws IllegalStateException if the last call to match was not successful. Stateful programming sucks.
-         * @throws it.unipr.aotlab.blogracy.errors.URLMappingError
-         *                               if the resolver cannot be built (e.g., wrong number of parameters)
-         */
-        public RequestResolver buildResolver() throws IllegalStateException, URLMappingError {
-            if (tempParameters == null) {
-                throw new IllegalStateException("buildResolver can be called only after a successful match.");
-            }
-            Class<String> constructorFormalParameters[] = buildConstructorFormalParameters();
-            try {
-                Constructor<RequestResolver> constructor = resolverClass.getConstructor(constructorFormalParameters);
-                return constructor.newInstance(tempParameters);
-            } catch (NoSuchMethodException e) {
-                throw new URLMappingError(e);
-            } catch (InvocationTargetException e) {
-                throw new URLMappingError(e);
-            } catch (InstantiationException e) {
-                throw new URLMappingError(e);
-            } catch (IllegalAccessException e) {
-                throw new URLMappingError(e);
-            }
-        }
-
-        private Class<String>[] buildConstructorFormalParameters() {
-            Class<String>[] constructorFormalParameters = new Class[tempParameters.length];
-            for (int i = 0; i < tempParameters.length; ++i) {
-                constructorFormalParameters[i] = String.class;
-            }
-            return constructorFormalParameters;
-        }
-
-        private String[] buildParameters(final Matcher m) {
-            List<String> tempParameters = new LinkedList<String>();
-            for (int groupIndex = 1; groupIndex <= m.groupCount(); ++groupIndex) {
-                String parameter = m.group(groupIndex);
-                if (parameter != null) {
-                    tempParameters.add(parameter);
-                }
-            }
-            return tempParameters.toArray(new String[0]);
-        }
-
-        private void setResolverClass(String classString) throws URLMappingError {
-            try {
-                // WARNING: there may be classloader issues.
-                resolverClass = (Class<RequestResolver>) Class.forName(classString);
-            } catch (ClassNotFoundException e) {
-                throw new URLMappingError(e);
-            }
-        }
-
-        private void setRex(String regexpString) throws URLMappingError {
-            try {
-                rex = Pattern.compile(regexpString);
-            } catch (PatternSyntaxException e) {
-                throw new URLMappingError(e);
-            }
-        }
-    }
-
+    /**
+     * Returns the appropriate resolver for the required URL.
+     *
+     * @param url to be resolved.
+     * @return the appropriate resolver. If exceptions are thrown, and {@link ErrorPageResolver} is returned.
+     *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
+     */
     public RequestResolver getResolver(String url) {
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {
@@ -138,6 +57,17 @@ public class URLMapper {
     public URLMapper() {
     }
 
+    /**
+     * Configures the current URL Mapper
+     *
+     * @param strings is an array of strings with an even of elements.
+     *                odd elements are interpreted as patterns, even elements are
+     *                interpreted as the fully qualified names of the classes which
+     *                resolve such URLs
+     * @throws URLMappingError if the number of elements is not even,
+     *                         if some pattern is not valid or if some classfile cannot be
+     *                         found.
+     */
     public void configure(String... strings) throws URLMappingError {
         if (checkStringsAreEven(strings)) {
             prepareList(strings);
@@ -159,10 +89,5 @@ public class URLMapper {
 
     private boolean checkStringsAreEven(String[] strings) {
         return strings.length % 2 == 0;
-    }
-
-    private void add(Regexp urlMap, String className) {
-        throw new NotImplementedException();
-
     }
 }

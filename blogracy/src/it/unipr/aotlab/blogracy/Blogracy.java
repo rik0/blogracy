@@ -258,7 +258,7 @@ public class Blogracy extends WebPlugin {
     private void initializeURLMapper() throws PluginException {
         try {
             mapper.configure(
-                    "/followers", "it.unipr.aotlab.blogracy.web.Followers"
+                    "$/followers^", "it.unipr.aotlab.blogracy.web.Followers"
             );
         } catch (URLMappingError urlMappingError) {
             throw new PluginException(urlMappingError);
