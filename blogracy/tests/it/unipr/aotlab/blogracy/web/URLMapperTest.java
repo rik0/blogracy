@@ -20,8 +20,8 @@ public class URLMapperTest {
     public void setUp() throws Exception {
         mapper = new URLMapper();
         mapper.configure(
-                "^/profile/$", "it.unipr.aotlab.blogracy.web.FakeProfile",
-                "^/messages/$", "it.unipr.aotlab.blogracy.web.FakeMessages"
+                "^/profile$", "it.unipr.aotlab.blogracy.web.FakeProfile",
+                "^/messages$", "it.unipr.aotlab.blogracy.web.FakeMessages"
         );
     }
 

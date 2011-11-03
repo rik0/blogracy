@@ -24,10 +24,10 @@ import java.util.List;
  * <p/>
  * About the individual patterns:
  * <ol>
- * <li>Have patterns start and end with ^ and $ such as "^profiles$</li>
+ * <li>Have patterns start and end with ^ and $ such as "^/profiles$</li>
  * <li>Patterns have to start with /: e.g., "^profiles$ is an error</li>
- * <li>It is irrelevant if patterns end with trailing /: e.g., "^/profiles$" and
- * "^/profiles/$" do the same thing</li>
+ * <li>Patterns have to end without /: e.g., "^/profiles$" is ok,
+ * "^/profiles/$" does not. In any case we remove the trailing slash from URLs, so it would not match</li>
  * </ol>
  */
 public class URLMapper {
@@ -36,22 +36,29 @@ public class URLMapper {
     /**
      * Returns the appropriate resolver for the required URL.
      *
-     * @param url to be resolved.
+     * @param url to be resolved. If the url ends with a slash, it is removed.
      * @return the appropriate resolver. If exceptions are thrown, and {@link ErrorPageResolver} is returned.
      *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
      */
-    public RequestResolver getResolver(String url) {
+    public RequestResolver getResolver(String url) throws URLMappingError {
         url = removeTrailingSlash(url);
+        checkURLSanity(url);
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {
-                try {
-                    return mapping.buildResolver();
-                } catch (URLMappingError urlMappingError) {
-                    return new ErrorPageResolver(urlMappingError);
-                }
+                return mapping.buildResolver();
             }
         }
-        return new MissingPageResolver(url);
+        throw new URLMappingError("Could not resolve URL.");
+    }
+
+    private void checkURLSanity(final String url) throws URLMappingError {
+        if (!startsWithSlash(url)) {
+            throw new URLMappingError("Invalid URL: does not start with slash.");
+        }
+    }
+
+    private boolean startsWithSlash(final String url) {
+        return url.startsWith("/");
     }
 
     private String removeTrailingSlash(final String url) {
@@ -60,10 +67,6 @@ public class URLMapper {
         } else {
             return url;
         }
-    }
-
-
-    public URLMapper() {
     }
 
     /**

@@ -186,8 +186,8 @@ public class Blogracy extends WebPlugin {
     @Override
     public boolean generateSupport(TrackerWebPageRequest request, TrackerWebPageResponse response) throws IOException {
         String url = request.getURL();
-        RequestResolver resolver = mapper.getResolver(url);
         try {
+            RequestResolver resolver = mapper.getResolver(url);
             resolver.resolve(request, response);
         } catch (Exception e) {
             ErrorPageResolver errorResolver = new ErrorPageResolver(e);
