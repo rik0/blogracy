@@ -64,7 +64,7 @@ import java.util.*;
 public class Controller {
     static PluginInterface pluginInterface = null;
     private static SortedMap<String, Rss> userContentMap = new TreeMap<String, Rss>();
-    private OldView cView;
+    //private OldView cView;
     static Model cModel;
     private static DistributedDatabase ddb;
     private Blogracy plugin = null;
@@ -85,8 +85,8 @@ public class Controller {
      * @param plgn
      * @param s_allStr
      */
-    public Controller(OldView view, Model model, Blogracy plgn, PluginInterface plgnInterface, String s_allStr) {
-        cView = view;
+    public Controller(Model model, Blogracy plgn, PluginInterface plgnInterface, String s_allStr) {
+        // cView = view;
         cModel = model;
         plugin = plgn;
         pluginInterface = plgnInterface;
@@ -616,9 +616,9 @@ public class Controller {
                 friendsMap.put(strLine, strLine);
             }
 
-            cView.friendsCmb.removeAll();
-            cView.deleteFriendsCmb.removeAll();
-            cView.friendsCmb.add(allStr);
+            // cView.friendsCmb.removeAll();
+            // cView.deleteFriendsCmb.removeAll();
+            // cView.friendsCmb.add(allStr);
             Iterator<String> friendsIterator = friendsMap.keySet().iterator();
             String title, text, date, author, typeObj = null, link, timestampStr, prefix = "";
 
@@ -631,8 +631,8 @@ public class Controller {
                 addDownlodRss(strLine);
 
                 if (strLine != null) {
-                    cView.friendsCmb.add(strLine);
-                    cView.deleteFriendsCmb.add(strLine);
+                    // cView.friendsCmb.add(strLine);
+                    // cView.deleteFriendsCmb.add(strLine);
                     File d = new File(friends_feed_dir + "\\" + strLine);
                     //make an array with him file
                     if (!d.isDirectory())
@@ -950,13 +950,13 @@ public class Controller {
      * @param deleteName name to delete
      */
     public void manageFriend(int type, String deleteName) {
-        if (((cView.friendIdTxt.getText() != "") && (type == 1)) || (type == 2)) {
+        //if (((cView.friendIdTxt.getText() != "") && (type == 1)) || (type == 2)) {
             //if doesn't exists the file firends, make him
             if (!(new File("friends.txt").exists())) {
                 try {
                     FileOutputStream file = new FileOutputStream("friends.txt");
                     PrintStream Output = new PrintStream(file);
-                    Output.print(cView.friendIdTxt.getText());
+                    //Output.print(cView.friendIdTxt.getText());
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -976,10 +976,10 @@ public class Controller {
                     }
                     //add a friends
                     if (type == 1) {
-                        str += cView.friendIdTxt.getText();
-                        File friendsDir = new File(friends_feed_dir, "" + cView.friendIdTxt.getText());
-                        if (!friendsDir.isDirectory())
-                            friendsDir.mkdirs();
+                        //str += cView.friendIdTxt.getText();
+                        // File friendsDir = new File(friends_feed_dir, "" + cView.friendIdTxt.getText());
+                        // if (!friendsDir.isDirectory())
+                        //     friendsDir.mkdirs();
                     }
                     PrintStream Output = new PrintStream("friends.txt");
                     Output.println(str);
@@ -988,7 +988,7 @@ public class Controller {
                     e.printStackTrace();
                 }
             }
-        }
+        //}
     }
 
 
@@ -1005,15 +1005,16 @@ public class Controller {
             link = tmpRss.getLink();
         }
         // System.out.println(id);
-        if ((cView.textTxt.getText().length() > 0) && ((cView.titleTxt.getText().length() > 0) || (Integer.parseInt(id) > 1))) {
-            Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), cView.titleTxt.getText(), "", type, link, 10);
+        //if ((cView.textTxt.getText().length() > 0) && ((cView.titleTxt.getText().length() > 0) || (Integer.parseInt(id) > 1))) {
+        //    Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), cView.titleTxt.getText(), "", type, link, 10);
+            Rss contentRss = null;
             userContentMap.put(id + "", contentRss);
             cModel.setUserContentmap(userContentMap);
             changeLblNContent(0);
             cModel.setStatus("contentAddesdSuccessfulMessage");//currentId
-        } else {
+        //} else {
             cModel.setStatus("errorAddingContentMessage");//currentId
-        }
+        //}
     }
 
     /**
@@ -1024,16 +1025,17 @@ public class Controller {
      * @param id   id del content
      */
     public void addFileToRSS(String file, String type, String id) {
-        if (((type.equals("link")) && (cView.textTxt.getText().length() != 0)) || (type.equals("img"))) {
-            Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), file, "blankDate", type, file, 10);
+        //if (((type.equals("link")) && (cView.textTxt.getText().length() != 0)) || (type.equals("img"))) {
+            //Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), file, "blankDate", type, file, 10);
+            Rss contentRss = null;
             userContentMap.put(id + "", contentRss);
             cModel.setUserContentmap(userContentMap);
             changeLblNContent(0);
             cModel.setStatus("fileAddedSuccessfulMessage");
 
-        } else {
+        //} else {
             cModel.setStatus("descriptionAddingFileRequiredMessage");
-        }
+        //}
     }
 
     /**
@@ -1059,7 +1061,8 @@ public class Controller {
     public void changeLblNContent(int i) {
         cModel.setUpdateContentFlag(false);
         String text = "", title = "";
-        int val = Integer.parseInt(cView.lblNContent.getText());
+        //int val = Integer.parseInt(cView.lblNContent.getText());
+        int val = 0;
         if (userContentMap.containsKey("1")) {
             if (((val + i) > 0) && ((val + i) < cModel.getMaxNOfItem())) {
                 val = val + i;
