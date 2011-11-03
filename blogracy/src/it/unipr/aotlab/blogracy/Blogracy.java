@@ -23,7 +23,6 @@ package it.unipr.aotlab.blogracy;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
-import it.unipr.aotlab.blogracy.view.ViewListener;
 import it.unipr.aotlab.blogracy.web.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.RequestResolver;
 import it.unipr.aotlab.blogracy.web.URLMapper;
@@ -34,12 +33,9 @@ import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
-import org.gudy.azureus2.plugins.ui.UIInstance;
-import org.gudy.azureus2.plugins.ui.UIManagerListener;
 import org.gudy.azureus2.plugins.ui.config.ConfigSection;
 import org.gudy.azureus2.plugins.ui.config.HyperlinkParameter;
 import org.gudy.azureus2.plugins.ui.model.BasicPluginConfigModel;
-import org.gudy.azureus2.ui.swt.plugins.UISWTInstance;
 import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
 import java.io.File;
@@ -82,8 +78,6 @@ public class Blogracy extends WebPlugin {
     final static int DEFAULT_PORT = 32674;
     final static String DEFAULT_ACCESS = Accesses.ALL;
 
-    private ViewListener viewListener = null;
-    private UISWTInstance swtInstance = null;
     private static boolean loaded;
 
 
@@ -213,38 +207,12 @@ public class Blogracy extends WebPlugin {
         initializePluginInterface(pluginInterface);
         initializeLoggr();
         initializeURLMapper();
-        initializeViewListener();
         initializeSingleton();
         super.initialize(pluginInterface);
     }
 
     private void initializeSingleton() {
         singleton = this;
-    }
-
-    private void initializeViewListener() {
-        viewListener = new ViewListener();
-
-        plugin.getUIManager().addUIListener(new UIManagerListener() {
-            public void UIAttached(UIInstance instance) {
-                if (instance instanceof UISWTInstance) {
-                    swtInstance = ((UISWTInstance) instance);
-
-                    if (viewListener != null) {
-
-                        swtInstance.addView(UISWTInstance.VIEW_MAIN, PLUGIN_NAME_KEY, viewListener);
-                        swtInstance.openMainView(PLUGIN_NAME_KEY, viewListener, null);
-                    }
-                }
-            }
-
-            public void UIDetached(UIInstance instance) {
-                if (instance instanceof UISWTInstance) {
-                    Logger.info("Destroyed plugin.");
-                }
-
-            }
-        });
     }
 
     private void initializePluginInterface(final PluginInterface pluginInterface) {
