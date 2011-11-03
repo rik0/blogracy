@@ -9,7 +9,8 @@
 	</path>
 
 	<property name="build.dir"   value="build"/>
-	<property name="classes.dir" value="${build.dir}/config/blogracy"/>
+	<property name="vuze.config.dir" value="build/config"/>
+	<property name="classes.dir" value="${vuze.config.dir}/plugins/blogracy" />
 
 	<!-- VUZE JARS -->
 	<property name="vuze.jar" value="Vuze_4700.jar" />
@@ -82,6 +83,7 @@
 			<java jar="${vuze.jar.path}" fork="true" 
 				  failonerror="true" maxmemory="512m"
 				  classpathref="runtime.classpath" >
+				<jvmarg value="-Dazureus.config.path=${vuze.config.dir}" />
 				<arg value="--ui=console" />
 			</java>
 		</target>
