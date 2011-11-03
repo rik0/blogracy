@@ -36,7 +36,7 @@ public class URLMapperTest {
         RequestResolver withSlash = mapper.getResolver("/profile/");
         RequestResolver withoutSlash = mapper.getResolver("/profile");
 
-        Assert.assertEquals(withoutSlash, withSlash);
+        Assert.assertEquals(withoutSlash.getClass(), withSlash.getClass());
     }
 
     @Test(expected = URLMappingError.class)
