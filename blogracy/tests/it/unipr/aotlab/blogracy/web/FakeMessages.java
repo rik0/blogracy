@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web;
 
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
@@ -32,6 +33,20 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
  * Time: 11:32 AM
  */
 public class FakeMessages implements RequestResolver {
+    int page;
+
+    public FakeMessages(String page) throws URLMappingError {
+        try {
+            Integer pageNumber = Integer.parseInt(page);
+        } catch (NumberFormatException e) {
+            throw new URLMappingError(e);
+        }
+    }
+
+    public FakeMessages() {
+        page = 0;
+    }
+
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
 
