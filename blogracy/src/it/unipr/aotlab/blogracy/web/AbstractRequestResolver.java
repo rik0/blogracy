@@ -23,8 +23,11 @@
 package it.unipr.aotlab.blogracy.web;
 
 import it.unipr.aotlab.blogracy.errors.NotImplementedHTTPRequest;
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
+
+import java.util.Map;
 
 /**
  * User: enrico
@@ -33,49 +36,67 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
  * Time: 10:37 AM
  */
 public class AbstractRequestResolver implements RequestResolver {
+    private Status requestStatus = Status.INVALID;
+
+    static protected enum Status {
+        GET, POST, PUT, DELETE, INVALID
+    }
+
+    ;
+
+    protected Status getRequestStatus() {
+        return requestStatus;
+    }
+
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
-        if (isGET(request)) {
-            get(request, response);
-        } else if (isPOST(request)) {
-            post(request, response);
-        } else if (isPUT(request)) {
-            put(request, response);
-        } else if (isDELETE(request)) {
-            delete(request, response);
+        processHeaders(request);
+        switch (requestStatus) {
+            case GET:
+                get(request, response);
+                break;
+            case POST:
+                post(request, response);
+                break;
+            case PUT:
+                put(request, response);
+                break;
+            case DELETE:
+                delete(request, response);
+                break;
+            case INVALID:
+                throw new URLMappingError("Could not find out the kind of request we got.");
         }
     }
 
+    private void processHeaders(final TrackerWebPageRequest request) {
+        Map headers = request.getHeaders();
+        String status = (String) headers.get("status");
+        if (status.startsWith("GET")) {
+            requestStatus = Status.GET;
+        } else if (status.startsWith("POST")) {
+            requestStatus = Status.POST;
+        } else if (status.startsWith("PUT")) {
+            requestStatus = Status.PUT;
+        } else if (status.startsWith("DELETE")) {
+            requestStatus = Status.DELETE;
+        }
+
+    }
+
     protected void delete(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest();
+        throw new NotImplementedHTTPRequest("Command DELETE not supported for current resource.");
     }
 
     protected void put(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest();
+        throw new NotImplementedHTTPRequest("Command PUT not supported for current resource.");
     }
 
     protected void post(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest();
+        throw new NotImplementedHTTPRequest("Command POST not supported for current resource.");
     }
 
     protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest();
-    }
-
-    private boolean isDELETE(final TrackerWebPageRequest request) {
-        return false;
-    }
-
-
-    private boolean isPUT(final TrackerWebPageRequest request) {
-        return false;
-    }
-
-    private boolean isPOST(final TrackerWebPageRequest request) {
-        return false;
-    }
-
-    private boolean isGET(final TrackerWebPageRequest request) {
-        return false;
+        throw new NotImplementedHTTPRequest("Command GET not supported for current resource.");
     }
 }
