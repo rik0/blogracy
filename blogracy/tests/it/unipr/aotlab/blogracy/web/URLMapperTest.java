@@ -1,5 +1,6 @@
 package it.unipr.aotlab.blogracy.web;
 
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -22,6 +23,12 @@ public class URLMapperTest {
                 "/profile/", "it.unipr.aotlab.blogracy.web.FakeProfile",
                 "/messages/", "it.unipr.aotlab.blogracy.web.FakeMessages"
         );
+    }
+
+    @Test(expected = URLMappingError.class)
+    public void testConfigureNonExistentClass() throws Exception {
+        URLMapper tempMapper = new URLMapper();
+        tempMapper.configure("/fail", "not.existing.class.djsahdsja");
     }
 
     @Test
