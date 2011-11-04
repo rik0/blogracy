@@ -85,7 +85,7 @@ public class Blogracy extends WebPlugin {
         ConfigurationDefaults cd = ConfigurationDefaults.getInstance();
         cd.addParameter(DID_MIGRATE_KEY, Boolean.TRUE);
         cd.addParameter(DEVICE_LOCALONLY_KEY, Boolean.TRUE);
-        cd.addParameter(DEVICE_BLOGRACY_ENABLE_KEY, Boolean.FALSE);
+        cd.addParameter(DEVICE_BLOGRACY_ENABLE_KEY, Boolean.TRUE);
     }
 
     public static Blogracy getSingleton() {
@@ -200,6 +200,12 @@ public class Blogracy extends WebPlugin {
             test_param.setEnabled(isPluginEnabled());
             test_param.setHyperlink(getURL());
         }
+    }
+
+    @Override
+    protected boolean
+    isPluginEnabled() {
+        return true;
     }
 
     @Override
