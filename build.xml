@@ -100,6 +100,8 @@
         <target name="clean"
                 description="Cleans the build files" >
             <delete dir="${vuze.config.dir}/plugins/blogracy" />
+            <delete file="blogracy.bat" />
+            <delete file="blogracy.sh" />
         </target>
 
         <target name="compile" depends="mvn-init,vuze-download"
@@ -151,4 +153,7 @@ java -Xmx128m -Dazureus.config.path=${vuze.config.dir} \
 <chmod file="blogracy.sh" perm="755" />
         </target>
 
+        <target name="all" depends="build-bat,build,build-script" >
+
+        </target>
 </project>
