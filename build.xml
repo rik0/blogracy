@@ -8,6 +8,7 @@
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
     </path>
 
+
     <!-- project build paths and stuff -->
     <property name="build.dir"   value="build"/>
     <property name="vuze.config.dir" value="build/config"/>
@@ -90,6 +91,7 @@
                 <localRepository refid="local.repository"/>
             </artifact:dependencies>
             <path id="full-classpath">
+                <pathelement path="${classes.dir}" />
                 <path refid="classpath" />
                 <path refid="compile.classpath" />
             </path>
@@ -112,7 +114,10 @@
 
         <target name="build" depends="compile"
                 description="Compiles and moves relevant files to the output directory">
-
+            <copy todir="${classes.dir}/messages">
+                <fileset dir="${src.dir}/messages" />
+            </copy>
+            <copy file="${src.dir}/plugin.properties" todir="${classes.dir}" />
         </target>
 
         <target name="build-bat"
