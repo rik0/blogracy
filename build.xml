@@ -115,17 +115,6 @@
 
         </target>
 
-        <target name="run" depends="build"
-                description="Runs Vuze with our plugin. Use a script file instead.">
-            <java classname="org.gudy.azureus2.ui.common.Main"
-                  fork="true" spawn="false"
-                  failonerror="true" maxmemory="512m"
-                  classpathref="full-classpath">
-                <jvmarg value="-Dazureus.config.path=${vuze.config.dir}" />
-                <arg value="--ui=console" />
-            </java>
-        </target>
-
         <target name="build-bat"
                 description="Builds a BAT file">
             <file file="blogracy.bat" basedir="." name="blogracy.bat" />
