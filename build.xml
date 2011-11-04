@@ -89,7 +89,6 @@
                 <pom refid="blogracy.project"/>
                 <localRepository refid="local.repository"/>
             </artifact:dependencies>
-            
             <path id="full-classpath">
                 <path refid="classpath" />
                 <path refid="compile.classpath" />
@@ -145,7 +144,7 @@ echo "Windows not supported."
 <echo output="blogracy.sh">
 #!/bin/sh
 
-java -Xmx128m -Dazureus.config.path=${vuze.config.dir} \
+java -Xmx128m -Dazureus.config.path=${vuze.config.dir}        \
             -cp ${var.full-classpath}                         \
             org.gudy.azureus2.ui.common.Main                  \
             --ui=console
