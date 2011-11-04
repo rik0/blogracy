@@ -66,13 +66,13 @@
 		</target>
 
 		<target name="clean">
-			<delete dir="build"/>
+			<delete dir="${vuze.config.dir}/plugins/blogracy" />
 		</target>
 
 		<target name="compile" depends="mvn-init">
 			<mkdir dir="${classes.dir}"/>
 			<javac srcdir="${src.dir}" destdir="${classes.dir}" 
-				classpathref="full-classpath" />
+				   classpathref="full-classpath" />
 		</target>
 
 		<target name="build" depends="compile">
@@ -80,9 +80,10 @@
 		</target>
 
 		<target name="run" depends="build">
-			<java jar="${vuze.jar.path}" fork="true" 
+			<java classname="org.gudy.azureus2.ui.common.Main"
+				  fork="true" 
 				  failonerror="true" maxmemory="512m"
-				  classpathref="runtime.classpath" >
+				  classpathref="full-classpath" >
 				<jvmarg value="-Dazureus.config.path=${vuze.config.dir}" />
 				<arg value="--ui=console" />
 			</java>
