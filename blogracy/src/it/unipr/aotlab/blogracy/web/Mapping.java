@@ -89,7 +89,7 @@ class Mapping {
         Class<String> constructorFormalParameters[] = buildConstructorFormalParameters();
         try {
             Constructor<RequestResolver> constructor = resolverClass.getConstructor(constructorFormalParameters);
-            return constructor.newInstance(tempParameters);
+            return constructor.newInstance(new Object[]{tempParameters});
         } catch (NoSuchMethodException e) {
             throw new URLMappingError(e);
         } catch (InvocationTargetException e) {
@@ -102,7 +102,7 @@ class Mapping {
     }
 
     private Class<String>[] buildConstructorFormalParameters() {
-        Class<String>[] constructorFormalParameters = new Class[tempParameters.length];
+        Class<String>[] constructorFormalParameters = (Class<String>[])new Class[tempParameters.length];
         for (int i = 0; i < tempParameters.length; ++i) {
             constructorFormalParameters[i] = String.class;
         }
