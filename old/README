@@ -1,0 +1,48 @@
+==== Blogracy ====
+
+=== Introduction ===
+
+Blogracy is a simple peer-to-peer social networking system, built on top of Bittorrent.
+
+=== Install ===
+
+The installation process is not yet streamlined. Essentially Blogracy runs as a Vuze
+plugin. In order to make it easier to try the project, we distribute the unmodified
+Vuze jars in the lib directory. Vuze also needs SWT and some native libraries (on
+OS X and Windows at least). Right now, in the libs there are the binary libs for OS X.
+It should suffice to add those for windows (see Vuze and Eclipse/SWT docs).
+
+To run Vuze in an IDE, simply create a new configuration which adds the Vuze libs in the
+classpath.
+
+Vuze main class to run is: org.gudy.azureus2.ui.swt.Main
+Options to be passed to the JVM are:
+
+-d32 -Dazureus.config.path=config  -Djava.library.path="lib/dll"  -Xmx128m -XstartOnFirstThread
+
+
+-d32 and -XstartOnFirstThread are for OS X only and are needed (the first one only if
+you are using a 32bit version of SWT and binary libraries, like those we are using).
+
+We assume that the working directory for the application is the root directory of Blogracy
+(the one with .gitignore and this file). So lib/dll is just the right directory (place in 
+that one the windows dll which you may need -- not the jars). 
+
+Config is a directory where Vuze will save all its files and configurations. In order for
+Vuze to find the new plugin, it is needed that the output files of the compilation go into
+the plugins subdirectory of the config directory.
+
+It is not necessary to create a jar file, the classfiles suffice. However, the plugin.properties
+file must be there. Essentially the config directory must be something like
+
++- config
+   +- plugins
+      +- blogracy
+         - plugin.properties
+         - it/unipr/aotlab/blogracy/*.class
+
+=== Authors ===
+
+The original core was written by Alan Nonnato as his master's theses project.
+Subsequent modifications have been made by Enrico Franchi and Michele Tomaiuolo.
+The project is currently maintained by Enrico Franchi and Michele Tomaiuolo.
