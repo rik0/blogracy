@@ -6,3 +6,7 @@
 *.jar
 .idea
 config
+blogracy.bat
+blogracy.sh
+build
+Azureus.app
