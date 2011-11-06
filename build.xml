@@ -133,7 +133,7 @@
         </echo>
     </target>
 
-    <target name="build-script"
+    <target name="build-sh"
             description="Builds a shell file"
             depends="build">
         <file file="blogracy.sh" basedir="." name="blogracy.sh"/>
@@ -150,7 +150,11 @@
         <chmod file="blogracy.sh" perm="755"/>
     </target>
 
-    <target name="all" depends="build-bat,build,build-script">
+    <target name="build-scripts" depends="build-bat,build-sh">
+        
+    </target>
+
+    <target name="all" depends="build-scripts,build">
 
     </target>
 </project>
