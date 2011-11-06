@@ -10,3 +10,7 @@ blogracy.bat
 blogracy.sh
 build
 Azureus.app
+*.iml
+target
+*.log
+*.zip
