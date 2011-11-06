@@ -89,7 +89,7 @@ class Mapping {
         Class<String> constructorFormalParameters[] = buildConstructorFormalParameters();
         try {
             Constructor<RequestResolver> constructor = resolverClass.getConstructor(constructorFormalParameters);
-            return constructor.newInstance(new Object[]{tempParameters});
+            return constructor.newInstance(tempParameters);
         } catch (NoSuchMethodException e) {
             throw new URLMappingError(e);
         } catch (InvocationTargetException e) {

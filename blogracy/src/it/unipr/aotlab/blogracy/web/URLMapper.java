@@ -32,6 +32,7 @@ import java.util.List;
  */
 public class URLMapper {
     List<Mapping> lst;
+    private RequestResolver homePageResolver = null;
 
     /**
      * Returns the appropriate resolver for the required URL.
@@ -42,6 +43,14 @@ public class URLMapper {
      */
     public RequestResolver getResolver(String url) throws URLMappingError {
         url = removeTrailingSlash(url);
+        if (url.length() == 0 && homePageResolver != null) {
+            return homePageResolver;
+        } else {
+            return findResolver(url);
+        }
+    }
+
+    private RequestResolver findResolver(String url) throws URLMappingError {
         checkURLSanity(url);
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {
@@ -87,6 +96,10 @@ public class URLMapper {
         } else {
             throw new URLMappingError("Odd number of parameters has been inserted.");
         }
+    }
+
+    public void setHomePage(RequestResolver homePageResolver) {
+        this.homePageResolver = homePageResolver;
     }
 
     private void addMappings(String[] strings) throws URLMappingError {

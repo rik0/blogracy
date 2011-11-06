@@ -26,6 +26,7 @@ public class URLMapperTest {
                 "^/messages$", "it.unipr.aotlab.blogracy.web.FakeMessages",
                 "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.FakeMessages"
         );
+        mapper.setHomePage(new HomepageResolver());
     }
 
     @Test(expected = URLMappingError.class)
@@ -72,4 +73,25 @@ public class URLMapperTest {
     public void testErrorInResolverConstruction() throws Exception {
         mapper.getResolver("/mapper/foo");
     }
+
+
+    @Test
+    public void testHomePage() throws Exception {
+        Assert.assertEquals(
+                HomepageResolver.class,
+                mapper.getResolver("/").getClass()
+        );
+        Assert.assertEquals(
+                HomepageResolver.class,
+                mapper.getResolver("").getClass()
+        );
+    }
+
+    private static class HomepageResolver implements RequestResolver {
+        public void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response) throws Exception {
+
+        }
+    }
+
+    
 }
