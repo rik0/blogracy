@@ -88,7 +88,7 @@ the command which is inside the blogracy.sh file built for my system is, at the
 present moment:
 
 ```
-\#!/bin/sh
+#!/bin/sh
 
 java -Xmx128m -Dazureus.config.path=build/config        \
             -cp SOME_CLASSPATH                          \
@@ -113,11 +113,13 @@ Working Directory. Please do not commit your IDE specific stuff.
 ## Authors ##
 
 The original core was written by Alan Nonnato as his master's theses project.
+
 The code of the present versions is mostly written by Enrico Franchi and Michele Tomaiuolo.
+
 The project is currently maintained by Enrico Franchi and Michele Tomaiuolo.
 
 ## Contributors ##
-Enrico Franchi (efranchi@ce.unipr.it) [ core ]
-Michele Tomaiuolo (tomamic@ce.unipr.it) [ core ]
-Alan Nonnato () [ old core ]
+* Enrico Franchi (efranchi@ce.unipr.it) [ core ]
+* Michele Tomaiuolo (tomamic@ce.unipr.it) [ core ]
+* Alan Nonnato () [ old core ]
 ...
