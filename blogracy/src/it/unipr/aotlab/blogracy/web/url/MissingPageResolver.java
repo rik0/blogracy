@@ -20,29 +20,20 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web;
+package it.unipr.aotlab.blogracy.web.url;
 
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
-import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
-import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
-
-import java.io.OutputStreamWriter;
-
+import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 
 /**
  * User: enrico
  * Package: it.unipr.aotlab.blogracy.web
  * Date: 11/3/11
- * Time: 10:53 AM
+ * Time: 10:36 AM
  */
-public class Followers extends AbstractRequestResolver {
-    @Override
-    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
-        response.setContentType("text/text");
-        VelocityContext context = new VelocityContext();
-        Template template = Velocity.getTemplate("exp.vm");
-        template.merge(context, new OutputStreamWriter(response.getOutputStream()));
+
+// TODO have this not implemented through ErrorPageResolver
+public class MissingPageResolver extends ErrorPageResolver {
+    public MissingPageResolver(final String url) {
+        super(new Exception("Cannot find resolver for url " + url));
     }
 }

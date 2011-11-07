@@ -1,4 +1,4 @@
-package it.unipr.aotlab.blogracy.web;
+package it.unipr.aotlab.blogracy.web.resolvers;
 
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;

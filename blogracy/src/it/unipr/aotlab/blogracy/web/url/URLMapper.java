@@ -1,6 +1,7 @@
-package it.unipr.aotlab.blogracy.web;
+package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -38,7 +39,7 @@ public class URLMapper {
      * Returns the appropriate resolver for the required URL.
      *
      * @param url to be resolved. If the url ends with a slash, it is removed.
-     * @return the appropriate resolver. If exceptions are thrown, and {@link ErrorPageResolver} is returned.
+     * @return the appropriate resolver. If exceptions are thrown, and {@link it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver} is returned.
      *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
      */
     public RequestResolver getResolver(String url) throws URLMappingError {

@@ -20,9 +20,10 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web;
+package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;

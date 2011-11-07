@@ -1,6 +1,8 @@
 package it.unipr.aotlab.blogracy.web;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
+import it.unipr.aotlab.blogracy.web.url.URLMapper;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.junit.Assert;

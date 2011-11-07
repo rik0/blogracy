@@ -23,9 +23,9 @@ package it.unipr.aotlab.blogracy;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
-import it.unipr.aotlab.blogracy.web.ErrorPageResolver;
-import it.unipr.aotlab.blogracy.web.RequestResolver;
-import it.unipr.aotlab.blogracy.web.URLMapper;
+import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
+import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
+import it.unipr.aotlab.blogracy.web.url.URLMapper;
 import org.apache.velocity.app.Velocity;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
@@ -269,7 +269,7 @@ public class Blogracy extends WebPlugin {
     private void initializeURLMapper() throws PluginException {
         try {
             mapper.configure(
-                    "^/followers$", "it.unipr.aotlab.blogracy.web.Followers"
+                    "^/followers$", "it.unipr.aotlab.blogracy.web.resolvers.Followers"
             );
         } catch (URLMappingError urlMappingError) {
             throw new PluginException(urlMappingError);

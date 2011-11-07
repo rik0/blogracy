@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web;
+package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.NotImplementedHTTPRequest;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
