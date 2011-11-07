@@ -1,6 +1,7 @@
-<project name="Blogracy" basedir="." default="all" xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+<project name="Blogracy" basedir="." default="all"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="antlib:org.apache.maven.artifact.ant ">
+         xmlns:artifact="antlib:org.apache.maven.artifact.ant"
+         xsi:schemaLocation="antlib:org.apache.maven.artifact.ant" >
 
     <!-- General properties and class paths -->
     <property name="src.dir" value="blogracy/src"/>
@@ -119,7 +120,7 @@
 
     <target name="deploy-static-files">
         <copy todir="${classes.dir}">
-            <path path="${src.dir}/${package.prefix}/resources/" />
+            <fileset dir="${src.dir}/resources" />
         </copy>
     </target>
 
