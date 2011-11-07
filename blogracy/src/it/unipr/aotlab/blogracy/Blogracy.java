@@ -173,7 +173,10 @@ public class Blogracy extends WebPlugin {
     }
 
     public static File getRootDirectory() {
-        return new File(SystemProperties.getUserPath() + BLOGRACY);
+        File userPath = new File(SystemProperties.getUserPath());
+        File pluginsDirectoryPath = new File(userPath, "plugins");
+        File blogracyRoot = new File(pluginsDirectoryPath, BLOGRACY);
+        return blogracyRoot;
     }
 
     public static File getTemplateDirectory() {
