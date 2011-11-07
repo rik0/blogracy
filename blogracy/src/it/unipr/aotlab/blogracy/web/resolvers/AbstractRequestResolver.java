@@ -22,11 +22,17 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.errors.NotImplementedHTTPRequest;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import org.apache.velocity.Template;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.exception.ParseErrorException;
+import org.apache.velocity.exception.ResourceNotFoundException;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
+import java.io.File;
 import java.util.Map;
 
 /**
@@ -35,8 +41,14 @@ import java.util.Map;
  * Date: 11/3/11
  * Time: 10:37 AM
  */
-public class AbstractRequestResolver implements RequestResolver {
+abstract public class AbstractRequestResolver implements RequestResolver {
+    private File TEMPLATES_ROOT_DIRECTORY = Blogracy.getTemplateDirectory();
+
     private Status requestStatus = Status.INVALID;
+
+    protected void setHTMLResponse(TrackerWebPageResponse response) {
+        response.setContentType("text/html");
+    }
 
     static protected enum Status {
         GET, POST, PUT, DELETE, INVALID
@@ -49,6 +61,7 @@ public class AbstractRequestResolver implements RequestResolver {
     @Override
     final public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
         processHeaders(request);
+        response.setContentType(getViewType());
         switch (requestStatus) {
             case GET:
                 get(request, response);
@@ -97,4 +110,55 @@ public class AbstractRequestResolver implements RequestResolver {
     protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
         throw new NotImplementedHTTPRequest("Command GET not supported for current resource.");
     }
+
+    protected Template loadTemplate()
+            throws ParseErrorException, ResourceNotFoundException {
+        Status currentStatus = getRequestStatus();
+        String htmlViewName = getViewName();
+        String templateName;
+        if (hasSpecialTemplateForStatus(currentStatus, htmlViewName)) {
+            templateName = buildTemplateName(currentStatus, htmlViewName);
+        } else {
+            templateName = htmlViewName;
+        }
+        return Velocity.getTemplate(templateName);
+    }
+
+    protected String buildTemplateName(Status currentStatus, String htmlViewName) {
+        return currentStatus.toString() + "/" + htmlViewName;
+    }
+
+    private boolean hasSpecialTemplateForStatus(final Status currentStatus, final String htmlViewName) {
+        File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentStatus.toString());
+        if (specialTemplateDirectory.exists()) {
+            File templateFile = new File(specialTemplateDirectory, htmlViewName);
+            return templateFile.exists();
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Implements this method to specify the name of the view to use.
+     * <p/>
+     * A file with that name must exist either in a subdirectory named COMMAND
+     * (one among GET, POST, etc.) or directly in the templates directory.
+     * <p/>
+     * In the former case it will be chosen only when the request is a GET, POST, etc
+     * respectively. A file directly in the templates directory is used, if exists,
+     * as a fallback for requests without a specific file.
+     *
+     * @return the name of the file.
+     */
+    abstract protected String getViewName();
+
+    /**
+     * Return the kind of file this resolver is going to send back
+     * <p/>
+     * E.g., text/html
+     *
+     * @return the MIME type of the file to be sent back.
+     */
+    abstract protected String getViewType();
+
 }

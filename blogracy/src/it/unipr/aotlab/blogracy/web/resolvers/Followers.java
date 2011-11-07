@@ -24,7 +24,6 @@ package it.unipr.aotlab.blogracy.web.resolvers;
 
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
-import org.apache.velocity.app.Velocity;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
@@ -40,9 +39,19 @@ import java.io.OutputStreamWriter;
 public class Followers extends AbstractRequestResolver {
     @Override
     protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
-        response.setContentType("text/text");
         VelocityContext context = new VelocityContext();
-        Template template = Velocity.getTemplate("exp.vm");
+        Template template = loadTemplate();
         template.merge(context, new OutputStreamWriter(response.getOutputStream()));
+    }
+
+    @Override
+    protected String getViewName() {
+        return "exp.vm";
+
+    }
+
+    @Override
+    protected String getViewType() {
+        return "text/text";
     }
 }
