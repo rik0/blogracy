@@ -26,6 +26,7 @@ import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.web.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.RequestResolver;
 import it.unipr.aotlab.blogracy.web.URLMapper;
+import org.apache.velocity.app.Velocity;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
 import org.gudy.azureus2.core3.util.SystemProperties;
@@ -50,7 +51,7 @@ public class Blogracy extends WebPlugin {
     private static final String BLOGRACY = "blogracy";
     private HyperlinkParameter test_param;
     static private Blogracy singleton;
-    private final String MESSAGES_BLOGRACY_URL_KEY = "blogracy.url";
+
 
     static class Accesses {
         static String ALL = "all";
@@ -59,16 +60,24 @@ public class Blogracy extends WebPlugin {
 
     static private PluginInterface plugin;
 
+    // Velocity configuration keys
+    private final String VELOCITY_RESOURCE_LOADER_PATH_KEY = "file.resource.loader.path";
+
+    // Misc Keys
+    private final String MESSAGES_BLOGRACY_URL_KEY = "blogracy.url";
+    private static final String PLUGIN_NAME_KEY = "blogracy.name";
+
+    // blogracy.internal. keys
     private static final String CONFIG_ACCESS_KEY = "blogracy.internal.config.access";
     private static final String CONFIG_PORT_KEY = "blogracy.internal.config.port";
     private static final String DEVICE_ACCESS_KEY = "blogracy.internal.config.access";
     private static final String INTERNAL_URL_KEY = "blogracy.internal.test.url";
+    private static final String DID_MIGRATE_KEY = "blogracy.internal.migrated";
+
+    // blogracy default keys
     private static final String DEVICE_PORT_KEY = "Plugin.default.device.blogracy.port";
     private static final String DEVICE_LOCALONLY_KEY = "Plugin.default.device.blogracy.localonly";
     private static final String DEVICE_BLOGRACY_ENABLE_KEY = "Plugin.default.device.blogracy.enable";
-    private static final String PLUGIN_NAME_KEY = "blogracy.name";
-
-    private static final String DID_MIGRATE_KEY = "blogracy.internal.migrated";
 
 
     private static Properties defaults = new Properties();
@@ -159,13 +168,28 @@ public class Blogracy extends WebPlugin {
     }
 
     private static File createRootDirectoryIfMissingAndGetPath() {
-        File root_dir = new File(SystemProperties.getUserPath() + BLOGRACY);
+        File root_dir = getRootDirectory();
+        return createDirIfMissing(root_dir);
+    }
 
-        if (!root_dir.exists()) {
-            boolean createdDir = root_dir.mkdir();
+    public static File getRootDirectory() {
+        return new File(SystemProperties.getUserPath() + BLOGRACY);
+    }
+
+    public static File getTemplateDirectory() {
+        return new File(getRootDirectory(), "templates");
+    }
+
+    public static File getStaticFilesDirectory() {
+        return new File(getRootDirectory(), "static");
+    }
+
+    private static File createDirIfMissing(File dir) {
+        if (!dir.exists()) {
+            boolean createdDir = dir.mkdir();
             assert (createdDir);
         }
-        return root_dir;
+        return dir;
     }
 
     public Blogracy() {
@@ -213,8 +237,18 @@ public class Blogracy extends WebPlugin {
         initializePluginInterface(pluginInterface);
         initializeLoggr();
         initializeURLMapper();
+        initVelocity();
         initializeSingleton();
         super.initialize(pluginInterface);
+    }
+
+    private void initVelocity() {
+        Properties velocityProperties = new Properties();
+        velocityProperties.setProperty(
+                VELOCITY_RESOURCE_LOADER_PATH_KEY,
+                getTemplateDirectory().getAbsolutePath()
+        );
+        Velocity.init(velocityProperties);
     }
 
     private void initializeSingleton() {
