@@ -1,12 +1,10 @@
 <project name="Blogracy" basedir="." default="all"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xmlns:artifact="antlib:org.apache.maven.artifact.ant"
-         xsi:schemaLocation="antlib:org.apache.maven.artifact.ant" >
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
     <!-- General properties and class paths -->
     <property name="src.dir" value="blogracy/src"/>
     <property name="lib.dir" value="lib"/>
-    <property name="package.prefix" value="it/unipr/aotlab/blogracy" />
+    <property name="package.prefix" value="it/unipr/aotlab/blogracy"/>
 
     <path id="classpath">
         <fileset dir="${lib.dir}" includes="**/*.jar"/>
@@ -73,6 +71,7 @@
 
     <target name="mvn-init"
             depends="mvn-ant-tasks-download"
+            xmlns:artifact="antlib:org.apache.maven.artifact.ant"
             unless="compile.classpath"
             description="Gets all the necessary libraries but vuze as specified in the pom file">
 
@@ -120,7 +119,7 @@
 
     <target name="deploy-static-files">
         <copy todir="${classes.dir}">
-            <fileset dir="${src.dir}/resources" />
+            <fileset dir="${src.dir}/resources"/>
         </copy>
     </target>
 
@@ -159,7 +158,7 @@
     </target>
 
     <target name="build-scripts" depends="build-bat,build-sh">
-        
+
     </target>
 
     <target name="all" depends="build-scripts,build">
