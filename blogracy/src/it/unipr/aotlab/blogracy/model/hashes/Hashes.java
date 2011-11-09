@@ -23,7 +23,6 @@
 package it.unipr.aotlab.blogracy.model.hashes;
 
 import org.gudy.azureus2.core3.util.SHA1Hasher;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Arrays;
 
@@ -78,36 +77,40 @@ public class Hashes {
 
     /**
      * Creates an hash from a {@code String}
+     *
      * @param value is the {@code String} to be hashed
      * @return the Hash of {@param value}
      */
     static public Hash newHash(String value) {
         SHA1Hasher hasher = new SHA1Hasher();
-        final byte[] hash =  hasher.calculateHash(value.getBytes());
+        final byte[] hash = hasher.calculateHash(value.getBytes());
         return new HashImpl(hash);
     }
+
     /**
      * Creates an hash from a generic {@code Object}
+     *
      * @param o is the {@code Object} to be hashed
      * @return the Hash of {@param o}
      */
     static public Hash newHash(Object o) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     /**
      * Checks if the hash is a valid hash
+     *
      * @param hash is the hash to be validated
      * @return false if we know for sure it is not a valid hash
      */
     static public boolean validateHash(Hash hash) {
         byte[] theHash;
-        if(hash instanceof HashImpl) {
-            theHash = ((HashImpl)hash).hash;
+        if (hash instanceof HashImpl) {
+            theHash = ((HashImpl) hash).hash;
         } else {
             theHash = hash.getValue();
         }
-        if(theHash.length != 20) {
+        if (theHash.length != 20) {
             return false;
         }
         return true;

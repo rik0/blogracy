@@ -23,7 +23,6 @@
 package it.unipr.aotlab.blogracy.model.messages;
 
 import it.unipr.aotlab.blogracy.model.users.User;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.Date;
 
@@ -35,10 +34,10 @@ import java.util.Date;
  */
 public class Messages {
     public static Message newMessage(String title, Date date, String text, User author) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     public static void postMessage(Message m) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 }

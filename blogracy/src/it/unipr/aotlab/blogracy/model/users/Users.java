@@ -34,7 +34,6 @@ import it.unipr.aotlab.blogracy.errors.NetworkError;
 import it.unipr.aotlab.blogracy.model.hashes.Hash;
 import it.unipr.aotlab.blogracy.network.Network;
 import it.unipr.aotlab.blogracy.network.NetworkManager;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Utility methods to manipulate the users.
@@ -42,6 +41,7 @@ import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 public class Users {
     /**
      * Creates a new user from given hash. In this case the user is identified in the system by its own hash.
+     *
      * @param hash to identify the user
      * @return a new user
      */
@@ -51,6 +51,7 @@ public class Users {
 
     /**
      * Creates a new user from a given hash and locally associates the user with the given nickname
+     *
      * @param hash to identify the user globally
      * @param name to identify the user locally
      * @return the user
@@ -69,7 +70,7 @@ public class Users {
      */
     public static Profile getProfile(User user) throws NetworkError {
         Profile p = getCachedProfile(user.getHash());
-        if(p == null) {
+        if (p == null) {
             return updateProfile(user);
         } else {
             return p;
@@ -77,12 +78,12 @@ public class Users {
     }
 
     private static Profile getCachedProfile(Hash hash) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     /**
      * Get profile for the specified user.
-     *
+     * <p/>
      * The profile is always downloaded from the network.
      *
      * @param user for which to return the profile.
@@ -92,16 +93,17 @@ public class Users {
     public static Profile updateProfile(User user) throws NetworkConfigurationError {
         Network network = NetworkManager.getNetwork();
         // insert profile in cache.
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     /**
      * Example method which indicates that we should have stuff to perform searches of users /in memory/
+     *
      * @param query
      * @return
      */
     public static User searchUser(String query) {
-        throw new NotImplementedException();
+        throw new UnsupportedOperationException();
     }
 
     private Users() {
