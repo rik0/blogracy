@@ -123,7 +123,7 @@
         </copy>
     </target>
 
-    <target name="build" depends="compile"
+    <target name="build" depends="compile,deploy-static-files"
             description="Compiles and moves relevant files to the output directory">
         <copy todir="${classes.dir}/messages">
             <fileset dir="${src.dir}/messages"/>
