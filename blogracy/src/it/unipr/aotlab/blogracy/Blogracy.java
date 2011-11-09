@@ -175,8 +175,7 @@ public class Blogracy extends WebPlugin {
     public static File getRootDirectory() {
         File userPath = new File(SystemProperties.getUserPath());
         File pluginsDirectoryPath = new File(userPath, "plugins");
-        File blogracyRoot = new File(pluginsDirectoryPath, BLOGRACY);
-        return blogracyRoot;
+        return new File(pluginsDirectoryPath, BLOGRACY);
     }
 
     public static File getTemplateDirectory() {
@@ -238,7 +237,7 @@ public class Blogracy extends WebPlugin {
     @Override
     public void initialize(PluginInterface pluginInterface) throws PluginException {
         initializePluginInterface(pluginInterface);
-        initializeLoggr();
+        initializeLogger();
         initializeURLMapper();
         initVelocity();
         initializeSingleton();
@@ -262,7 +261,7 @@ public class Blogracy extends WebPlugin {
         plugin = pluginInterface;
     }
 
-    private void initializeLoggr() {
+    private void initializeLogger() {
         Logger.initialize(plugin, DSNS_PLUGIN_CHANNEL_NAME);
     }
 
