@@ -33,6 +33,7 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 import java.io.File;
+import java.io.OutputStreamWriter;
 import java.util.Map;
 
 /**
@@ -48,6 +49,10 @@ abstract public class AbstractRequestResolver implements RequestResolver {
 
     protected void setHTMLResponse(TrackerWebPageResponse response) {
         response.setContentType("text/html");
+    }
+
+    protected OutputStreamWriter outputWriter(final TrackerWebPageResponse response) {
+        return new OutputStreamWriter(response.getOutputStream());
     }
 
     static protected enum Status {

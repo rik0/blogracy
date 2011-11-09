@@ -1,6 +1,7 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.NotImplementedHTTPRequest;
+import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -20,7 +21,11 @@ public class IndexResolver extends AbstractRequestResolver {
     @Override
     protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response)
             throws NotImplementedHTTPRequest {
-
+        Template indexTemplate = loadTemplate();
+        indexTemplate.merge(
+                new VelocityContext(),
+                outputWriter(response)
+        );
     }
 
     @Override
