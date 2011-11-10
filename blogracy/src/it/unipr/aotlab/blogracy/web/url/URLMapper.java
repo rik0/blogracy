@@ -3,6 +3,7 @@ package it.unipr.aotlab.blogracy.web.url;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,6 +42,7 @@ public class URLMapper {
      * @param url to be resolved. If the url ends with a slash, it is removed.
      * @return the appropriate resolver. If exceptions are thrown, and {@link it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver} is returned.
      *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
+     * @throws URLMappingError if the URL cannot be resolved.
      */
     public RequestResolver getResolver(String url) throws URLMappingError {
         url = removeTrailingSlash(url);
@@ -99,6 +101,30 @@ public class URLMapper {
         }
     }
 
+    public void setStaticFilesDirectory(File staticRoot) throws URLMappingError {
+        if (staticRoot.exists()) {
+            if (staticRoot.isDirectory()) {
+                throw new UnsupportedOperationException();
+            } else {
+                throw new URLMappingError(
+                        "Static files root " +
+                                staticRoot.toString() +
+                                " exists but is not a directory.");
+            }
+        }
+        throw new URLMappingError(
+                "Static files root " +
+                        staticRoot.toString() +
+                        " does not exist.");
+    }
+
+    /**
+     * Use the specified resolver to resolve requests to the homepage.
+     *
+     * @param homePageResolver the resolver <b>instance</b> to be used.
+     *                         <p/>
+     *                         As always, resolvers should be stateless.
+     */
     public void setHomePage(RequestResolver homePageResolver) {
         this.homePageResolver = homePageResolver;
     }
