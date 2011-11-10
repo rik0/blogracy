@@ -121,39 +121,54 @@ public class Blogracy extends WebPlugin {
      * @param pluginInterface is the same old access point for plugins
      */
     public static void load(PluginInterface pluginInterface) {
-        Integer blogracy_port;
-        String blogracy_access;
 
+        if (singletonShouldReturnImmediately()) return;
+        File root_dir = createRootDirectoryIfMissingAndGetPath();
+
+        if (COConfigurationManager.getBooleanParameter(DID_MIGRATE_KEY)) {
+            configureIfMigratedKey(root_dir);
+        } else {
+            configureIfNotMigrateKey(root_dir);
+        }
+
+    }
+
+    private static void configureIfNotMigrateKey(final File root_dir) {
+        final Integer blogracy_port = COConfigurationManager.getIntParameter(DEVICE_PORT_KEY, DEFAULT_PORT);
+        final String blogracy_access;
+        if (blogracy_port != DEFAULT_PORT) {
+            COConfigurationManager.setParameter(CONFIG_PORT_KEY, blogracy_port);
+        }
+
+        boolean local = COConfigurationManager.getBooleanParameter(DEVICE_LOCALONLY_KEY);
+        blogracy_access = local ? Accesses.LOCAL : Accesses.ALL;
+        if (!blogracy_access.equals(DEFAULT_ACCESS)) {
+            COConfigurationManager.setParameter(DEVICE_ACCESS_KEY, blogracy_access);
+        }
+        COConfigurationManager.setParameter(DID_MIGRATE_KEY, Boolean.TRUE);
+        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(DEVICE_BLOGRACY_ENABLE_KEY);
+        setDefaultsProperties(blogracy_port, blogracy_access, root_dir, blogracyEnable);
+    }
+
+    private static void configureIfMigratedKey(final File root_dir) {
+        final Integer blogracy_port = COConfigurationManager.getIntParameter(CONFIG_PORT_KEY, DEFAULT_PORT);
+        final String blogracy_access = COConfigurationManager.getStringParameter(CONFIG_ACCESS_KEY, DEFAULT_ACCESS);
+        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(DEVICE_BLOGRACY_ENABLE_KEY);
+        setDefaultsProperties(blogracy_port, blogracy_access, root_dir, blogracyEnable);
+    }
+
+    private static boolean singletonShouldReturnImmediately() {
         synchronized (Blogracy.class) {
             if (loaded) {
-                return;
+                return true;
             } else {
                 loaded = true;
             }
         }
+        return false;
+    }
 
-        File root_dir = createRootDirectoryIfMissingAndGetPath();
-
-
-        if (COConfigurationManager.getBooleanParameter(DID_MIGRATE_KEY)) {
-            blogracy_port = COConfigurationManager.getIntParameter(CONFIG_PORT_KEY, DEFAULT_PORT);
-            blogracy_access = COConfigurationManager.getStringParameter(CONFIG_ACCESS_KEY, DEFAULT_ACCESS);
-        } else {
-            blogracy_port = COConfigurationManager.getIntParameter(DEVICE_PORT_KEY, DEFAULT_PORT);
-            if (blogracy_port != DEFAULT_PORT) {
-                COConfigurationManager.setParameter(CONFIG_PORT_KEY, blogracy_port);
-            }
-
-            boolean local = COConfigurationManager.getBooleanParameter(DEVICE_LOCALONLY_KEY);
-            blogracy_access = local ? Accesses.LOCAL : Accesses.ALL;
-            if (!blogracy_access.equals(DEFAULT_ACCESS)) {
-                COConfigurationManager.setParameter(DEVICE_ACCESS_KEY, blogracy_access);
-            }
-            COConfigurationManager.setParameter(DID_MIGRATE_KEY, Boolean.TRUE);
-
-        }
-
-        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(DEVICE_BLOGRACY_ENABLE_KEY);
+    private static void setDefaultsProperties(final Integer blogracy_port, final String blogracy_access, final File root_dir, final boolean blogracyEnable) {
         defaults.put(WebPlugin.PR_ENABLE, blogracyEnable);
         defaults.put(WebPlugin.PR_DISABLABLE, Boolean.TRUE);
         defaults.put(WebPlugin.PR_PORT, blogracy_port);
@@ -165,7 +180,6 @@ public class Blogracy extends WebPlugin {
 
         defaults.put(WebPlugin.PR_CONFIG_MODEL_PARAMS,
                 new String[]{ConfigSection.SECTION_ROOT, BLOGRACY});
-
     }
 
     private static File createRootDirectoryIfMissingAndGetPath() {
