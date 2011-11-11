@@ -20,7 +20,9 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web.resolvers;
+package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
+
+import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
 /**
  * User: enrico
