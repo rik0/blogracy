@@ -36,7 +36,7 @@ import java.util.List;
 public class URLMapper {
     List<Mapping> lst;
     private RequestResolver homePageResolver = null;
-    private File staticFilesDirectory;
+    private StaticFileResolver staticFilesResolver;
 
     /**
      * Returns the appropriate resolver for the required URL.
@@ -56,14 +56,14 @@ public class URLMapper {
     }
 
     private RequestResolver findResolver(String url) throws URLMappingError {
-        RequestResolver resolver = null;
         checkURLSanity(url);
-        if ((resolver = visitDefinedMappings(url)) != null) {
+        RequestResolver resolver = visitDefinedMappings(url);
+        if (resolver != null) {
             return resolver;
-        } else {
-            return new StaticFileResolver(staticFilesDirectory, url);
+        } else if (staticFilesResolver.couldResolve(url)) {
+            return staticFilesResolver;
         }
-        //throw new URLMappingError("Could not resolve URL.");
+        throw new URLMappingError("Could not resolve URL.");
     }
 
     private RequestResolver visitDefinedMappings(final String url) throws URLMappingError {
@@ -114,8 +114,7 @@ public class URLMapper {
     }
 
     public void setStaticFilesDirectory(File staticRoot) throws URLMappingError {
-        StaticFileResolver.checksValidStaticRoot(staticRoot);
-        staticFilesDirectory = staticRoot;
+        staticFilesResolver = new StaticFileResolver(staticRoot);
     }
 
     /**

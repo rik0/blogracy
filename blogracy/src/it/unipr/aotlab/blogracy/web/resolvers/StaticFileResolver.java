@@ -41,30 +41,15 @@ import java.io.*;
 public class StaticFileResolver implements RequestResolver {
     MimeFinder mimeFinder = MimeFinderFactory.getInstance();
     private File staticFilesDirectory;
-    private String url;
-    private File actualFile;
 
-    public StaticFileResolver(final File staticFilesDirectory, final String url) throws URLMappingError {
-        checksValidStaticRoot(staticFilesDirectory);
-        this.staticFilesDirectory = staticFilesDirectory;
-        this.url = url;
-        this.actualFile = buildsActualFilePath();
+    public StaticFileResolver(final File staticFilesDirectory) throws URLMappingError {
+        checksValidStaticRootAndSetField(staticFilesDirectory);
     }
 
-    public StaticFileResolver(final File staticFilesDirectory, final String url, MimeFinder mimeFinder)
+    public StaticFileResolver(final File staticFilesDirectory, MimeFinder mimeFinder)
             throws URLMappingError {
-        this(staticFilesDirectory, url);
+        this(staticFilesDirectory);
         this.mimeFinder = mimeFinder;
-    }
-
-    private File buildsActualFilePath() throws URLMappingError {
-        File tentativeFile = new File(staticFilesDirectory, url);
-        if (tentativeFile.exists()) {
-            return tentativeFile;
-        } else {
-            throw new URLMappingError("Static file " +
-                    tentativeFile.toString() + " does not exist.");
-        }
     }
 
     /**
@@ -73,10 +58,10 @@ public class StaticFileResolver implements RequestResolver {
      * @param staticRoot is the path to check
      * @throws URLMappingError if {@param staticRoot} does not exist or is not a directory
      */
-    static public void checksValidStaticRoot(final File staticRoot) throws URLMappingError {
+    private void checksValidStaticRootAndSetField(final File staticRoot) throws URLMappingError {
         if (staticRoot.exists()) {
             if (staticRoot.isDirectory()) {
-                /* good */
+                staticFilesDirectory = staticRoot;
             } else {
                 throw new URLMappingError(
                         "Static files root " +
@@ -95,9 +80,13 @@ public class StaticFileResolver implements RequestResolver {
      */
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
+        final String url = request.getURL();
+        final File actualFile = getFileSystemPath(url);
         final String mimeType = mimeFinder.findMime(actualFile);
         final OutputStream outputStream = response.getOutputStream();
+
         response.setContentType(mimeType);
+
         try {
             FileUtils.copyCompletely(
                     new FileReader(actualFile),
@@ -108,5 +97,14 @@ public class StaticFileResolver implements RequestResolver {
         } catch (IOException e) {
             throw new BlogracyError(e);
         }
+    }
+
+    private File getFileSystemPath(final String url) {
+        return new File(staticFilesDirectory, url);
+    }
+
+    public boolean couldResolve(final String url) {
+        File tentativeFile = getFileSystemPath(url);
+        return tentativeFile.exists();
     }
 }
