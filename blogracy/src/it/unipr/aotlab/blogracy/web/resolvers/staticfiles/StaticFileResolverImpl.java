@@ -89,6 +89,11 @@ public class StaticFileResolverImpl implements StaticFileResolver {
         final String mimeType = mimeFinder.findMime(actualFile);
         final OutputStream outputStream = response.getOutputStream();
 
+        // TODO: broken mime finder stuff.
+        if (mimeType == null) {
+            Logger.info("Got null mime type... something is wrong.");
+        }
+
         Logger.info("Trying to send file "
                 + actualFile.getAbsolutePath() + " of type "
                 + mimeType);
