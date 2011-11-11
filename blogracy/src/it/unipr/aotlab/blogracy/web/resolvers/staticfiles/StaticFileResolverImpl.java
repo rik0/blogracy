@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 
 import it.unipr.aotlab.blogracy.errors.BlogracyError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.mime.MimeFinder;
 import it.unipr.aotlab.blogracy.mime.MimeFinderFactory;
 import it.unipr.aotlab.blogracy.util.FileUtils;
@@ -31,6 +32,7 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 
 /**
  * User: enrico
@@ -87,18 +89,37 @@ public class StaticFileResolverImpl implements StaticFileResolver {
         final String mimeType = mimeFinder.findMime(actualFile);
         final OutputStream outputStream = response.getOutputStream();
 
+        Logger.info("Trying to send file "
+                + actualFile.getAbsolutePath() + " of type "
+                + mimeType);
+
         response.setContentType(mimeType);
 
         try {
-            FileUtils.copyCompletely(
-                    new FileReader(actualFile),
-                    new OutputStreamWriter(outputStream)
-            );
-            outputStream.flush();
-            outputStream.close();
+            sendFile(actualFile, outputStream);
         } catch (IOException e) {
-            throw new BlogracyError(e);
+            if (actualFile.isDirectory()) {
+                Logger.info(actualFile.getAbsolutePath()
+                        + " is a directory. Trying to send index.html instead.");
+                response.setContentType("text/html");
+                File indexFile = new File(actualFile, "index.html");
+                response.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
+                // TODO use correct path!
+                response.setHeader("Location", indexFile.toString());
+                sendFile(indexFile, outputStream);
+            } else {
+                throw new BlogracyError(e);
+            }
         }
+    }
+
+    private void sendFile(final File actualFile, final OutputStream outputStream) throws IOException {
+        FileUtils.copyCompletely(
+                new FileReader(actualFile),
+                new OutputStreamWriter(outputStream)
+        );
+        outputStream.flush();
+        outputStream.close();
     }
 
     private File getFileSystemPath(final String url) {
