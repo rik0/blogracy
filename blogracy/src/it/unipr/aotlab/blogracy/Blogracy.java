@@ -288,6 +288,9 @@ public class Blogracy extends WebPlugin {
             mapper.setHomePage(
                     new IndexResolver()
             );
+            mapper.setStaticFilesDirectory(
+                    getStaticFilesDirectory().getAbsoluteFile()
+            );
         } catch (URLMappingError urlMappingError) {
             throw new PluginException(urlMappingError);
         }
