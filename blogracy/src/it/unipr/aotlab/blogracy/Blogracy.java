@@ -21,6 +21,7 @@
  */
 package it.unipr.aotlab.blogracy;
 
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
@@ -219,14 +220,18 @@ public class Blogracy extends WebPlugin {
 
 
     @Override
-    public boolean generateSupport(TrackerWebPageRequest request, TrackerWebPageResponse response) throws IOException {
+    public boolean generateSupport(TrackerWebPageRequest request, TrackerWebPageResponse response)
+            throws IOException {
         String url = request.getURL();
         try {
             RequestResolver resolver = mapper.getResolver(url);
             resolver.resolve(request, response);
-        } catch (Exception e) {
+        } catch (URLMappingError e) {
             ErrorPageResolver errorResolver = new ErrorPageResolver(e);
             errorResolver.resolve(request, response);
+        } catch (Exception e) {
+            //ErrorPageResolver errorResolver = new ErrorPageResolver(e);
+            //errorResolver.resolve(request, response);
         }
         return true;
     }
@@ -291,8 +296,8 @@ public class Blogracy extends WebPlugin {
             mapper.setStaticFilesDirectory(
                     getStaticFilesDirectory().getAbsoluteFile()
             );
-        } catch (URLMappingError urlMappingError) {
-            throw new PluginException(urlMappingError);
+        } catch (ServerConfigurationError serverConfigurationError) {
+            throw new PluginException(serverConfigurationError);
         }
     }
 }

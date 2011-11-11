@@ -20,20 +20,32 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web.url;
-
-import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
+package it.unipr.aotlab.blogracy.errors;
 
 /**
  * User: enrico
- * Package: it.unipr.aotlab.blogracy.web
- * Date: 11/3/11
- * Time: 10:36 AM
+ * Package: it.unipr.aotlab.blogracy.errors
+ * Date: 11/11/11
+ * Time: 10:59 PM
  */
 
-// TODO have this not implemented through ErrorPageResolver
-public class MissingPageResolver extends ErrorPageResolver {
-    public MissingPageResolver(final String url) {
-        super(new Exception("Cannot find resolver for url " + url));
+/**
+ * A ServerConfigurationError is thrown (usually) at configuration time if
+ * something is not right about the specified configuration.
+ */
+public class ServerConfigurationError extends BlogracyError {
+    public ServerConfigurationError() {
+    }
+
+    public ServerConfigurationError(final String s) {
+        super(s);
+    }
+
+    public ServerConfigurationError(final String s, final Throwable throwable) {
+        super(s, throwable);
+    }
+
+    public ServerConfigurationError(final Throwable throwable) {
+        super(throwable);
     }
 }

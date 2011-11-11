@@ -1,6 +1,5 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.errors.NotImplementedHTTPRequest;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
@@ -23,8 +22,7 @@ public class IndexResolver extends AbstractRequestResolver {
     private String VIEW_TYPE = "text/html";
 
     @Override
-    protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response)
-            throws NotImplementedHTTPRequest {
+    protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response) {
         StringWriter writer = new StringWriter();
         Template indexTemplate = loadTemplate();
         indexTemplate.initDocument();

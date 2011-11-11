@@ -22,7 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.url;
 
-import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
 import java.lang.reflect.Constructor;
@@ -52,7 +52,16 @@ class Mapping {
      */
     private String[] tempParameters = null;
 
-    public Mapping(String regexpString, String classString) throws URLMappingError {
+    /**
+     * Creates a Mapping object that connects pages matching {@param regexpString} to the
+     * resolver specified by {@param classString}
+     *
+     * @param regexpString is the regexp to match
+     * @param classString  is the fully qualified name of the resolver
+     * @throws ServerConfigurationError if the mapping cannot be established, e.g., because the
+     *                                  regex is not valid or because the specified classfile cannot be found.
+     */
+    public Mapping(String regexpString, String classString) throws ServerConfigurationError {
         setRex(regexpString);
         setResolverClass(classString);
     }
@@ -83,27 +92,28 @@ class Mapping {
      * @throws it.unipr.aotlab.blogracy.errors.URLMappingError
      *                               if the resolver cannot be built (e.g., wrong number of parameters)
      */
-    public RequestResolver buildResolver() throws IllegalStateException, URLMappingError {
+    public RequestResolver buildResolver() throws IllegalStateException, ServerConfigurationError {
+        // TODO split the resolver constructor loading from the actual resolver building.
         if (tempParameters == null) {
-            throw new IllegalStateException("buildResolver can be called only after a successful match.");
+            throw new ServerConfigurationError("buildResolver can be called only after a successful match.");
         }
         Class<String> constructorFormalParameters[] = buildConstructorFormalParameters();
         try {
             Constructor<RequestResolver> constructor = resolverClass.getConstructor(constructorFormalParameters);
             return constructor.newInstance(tempParameters);
         } catch (NoSuchMethodException e) {
-            throw new URLMappingError(e);
+            throw new ServerConfigurationError(e);
         } catch (InvocationTargetException e) {
-            throw new URLMappingError(e);
+            throw new ServerConfigurationError(e);
         } catch (InstantiationException e) {
-            throw new URLMappingError(e);
+            throw new ServerConfigurationError(e);
         } catch (IllegalAccessException e) {
-            throw new URLMappingError(e);
+            throw new ServerConfigurationError(e);
         }
     }
 
     private Class<String>[] buildConstructorFormalParameters() {
-        Class<String>[] constructorFormalParameters = (Class<String>[])new Class[tempParameters.length];
+        Class<String>[] constructorFormalParameters = (Class<String>[]) new Class[tempParameters.length];
         for (int i = 0; i < tempParameters.length; ++i) {
             constructorFormalParameters[i] = String.class;
         }
@@ -125,14 +135,14 @@ class Mapping {
      * Set the resolver class object attribute. May have classloading issues.
      *
      * @param classString the fully qualified name of the class
-     * @throws URLMappingError if the relevant classfile dows not exist
+     * @throws ServerConfigurationError if the relevant classfile dows not exist
      */
-    protected void setResolverClass(String classString) throws URLMappingError {
+    protected void setResolverClass(String classString) throws ServerConfigurationError {
         try {
             // WARNING: there may be classloader issues.
             resolverClass = (Class<RequestResolver>) Class.forName(classString);
         } catch (ClassNotFoundException e) {
-            throw new URLMappingError(e);
+            throw new ServerConfigurationError(e);
         }
     }
 
@@ -140,13 +150,13 @@ class Mapping {
      * Sets the pattern attribute.
      *
      * @param regexpString the string to compile
-     * @throws URLMappingError if it is not a valid regex
+     * @throws ServerConfigurationError if it is not a valid regex
      */
-    protected void setRex(String regexpString) throws URLMappingError {
+    protected void setRex(String regexpString) throws ServerConfigurationError {
         try {
             rex = Pattern.compile(regexpString);
         } catch (PatternSyntaxException e) {
-            throw new URLMappingError(e);
+            throw new ServerConfigurationError(e);
         }
     }
 }

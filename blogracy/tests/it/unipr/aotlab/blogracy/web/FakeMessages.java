@@ -27,6 +27,8 @@ import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
+import java.net.HttpURLConnection;
+
 /**
  * User: enrico
  * Package: it.unipr.aotlab.blogracy.web
@@ -40,7 +42,7 @@ public class FakeMessages implements RequestResolver {
         try {
             Integer pageNumber = Integer.parseInt(page);
         } catch (NumberFormatException e) {
-            throw new URLMappingError(e);
+            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
         }
     }
 
@@ -49,7 +51,7 @@ public class FakeMessages implements RequestResolver {
     }
 
     @Override
-    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
+    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
 
     }
 }

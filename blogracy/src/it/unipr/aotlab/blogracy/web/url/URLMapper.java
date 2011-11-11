@@ -1,11 +1,14 @@
 package it.unipr.aotlab.blogracy.web.url;
 
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.resolvers.MissingPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolvers;
 
 import java.io.File;
+import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,7 +50,7 @@ public class URLMapper {
      *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
      * @throws URLMappingError if the URL cannot be resolved.
      */
-    public RequestResolver getResolver(String url) throws URLMappingError {
+    public RequestResolver getResolver(String url) throws ServerConfigurationError, URLMappingError {
         url = removeTrailingSlash(url);
         if (url.length() == 0 && homePageResolver != null) {
             return homePageResolver;
@@ -56,7 +59,7 @@ public class URLMapper {
         }
     }
 
-    private RequestResolver findResolver(String url) throws URLMappingError {
+    private RequestResolver findResolver(String url) throws ServerConfigurationError, URLMappingError {
         checkURLSanity(url);
         RequestResolver resolver = visitDefinedMappings(url);
         if (resolver != null) {
@@ -64,10 +67,10 @@ public class URLMapper {
         } else if (staticFilesResolver.couldResolve(url)) {
             return staticFilesResolver;
         }
-        throw new URLMappingError("Could not resolve URL.");
+        return new MissingPageResolver(url);
     }
 
-    private RequestResolver visitDefinedMappings(final String url) throws URLMappingError {
+    private RequestResolver visitDefinedMappings(final String url) throws ServerConfigurationError {
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {
                 return mapping.buildResolver();
@@ -78,7 +81,10 @@ public class URLMapper {
 
     private void checkURLSanity(final String url) throws URLMappingError {
         if (!startsWithSlash(url)) {
-            throw new URLMappingError("Invalid URL: does not start with slash.");
+            throw new URLMappingError(
+                    HttpURLConnection.HTTP_NOT_FOUND,
+                    "Invalid URL: does not start with slash."
+            );
         }
     }
 
@@ -105,16 +111,16 @@ public class URLMapper {
      *                         if some pattern is not valid or if some classfile cannot be
      *                         found.
      */
-    public void configure(String... strings) throws URLMappingError {
+    public void configure(String... strings) throws ServerConfigurationError {
         if (checkStringsAreEven(strings)) {
             prepareList(strings);
             addMappings(strings);
         } else {
-            throw new URLMappingError("Odd number of parameters has been inserted.");
+            throw new ServerConfigurationError("Odd number of parameters has been inserted.");
         }
     }
 
-    public void setStaticFilesDirectory(File staticRoot) throws URLMappingError {
+    public void setStaticFilesDirectory(File staticRoot) throws ServerConfigurationError {
         staticFilesResolver = StaticFileResolvers.getStaticFileResolver(staticRoot);
     }
 
@@ -129,7 +135,7 @@ public class URLMapper {
         this.homePageResolver = homePageResolver;
     }
 
-    private void addMappings(String[] strings) throws URLMappingError {
+    private void addMappings(String[] strings) throws ServerConfigurationError {
         for (int nextIndex = 0; nextIndex < strings.length; nextIndex += 2) {
             lst.add(new Mapping(strings[nextIndex], strings[nextIndex + 1]));
         }

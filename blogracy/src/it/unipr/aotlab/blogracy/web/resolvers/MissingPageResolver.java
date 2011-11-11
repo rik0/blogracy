@@ -20,27 +20,33 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.errors;
+package it.unipr.aotlab.blogracy.web.resolvers;
+
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
+
+import java.net.HttpURLConnection;
 
 /**
  * User: enrico
- * Package: it.unipr.aotlab.blogracy.errors
+ * Package: it.unipr.aotlab.blogracy.web
  * Date: 11/3/11
- * Time: 12:26 PM
+ * Time: 10:36 AM
  */
-public class NotImplementedHTTPRequest extends BlogracyError {
-    public NotImplementedHTTPRequest() {
+
+public class MissingPageResolver implements RequestResolver {
+    final private String message;
+
+    public MissingPageResolver(final String url) {
+        message = "Cannot find resolver for url " + url;
     }
 
-    public NotImplementedHTTPRequest(final String s) {
-        super(s);
-    }
-
-    public NotImplementedHTTPRequest(final String s, final Throwable throwable) {
-        super(s, throwable);
-    }
-
-    public NotImplementedHTTPRequest(final Throwable throwable) {
-        super(throwable);
+    @Override
+    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        ErrorPageResolver errorPageResolver = new ErrorPageResolver(
+                new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, message)
+        );
+        errorPageResolver.resolve(request, response);
     }
 }

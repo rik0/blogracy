@@ -23,7 +23,6 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.Blogracy;
-import it.unipr.aotlab.blogracy.errors.NotImplementedHTTPRequest;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.apache.velocity.Template;
 import org.apache.velocity.app.Velocity;
@@ -34,6 +33,7 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 import java.io.File;
 import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
 import java.util.Map;
 
 /**
@@ -64,7 +64,8 @@ abstract public class AbstractRequestResolver implements RequestResolver {
     }
 
     @Override
-    final public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
+    final public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
+            throws URLMappingError {
         processHeaders(request);
         response.setContentType(getViewType());
         switch (requestStatus) {
@@ -81,7 +82,10 @@ abstract public class AbstractRequestResolver implements RequestResolver {
                 delete(request, response);
                 break;
             case INVALID:
-                throw new URLMappingError("Could not find out the kind of request we got.");
+                throw new URLMappingError(
+                        HttpURLConnection.HTTP_BAD_METHOD,
+                        "Could not find out the kind of request we got."
+                );
         }
     }
 
@@ -100,20 +104,32 @@ abstract public class AbstractRequestResolver implements RequestResolver {
 
     }
 
-    protected void delete(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest("Command DELETE not supported for current resource.");
+    protected void delete(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        throw new URLMappingError(
+                HttpURLConnection.HTTP_BAD_METHOD,
+                "Command DELETE not supported for current resource."
+        );
     }
 
-    protected void put(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest("Command PUT not supported for current resource.");
+    protected void put(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        throw new URLMappingError(
+                HttpURLConnection.HTTP_BAD_METHOD,
+                "Command PUT not supported for current resource."
+        );
     }
 
-    protected void post(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest("Command POST not supported for current resource.");
+    protected void post(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        throw new URLMappingError(
+                HttpURLConnection.HTTP_BAD_METHOD,
+                "Command POST not supported for current resource."
+        );
     }
 
-    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws NotImplementedHTTPRequest {
-        throw new NotImplementedHTTPRequest("Command GET not supported for current resource.");
+    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        throw new URLMappingError(
+                HttpURLConnection.HTTP_BAD_METHOD,
+                "Command GET not supported for current resource."
+        );
     }
 
     protected Template loadTemplate()

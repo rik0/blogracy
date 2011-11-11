@@ -22,13 +22,14 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 
-import it.unipr.aotlab.blogracy.errors.BlogracyError;
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.mime.MimeFinder;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 import java.io.File;
+import java.net.HttpURLConnection;
 
 /**
  * User: enrico
@@ -41,12 +42,13 @@ public class StaticFileResolvers {
         return new DummyStaticFileResolver();
     }
 
-    static public StaticFileResolver getStaticFileResolver(File filepath) throws URLMappingError {
+    static public StaticFileResolver getStaticFileResolver(File filepath)
+            throws ServerConfigurationError {
         return new StaticFileResolverImpl(filepath);
     }
 
     static public StaticFileResolver getStaticFileResolver(File filepath, MimeFinder mimeFinder)
-            throws URLMappingError {
+            throws ServerConfigurationError {
         return new StaticFileResolverImpl(filepath, mimeFinder);
     }
 
@@ -57,8 +59,9 @@ public class StaticFileResolvers {
         }
 
         @Override
-        public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
-            throw new BlogracyError(new UnsupportedOperationException("Calling resolve of dummy resolver."));
+        public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
+                throws URLMappingError {
+            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, "Static files not available.");
         }
     }
 }

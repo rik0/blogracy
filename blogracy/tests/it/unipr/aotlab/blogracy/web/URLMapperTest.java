@@ -54,7 +54,7 @@ public class URLMapperTest {
         @Override
         public void
         resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
-                throws Exception {
+                throws URLMappingError {
             // ok
         }
     }
@@ -90,10 +90,10 @@ public class URLMapperTest {
     }
 
     private static class HomepageResolver implements RequestResolver {
-        public void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response) throws Exception {
+        public void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response) throws URLMappingError {
 
         }
     }
 
-    
+
 }

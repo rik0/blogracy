@@ -10,18 +10,28 @@ package it.unipr.aotlab.blogracy.errors;
  * Time: 6:30 PM
  */
 public class URLMappingError extends BlogracyError {
-    public URLMappingError() {
+    private int httpErrorStatus;
+
+    public URLMappingError(int httpErrorStatus) {
+        this.httpErrorStatus = httpErrorStatus;
     }
 
-    public URLMappingError(String s) {
+    public URLMappingError(int httpErrorStatus, String s) {
         super(s);
+        this.httpErrorStatus = httpErrorStatus;
     }
 
-    public URLMappingError(String s, Throwable throwable) {
+    public URLMappingError(int httpErrorStatus, String s, Throwable throwable) {
         super(s, throwable);
+        this.httpErrorStatus = httpErrorStatus;
     }
 
-    public URLMappingError(Throwable throwable) {
+    public URLMappingError(int httpErrorStatus, Throwable throwable) {
         super(throwable);
+        this.httpErrorStatus = httpErrorStatus;
+    }
+
+    public int getHttpErrorStatus() {
+        return httpErrorStatus;
     }
 }

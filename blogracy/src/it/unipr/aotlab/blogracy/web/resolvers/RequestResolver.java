@@ -1,5 +1,6 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
@@ -14,5 +15,5 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
  */
 public interface RequestResolver {
     void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response)
-            throws Exception;
+            throws URLMappingError;
 }

@@ -22,7 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 
-import it.unipr.aotlab.blogracy.errors.BlogracyError;
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.mime.MimeFinder;
@@ -44,12 +44,12 @@ public class StaticFileResolverImpl implements StaticFileResolver {
     MimeFinder mimeFinder = MimeFinderFactory.getInstance();
     private File staticFilesDirectory;
 
-    StaticFileResolverImpl(final File staticFilesDirectory) throws URLMappingError {
+    StaticFileResolverImpl(final File staticFilesDirectory) throws ServerConfigurationError {
         checksValidStaticRootAndSetField(staticFilesDirectory);
     }
 
     StaticFileResolverImpl(final File staticFilesDirectory, MimeFinder mimeFinder)
-            throws URLMappingError {
+            throws ServerConfigurationError {
         this(staticFilesDirectory);
         this.mimeFinder = mimeFinder;
     }
@@ -60,19 +60,19 @@ public class StaticFileResolverImpl implements StaticFileResolver {
      * @param staticRoot is the path to check
      * @throws URLMappingError if {@param staticRoot} does not exist or is not a directory
      */
-    private void checksValidStaticRootAndSetField(final File staticRoot) throws URLMappingError {
+    private void checksValidStaticRootAndSetField(final File staticRoot) throws ServerConfigurationError {
         if (staticRoot.exists()) {
             if (staticRoot.isDirectory()) {
                 staticFilesDirectory = staticRoot;
 
             } else {
-                throw new URLMappingError(
+                throw new ServerConfigurationError(
                         "Static files root " +
                                 staticRoot.toString() +
                                 " exists but is not a directory.");
             }
         } else {
-            throw new URLMappingError(
+            throw new ServerConfigurationError(
                     "Static files root " +
                             staticRoot.toString() +
                             " does not exist.");
@@ -83,7 +83,7 @@ public class StaticFileResolverImpl implements StaticFileResolver {
      * {@inheritDoc}
      */
     @Override
-    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
+    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
         final String url = request.getURL();
         final File actualFile = getFileSystemPath(url);
         final String mimeType = mimeFinder.findMime(actualFile);
@@ -106,9 +106,8 @@ public class StaticFileResolverImpl implements StaticFileResolver {
                 response.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
                 // TODO use correct path!
                 response.setHeader("Location", indexFile.toString());
-                sendFile(indexFile, outputStream);
             } else {
-                throw new BlogracyError(e);
+                throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
             }
         }
     }

@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.util.HTMLUtil;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -38,14 +39,27 @@ import java.io.Writer;
  */
 public class ErrorPageResolver implements RequestResolver {
     private Exception exception;
+    private int status;
 
-    public ErrorPageResolver(final Exception e) {
+    public ErrorPageResolver(final URLMappingError e) {
         exception = e;
+        status = e.getHttpErrorStatus();
     }
 
+    public ErrorPageResolver(final Exception e, int httpErrorStatus) {
+        exception = e;
+        status = httpErrorStatus;
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p/>
+     * Notice that this specific implementation does not throw anything.
+     */
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
         String errorPage = HTMLUtil.errorString(exception);
+        response.setReplyStatus(status);
         response.setContentType("text/html");
         write(response, errorPage);
     }
