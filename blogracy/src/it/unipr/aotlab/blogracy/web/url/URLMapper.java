@@ -2,6 +2,7 @@ package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
+import it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -35,6 +36,7 @@ import java.util.List;
 public class URLMapper {
     List<Mapping> lst;
     private RequestResolver homePageResolver = null;
+    private File staticFilesDirectory;
 
     /**
      * Returns the appropriate resolver for the required URL.
@@ -54,13 +56,23 @@ public class URLMapper {
     }
 
     private RequestResolver findResolver(String url) throws URLMappingError {
+        RequestResolver resolver = null;
         checkURLSanity(url);
+        if ((resolver = visitDefinedMappings(url)) != null) {
+            return resolver;
+        } else {
+            return new StaticFileResolver(staticFilesDirectory, url);
+        }
+        //throw new URLMappingError("Could not resolve URL.");
+    }
+
+    private RequestResolver visitDefinedMappings(final String url) throws URLMappingError {
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {
                 return mapping.buildResolver();
             }
         }
-        throw new URLMappingError("Could not resolve URL.");
+        return null;
     }
 
     private void checkURLSanity(final String url) throws URLMappingError {
@@ -102,20 +114,8 @@ public class URLMapper {
     }
 
     public void setStaticFilesDirectory(File staticRoot) throws URLMappingError {
-        if (staticRoot.exists()) {
-            if (staticRoot.isDirectory()) {
-                throw new UnsupportedOperationException();
-            } else {
-                throw new URLMappingError(
-                        "Static files root " +
-                                staticRoot.toString() +
-                                " exists but is not a directory.");
-            }
-        }
-        throw new URLMappingError(
-                "Static files root " +
-                        staticRoot.toString() +
-                        " does not exist.");
+        StaticFileResolver.checksValidStaticRoot(staticRoot);
+        staticFilesDirectory = staticRoot;
     }
 
     /**
