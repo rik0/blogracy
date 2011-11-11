@@ -22,89 +22,12 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.errors.BlogracyError;
-import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import it.unipr.aotlab.blogracy.mime.MimeFinder;
-import it.unipr.aotlab.blogracy.mime.MimeFinderFactory;
-import it.unipr.aotlab.blogracy.util.FileUtils;
-import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
-import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
-
-import java.io.*;
-
 /**
  * User: enrico
  * Package: it.unipr.aotlab.blogracy.web.resolvers
  * Date: 11/11/11
- * Time: 4:10 PM
+ * Time: 5:01 PM
  */
-public class StaticFileResolver implements RequestResolver {
-    MimeFinder mimeFinder = MimeFinderFactory.getInstance();
-    private File staticFilesDirectory;
-
-    public StaticFileResolver(final File staticFilesDirectory) throws URLMappingError {
-        checksValidStaticRootAndSetField(staticFilesDirectory);
-    }
-
-    public StaticFileResolver(final File staticFilesDirectory, MimeFinder mimeFinder)
-            throws URLMappingError {
-        this(staticFilesDirectory);
-        this.mimeFinder = mimeFinder;
-    }
-
-    /**
-     * Checks if {@param staticRoot} exists and is a directory
-     *
-     * @param staticRoot is the path to check
-     * @throws URLMappingError if {@param staticRoot} does not exist or is not a directory
-     */
-    private void checksValidStaticRootAndSetField(final File staticRoot) throws URLMappingError {
-        if (staticRoot.exists()) {
-            if (staticRoot.isDirectory()) {
-                staticFilesDirectory = staticRoot;
-            } else {
-                throw new URLMappingError(
-                        "Static files root " +
-                                staticRoot.toString() +
-                                " exists but is not a directory.");
-            }
-        }
-        throw new URLMappingError(
-                "Static files root " +
-                        staticRoot.toString() +
-                        " does not exist.");
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws Exception {
-        final String url = request.getURL();
-        final File actualFile = getFileSystemPath(url);
-        final String mimeType = mimeFinder.findMime(actualFile);
-        final OutputStream outputStream = response.getOutputStream();
-
-        response.setContentType(mimeType);
-
-        try {
-            FileUtils.copyCompletely(
-                    new FileReader(actualFile),
-                    new OutputStreamWriter(outputStream)
-            );
-            outputStream.flush();
-            outputStream.close();
-        } catch (IOException e) {
-            throw new BlogracyError(e);
-        }
-    }
-
-    private File getFileSystemPath(final String url) {
-        return new File(staticFilesDirectory, url);
-    }
-
-    public boolean couldResolve(final String url) {
-        File tentativeFile = getFileSystemPath(url);
-        return tentativeFile.exists();
-    }
+public interface StaticFileResolver extends RequestResolver {
+    boolean couldResolve(String url);
 }

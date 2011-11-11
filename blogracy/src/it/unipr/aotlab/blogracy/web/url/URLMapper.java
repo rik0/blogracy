@@ -3,6 +3,7 @@ package it.unipr.aotlab.blogracy.web.url;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver;
+import it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolvers;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -36,7 +37,7 @@ import java.util.List;
 public class URLMapper {
     List<Mapping> lst;
     private RequestResolver homePageResolver = null;
-    private StaticFileResolver staticFilesResolver;
+    private StaticFileResolver staticFilesResolver = StaticFileResolvers.getNullStaticFileResolver();
 
     /**
      * Returns the appropriate resolver for the required URL.
@@ -114,7 +115,7 @@ public class URLMapper {
     }
 
     public void setStaticFilesDirectory(File staticRoot) throws URLMappingError {
-        staticFilesResolver = new StaticFileResolver(staticRoot);
+        staticFilesResolver = StaticFileResolvers.getStaticFileResolver(staticRoot);
     }
 
     /**
