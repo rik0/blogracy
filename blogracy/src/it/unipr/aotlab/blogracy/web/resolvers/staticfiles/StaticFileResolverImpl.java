@@ -62,17 +62,19 @@ public class StaticFileResolverImpl implements StaticFileResolver {
         if (staticRoot.exists()) {
             if (staticRoot.isDirectory()) {
                 staticFilesDirectory = staticRoot;
+
             } else {
                 throw new URLMappingError(
                         "Static files root " +
                                 staticRoot.toString() +
                                 " exists but is not a directory.");
             }
+        } else {
+            throw new URLMappingError(
+                    "Static files root " +
+                            staticRoot.toString() +
+                            " does not exist.");
         }
-        throw new URLMappingError(
-                "Static files root " +
-                        staticRoot.toString() +
-                        " does not exist.");
     }
 
     /**
