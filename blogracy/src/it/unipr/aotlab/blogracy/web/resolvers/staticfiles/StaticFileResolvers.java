@@ -53,15 +53,23 @@ public class StaticFileResolvers {
     }
 
     private static class DummyStaticFileResolver implements StaticFileResolver {
+
+        private final String errorMessage = "Static files not available.";
+
         @Override
         public boolean couldResolve(final String url) {
             return false;
         }
 
         @Override
+        public String resolvePath(final String url) throws URLMappingError {
+            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, errorMessage);
+        }
+
+        @Override
         public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
                 throws URLMappingError {
-            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, "Static files not available.");
+            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, errorMessage);
         }
     }
 }

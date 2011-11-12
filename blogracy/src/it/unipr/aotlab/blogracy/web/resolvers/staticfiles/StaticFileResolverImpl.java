@@ -129,6 +129,19 @@ public class StaticFileResolverImpl implements StaticFileResolver {
         }
     }
 
+    @Override
+    public String resolvePath(final String url) throws URLMappingError {
+        final File fileSystemPath = getFileSystemPath(url);
+        if (fileSystemPath.exists()) {
+            return fileSystemPath.getAbsolutePath();
+        } else {
+            throw new URLMappingError(
+                    HttpURLConnection.HTTP_NOT_FOUND,
+                    "Could not find file for " + fileSystemPath.getAbsolutePath()
+            );
+        }
+    }
+
     private void sendFile(final File actualFile,
                           final OutputStream outputStream) throws IOException {
         FileUtils.copyCompletely(
