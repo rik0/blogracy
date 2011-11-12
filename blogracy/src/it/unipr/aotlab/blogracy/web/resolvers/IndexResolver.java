@@ -14,12 +14,11 @@ import java.io.StringWriter;
  * User: enrico
  * Date: 11/7/11
  * Time: 3:38 PM
- * To change this template use File | Settings | File Templates.
  */
 public class IndexResolver extends AbstractRequestResolver {
     VelocityContext velocityContext = new VelocityContext();
-    private String VIEW_NAME = "index.vm";
-    private String VIEW_TYPE = "text/html";
+    final static private String VIEW_NAME = "index.vm";
+    final static private String VIEW_TYPE = "text/html";
 
     @Override
     protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response) {
@@ -27,7 +26,7 @@ public class IndexResolver extends AbstractRequestResolver {
         Template indexTemplate = loadTemplate();
         indexTemplate.initDocument();
         indexTemplate.merge(
-                new VelocityContext(),
+                velocityContext,
                 writer
         );
         String text = writer.toString();
