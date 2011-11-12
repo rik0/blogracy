@@ -55,7 +55,7 @@
     <property name="maven-ant-tasks.path"
               value="${lib.dir}${file.separator}${maven-ant-tasks.jar}"/>
     <property name="maven-ant-tasks.url"
-              value="http://www.apache.org/dyn/closer.cgi/maven/binaries/${maven-ant-tasks.jar}"/>
+              value="http://apache.fis.uniroma2.it//maven/binaries/${maven-ant-tasks.jar}"/>
     <available property="maven-ant-tasks.exists" file="${maven-ant-tasks.path}"/>
     <path id="maven-ant-tasks.classpath" path="${maven-ant-tasks.path}"/>
     <typedef resource="org/apache/maven/artifact/ant/antlib.xml"
