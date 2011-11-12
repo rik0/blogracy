@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy;
+package it.unipr.aotlab.blogracy.oldcode;
 
 
 public class Rss {

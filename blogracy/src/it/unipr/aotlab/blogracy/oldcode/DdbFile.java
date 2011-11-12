@@ -20,28 +20,50 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy;
+package it.unipr.aotlab.blogracy.oldcode;
 
-import java.io.InputStream;
+import java.io.Serializable;
+import java.net.URL;
 
 
-class
-        DownloadDetails {
-    private InputStream is;
-    private String content_type;
+public class DdbFile implements Serializable {
 
-    protected DownloadDetails(InputStream _is, String _content_type) {
-        is = _is;
-        content_type = _content_type;
+    private static final long serialVersionUID = 1L;
+    private String fileName;
+    private URL magnetLink;
+    private String fileKey;
+
+    public DdbFile() {
     }
 
-    protected String
-    getContentType() {
-        return (content_type);
+    public DdbFile(String torrentHash, String s_fileName, URL torrentMagnet) {
+        fileKey = torrentHash;
+        fileName = s_fileName;
+        magnetLink = torrentMagnet;
+
     }
 
-    protected InputStream
-    getInputStream() {
-        return (is);
+    public String getfileName() {
+        return fileName;
+    }
+
+
+    public URL getMagnetLink() {
+        return magnetLink;
+    }
+
+
+    public void setfileName(String s_fileName) {
+        fileName = s_fileName;
+    }
+
+
+    public void setMagnetLink(URL s_magnetLink) {
+        magnetLink = s_magnetLink;
+    }
+
+    @Override
+    public String toString() {
+        return "key=" + fileKey + "  --  fileName=" + fileName + "  --  magnetLink=" + magnetLink + "";
     }
 }

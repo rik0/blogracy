@@ -20,50 +20,27 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy;
-
-import java.io.Serializable;
-import java.net.URL;
+package it.unipr.aotlab.blogracy.oldcode;
 
 
-public class DdbFile implements Serializable {
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 
-    private static final long serialVersionUID = 1L;
-    private String fileName;
-    private URL magnetLink;
-    private String fileKey;
+public class DdbListenerWrite implements DistributedDatabaseListener {
 
-    public DdbFile() {
-    }
-
-    public DdbFile(String torrentHash, String s_fileName, URL torrentMagnet) {
-        fileKey = torrentHash;
-        fileName = s_fileName;
-        magnetLink = torrentMagnet;
-
-    }
-
-    public String getfileName() {
-        return fileName;
-    }
-
-
-    public URL getMagnetLink() {
-        return magnetLink;
-    }
-
-
-    public void setfileName(String s_fileName) {
-        fileName = s_fileName;
-    }
-
-
-    public void setMagnetLink(URL s_magnetLink) {
-        magnetLink = s_magnetLink;
-    }
 
     @Override
-    public String toString() {
-        return "key=" + fileKey + "  --  fileName=" + fileName + "  --  magnetLink=" + magnetLink + "";
+    public void event(DistributedDatabaseEvent event) {
+        //get the event type
+        int type = event.getType();
+        //if the plugin start to write
+        if (type == DistributedDatabaseEvent.ET_OPERATION_STARTS) //i start to write
+        {
+            // System.out.println("i'm starting write on DDB");
+        } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {//timeout Error
+            // System.out.println("Timeout error!\n 1000 seconds elapsed without any response from server.");
+        } else if (event.getType() == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {//write successful
+            // System.out.println("Data correctly write on DDB");
+        }
     }
 }

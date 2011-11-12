@@ -19,8 +19,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
-package it.unipr.aotlab.blogracy;
+package it.unipr.aotlab.blogracy.oldcode;
 
+import it.unipr.aotlab.blogracy.Blogracy;
 import org.gudy.azureus2.core3.util.ByteFormatter;
 import org.gudy.azureus2.core3.util.SystemTime;
 import org.gudy.azureus2.core3.util.TorrentUtils;
@@ -951,43 +952,43 @@ public class Controller {
      */
     public void manageFriend(int type, String deleteName) {
         //if (((cView.friendIdTxt.getText() != "") && (type == 1)) || (type == 2)) {
-            //if doesn't exists the file firends, make him
-            if (!(new File("friends.txt").exists())) {
-                try {
-                    FileOutputStream file = new FileOutputStream("friends.txt");
-                    PrintStream Output = new PrintStream(file);
-                    //Output.print(cView.friendIdTxt.getText());
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
-
-            } else {
-                try {
-                    //open the friends file
-                    String line, str = "";
-                    FileReader reader = new FileReader("friends.txt");
-                    Scanner in = new Scanner(reader);
-                    while (in.hasNextLine()) {
-                        line = in.nextLine();
-                        //delete a friends
-                        if (((type == 2) && (!(deleteName.equals(line)))) || (type == 1)) {
-                            str += line + "\n";
-                        }
-                    }
-                    //add a friends
-                    if (type == 1) {
-                        //str += cView.friendIdTxt.getText();
-                        // File friendsDir = new File(friends_feed_dir, "" + cView.friendIdTxt.getText());
-                        // if (!friendsDir.isDirectory())
-                        //     friendsDir.mkdirs();
-                    }
-                    PrintStream Output = new PrintStream("friends.txt");
-                    Output.println(str);
-                    viewRSS(0, allStr);
-                } catch (FileNotFoundException e) {
-                    e.printStackTrace();
-                }
+        //if doesn't exists the file firends, make him
+        if (!(new File("friends.txt").exists())) {
+            try {
+                FileOutputStream file = new FileOutputStream("friends.txt");
+                PrintStream Output = new PrintStream(file);
+                //Output.print(cView.friendIdTxt.getText());
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
             }
+
+        } else {
+            try {
+                //open the friends file
+                String line, str = "";
+                FileReader reader = new FileReader("friends.txt");
+                Scanner in = new Scanner(reader);
+                while (in.hasNextLine()) {
+                    line = in.nextLine();
+                    //delete a friends
+                    if (((type == 2) && (!(deleteName.equals(line)))) || (type == 1)) {
+                        str += line + "\n";
+                    }
+                }
+                //add a friends
+                if (type == 1) {
+                    //str += cView.friendIdTxt.getText();
+                    // File friendsDir = new File(friends_feed_dir, "" + cView.friendIdTxt.getText());
+                    // if (!friendsDir.isDirectory())
+                    //     friendsDir.mkdirs();
+                }
+                PrintStream Output = new PrintStream("friends.txt");
+                Output.println(str);
+                viewRSS(0, allStr);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+        }
         //}
     }
 
@@ -1007,13 +1008,13 @@ public class Controller {
         // System.out.println(id);
         //if ((cView.textTxt.getText().length() > 0) && ((cView.titleTxt.getText().length() > 0) || (Integer.parseInt(id) > 1))) {
         //    Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), cView.titleTxt.getText(), "", type, link, 10);
-            Rss contentRss = null;
-            userContentMap.put(id + "", contentRss);
-            cModel.setUserContentmap(userContentMap);
-            changeLblNContent(0);
-            cModel.setStatus("contentAddesdSuccessfulMessage");//currentId
+        Rss contentRss = null;
+        userContentMap.put(id + "", contentRss);
+        cModel.setUserContentmap(userContentMap);
+        changeLblNContent(0);
+        cModel.setStatus("contentAddesdSuccessfulMessage");//currentId
         //} else {
-            cModel.setStatus("errorAddingContentMessage");//currentId
+        cModel.setStatus("errorAddingContentMessage");//currentId
         //}
     }
 
@@ -1026,15 +1027,15 @@ public class Controller {
      */
     public void addFileToRSS(String file, String type, String id) {
         //if (((type.equals("link")) && (cView.textTxt.getText().length() != 0)) || (type.equals("img"))) {
-            //Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), file, "blankDate", type, file, 10);
-            Rss contentRss = null;
-            userContentMap.put(id + "", contentRss);
-            cModel.setUserContentmap(userContentMap);
-            changeLblNContent(0);
-            cModel.setStatus("fileAddedSuccessfulMessage");
+        //Rss contentRss = new Rss(Long.parseLong("0"), "author", cView.textTxt.getText(), file, "blankDate", type, file, 10);
+        Rss contentRss = null;
+        userContentMap.put(id + "", contentRss);
+        cModel.setUserContentmap(userContentMap);
+        changeLblNContent(0);
+        cModel.setStatus("fileAddedSuccessfulMessage");
 
         //} else {
-            cModel.setStatus("descriptionAddingFileRequiredMessage");
+        cModel.setStatus("descriptionAddingFileRequiredMessage");
         //}
     }
 

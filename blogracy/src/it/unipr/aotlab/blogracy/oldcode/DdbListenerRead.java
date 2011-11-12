@@ -20,27 +20,48 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy;
+package it.unipr.aotlab.blogracy.oldcode;
 
-
+import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
 
-public class DdbListenerWrite implements DistributedDatabaseListener {
+import java.net.URL;
 
+
+public class DdbListenerRead implements DistributedDatabaseListener {
 
     @Override
     public void event(DistributedDatabaseEvent event) {
         //get the event type
         int type = event.getType();
-        //if the plugin start to write
-        if (type == DistributedDatabaseEvent.ET_OPERATION_STARTS) //i start to write
-        {
-            // System.out.println("i'm starting write on DDB");
-        } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {//timeout Error
+        //finish to read the DDB
+        if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
+            // System.out.println("End read DDB");
+            return;
+        } else if (type == DistributedDatabaseEvent.ET_OPERATION_STARTS) { //I start read
+            // System.out.println("Start to read");//\n evento: "+event +";  type: "+type
+        } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) { //timeout error
             // System.out.println("Timeout error!\n 1000 seconds elapsed without any response from server.");
-        } else if (event.getType() == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {//write successful
-            // System.out.println("Data correctly write on DDB");
+        } else if (type == DistributedDatabaseEvent.ET_VALUE_READ) { // found the searched key
+
+            try {
+                // System.out.println("Found the key on the DDB");
+                DistributedDatabaseValue value = event.getValue();
+
+                // System.out.println("Value found ->" + value.getValue(String.class));
+
+                String magnet = (String) "magnet:?xt=urn:btih:" + value.getValue(String.class);
+                PluginInterface pluginInterface = Controller.pluginInterface;
+                //add the URI to download
+                pluginInterface.getDownloadManager().addDownload(new URL(magnet), true);
+            } catch (Throwable e) {
+                // System.out.println("Errore nella lettura del DDB!");
+            }
         }
+
     }
 }
+
+

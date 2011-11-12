@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy;
+package it.unipr.aotlab.blogracy.oldcode;
 
 import java.util.Observable;
 import java.util.SortedMap;
