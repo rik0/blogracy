@@ -39,6 +39,7 @@ import java.util.List;
  */
 public class URLMapper {
     List<Mapping> lst;
+    @Deprecated
     private RequestResolver homePageResolver = null;
     private StaticFileResolver staticFilesResolver = StaticFileResolvers.getNullStaticFileResolver();
 
@@ -60,10 +61,12 @@ public class URLMapper {
         }
     }
 
+    @Deprecated
     private boolean shouldUseHomepageResolver() {
         return homePageResolver != null;
     }
 
+    @Deprecated
     private boolean isHomepageURL(final String url) {
         return url.equals("/");
     }
@@ -157,6 +160,7 @@ public class URLMapper {
      *                         <p/>
      *                         As always, resolvers should be stateless.
      */
+    @Deprecated
     public void setHomePage(RequestResolver homePageResolver) {
         this.homePageResolver = homePageResolver;
     }
