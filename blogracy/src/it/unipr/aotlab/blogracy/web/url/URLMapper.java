@@ -38,8 +38,7 @@ import java.util.List;
  */
 public class URLMapper {
     List<Mapping> lst;
-    @Deprecated
-    private RequestResolver homePageResolver = null;
+
     private StaticFileResolver staticFilesResolver = StaticFileResolvers.getNullStaticFileResolver();
 
     /**
@@ -53,21 +52,8 @@ public class URLMapper {
      */
     public RequestResolver getResolver(String url) throws ServerConfigurationError, URLMappingError {
         url = fixLeadingAndTrailingSlashes(url);
-        if (isHomepageURL(url) && shouldUseHomepageResolver()) {
-            return homePageResolver;
-        } else {
-            return findResolver(url);
-        }
-    }
+        return findResolver(url);
 
-    @Deprecated
-    private boolean shouldUseHomepageResolver() {
-        return homePageResolver != null;
-    }
-
-    @Deprecated
-    private boolean isHomepageURL(final String url) {
-        return url.equals("/");
     }
 
     /**
@@ -150,18 +136,6 @@ public class URLMapper {
 
     public void setStaticFilesDirectory(String staticRoot) throws ServerConfigurationError {
         staticFilesResolver = StaticFileResolvers.getStaticFileResolver(staticRoot);
-    }
-
-    /**
-     * Use the specified resolver to resolve requests to the homepage.
-     *
-     * @param homePageResolver the resolver <b>instance</b> to be used.
-     *                         <p/>
-     *                         As always, resolvers should be stateless.
-     */
-    @Deprecated
-    public void setHomePage(RequestResolver homePageResolver) {
-        this.homePageResolver = homePageResolver;
     }
 
     private void addMappings(String[] strings) throws ServerConfigurationError {
