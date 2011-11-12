@@ -25,13 +25,12 @@ package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
-import it.unipr.aotlab.blogracy.mime.MimeFinder;
-import it.unipr.aotlab.blogracy.mime.MimeFinderFactory;
-import it.unipr.aotlab.blogracy.util.FileUtils;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 
 /**
@@ -41,17 +40,10 @@ import java.net.HttpURLConnection;
  * Time: 4:10 PM
  */
 public class StaticFileResolverImpl implements StaticFileResolver {
-    MimeFinder mimeFinder = MimeFinderFactory.getInstance();
     private File staticFilesDirectory;
 
     StaticFileResolverImpl(final File staticFilesDirectory) throws ServerConfigurationError {
         checksValidStaticRootAndSetField(staticFilesDirectory);
-    }
-
-    StaticFileResolverImpl(final File staticFilesDirectory, MimeFinder mimeFinder)
-            throws ServerConfigurationError {
-        this(staticFilesDirectory);
-        this.mimeFinder = mimeFinder;
     }
 
     /**
@@ -162,29 +154,6 @@ public class StaticFileResolverImpl implements StaticFileResolver {
 
     private boolean mayBeDirectoryUrl(final String url) {
         return url.endsWith("/");
-    }
-
-    @Override
-    public String resolvePath(final String url) throws URLMappingError {
-        final File fileSystemPath = getFileSystemPath(url);
-        if (fileSystemPath.exists()) {
-            return fileSystemPath.getAbsolutePath();
-        } else {
-            throw new URLMappingError(
-                    HttpURLConnection.HTTP_NOT_FOUND,
-                    "Could not find file for " + fileSystemPath.getAbsolutePath()
-            );
-        }
-    }
-
-    private void sendFile(final File actualFile,
-                          final OutputStream outputStream) throws IOException {
-        FileUtils.copyCompletely(
-                new FileReader(actualFile),
-                new OutputStreamWriter(outputStream)
-        );
-        outputStream.flush();
-        outputStream.close();
     }
 
     private File getFileSystemPath(final String url) {

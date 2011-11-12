@@ -22,7 +22,6 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 
-import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
 /**
@@ -39,13 +38,4 @@ public interface StaticFileResolver extends RequestResolver {
      * @return true if the file can be resolved
      */
     boolean couldResolve(String url);
-
-    /**
-     * Resolves the url to a filesystem path
-     *
-     * @param url the url to resolve
-     * @return the path of the file represented by the server side url
-     * @throws URLMappingError if the file could not be resolved.
-     */
-    String resolvePath(String url) throws URLMappingError;
 }

@@ -24,7 +24,6 @@ package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import it.unipr.aotlab.blogracy.mime.MimeFinder;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
@@ -47,11 +46,6 @@ public class StaticFileResolvers {
         return new StaticFileResolverImpl(filepath);
     }
 
-    static public StaticFileResolver getStaticFileResolver(File filepath, MimeFinder mimeFinder)
-            throws ServerConfigurationError {
-        return new StaticFileResolverImpl(filepath, mimeFinder);
-    }
-
     private static class DummyStaticFileResolver implements StaticFileResolver {
 
         private final String errorMessage = "Static files not available.";
@@ -59,11 +53,6 @@ public class StaticFileResolvers {
         @Override
         public boolean couldResolve(final String url) {
             return false;
-        }
-
-        @Override
-        public String resolvePath(final String url) throws URLMappingError {
-            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, errorMessage);
         }
 
         @Override
