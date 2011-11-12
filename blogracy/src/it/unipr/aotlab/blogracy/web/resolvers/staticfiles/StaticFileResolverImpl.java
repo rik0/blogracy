@@ -58,32 +58,44 @@ public class StaticFileResolverImpl implements StaticFileResolver {
      * Checks if {@param staticRoot} exists and is a directory
      *
      * @param staticRoot is the path to check
-     * @throws URLMappingError if {@param staticRoot} does not exist or is not a directory
+     * @throws ServerConfigurationError if {@param staticRoot} does not exist or is not a directory
      */
-    private void checksValidStaticRootAndSetField(final File staticRoot) throws ServerConfigurationError {
+    private void checksValidStaticRootAndSetField(final File staticRoot)
+            throws ServerConfigurationError {
         if (staticRoot.exists()) {
             if (staticRoot.isDirectory()) {
                 staticFilesDirectory = staticRoot;
 
             } else {
                 throw new ServerConfigurationError(
-                        "Static files root " +
-                                staticRoot.toString() +
-                                " exists but is not a directory.");
+                        errorMessageNotDirectory(staticRoot));
             }
         } else {
             throw new ServerConfigurationError(
-                    "Static files root " +
-                            staticRoot.toString() +
-                            " does not exist.");
+                    errorMessageNotExists(staticRoot));
         }
+    }
+
+    private static String errorMessageNotExists(final File staticRoot) {
+        return "Static files root " +
+                staticRoot.toString() +
+                " does not exist.";
+    }
+
+    private static String errorMessageNotDirectory(final File staticRoot) {
+        return "Static files root " +
+                staticRoot.toString() +
+                " exists but is not a directory.";
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+    public void resolve(
+            final TrackerWebPageRequest request,
+            final TrackerWebPageResponse response)
+            throws URLMappingError {
         final String url = request.getURL();
         final File actualFile = getFileSystemPath(url);
         final String mimeType = mimeFinder.findMime(actualFile);
@@ -117,7 +129,8 @@ public class StaticFileResolverImpl implements StaticFileResolver {
         }
     }
 
-    private void sendFile(final File actualFile, final OutputStream outputStream) throws IOException {
+    private void sendFile(final File actualFile,
+                          final OutputStream outputStream) throws IOException {
         FileUtils.copyCompletely(
                 new FileReader(actualFile),
                 new OutputStreamWriter(outputStream)
