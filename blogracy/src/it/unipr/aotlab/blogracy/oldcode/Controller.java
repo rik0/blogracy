@@ -62,6 +62,7 @@ import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
+@Deprecated
 public class Controller {
     static PluginInterface pluginInterface = null;
     private static SortedMap<String, Rss> userContentMap = new TreeMap<String, Rss>();

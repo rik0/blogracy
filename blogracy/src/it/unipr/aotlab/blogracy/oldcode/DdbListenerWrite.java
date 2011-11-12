@@ -26,6 +26,7 @@ package it.unipr.aotlab.blogracy.oldcode;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 
+@Deprecated
 public class DdbListenerWrite implements DistributedDatabaseListener {
 
 

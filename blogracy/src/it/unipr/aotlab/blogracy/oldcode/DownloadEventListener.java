@@ -31,7 +31,7 @@ import org.gudy.azureus2.plugins.torrent.TorrentAttribute;
 
 import java.io.File;
 
-
+@Deprecated
 class DownloadEventListener implements DownloadListener {
     private PluginInterface pluginInterface;
 

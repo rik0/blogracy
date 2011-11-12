@@ -22,7 +22,7 @@
 
 package it.unipr.aotlab.blogracy.oldcode;
 
-
+@Deprecated
 public class Rss {
 
     private Long id;

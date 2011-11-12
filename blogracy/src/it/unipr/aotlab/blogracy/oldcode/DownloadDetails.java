@@ -24,7 +24,7 @@ package it.unipr.aotlab.blogracy.oldcode;
 
 import java.io.InputStream;
 
-
+@Deprecated
 class
         DownloadDetails {
     private InputStream is;

@@ -30,6 +30,7 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
 import java.net.URL;
 
 
+@Deprecated
 public class DdbListenerRead implements DistributedDatabaseListener {
 
     @Override

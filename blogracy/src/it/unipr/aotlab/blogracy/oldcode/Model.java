@@ -26,7 +26,7 @@ import java.util.Observable;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-
+@Deprecated
 public class Model extends Observable {
 
 

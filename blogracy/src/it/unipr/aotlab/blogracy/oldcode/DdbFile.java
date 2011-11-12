@@ -26,6 +26,7 @@ import java.io.Serializable;
 import java.net.URL;
 
 
+@Deprecated
 public class DdbFile implements Serializable {
 
     private static final long serialVersionUID = 1L;
