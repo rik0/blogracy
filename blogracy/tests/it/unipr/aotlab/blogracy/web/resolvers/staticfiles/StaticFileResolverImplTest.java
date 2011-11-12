@@ -23,6 +23,7 @@
 package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.easymock.EasyMockSupport;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
@@ -32,9 +33,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.*;
 
 import static org.easymock.EasyMock.expect;
 
@@ -84,28 +83,56 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
     @Test
     public void testResolveStyle() throws Exception {
         final String filename = "/css/style.css";
+        final String contentType = "text/css";
 
-        TrackerWebPageRequest requestMock = createNiceMock(TrackerWebPageRequest.class);
-        expect(requestMock.getURL()).andReturn(filename).anyTimes();
+        testResolve(filename, contentType);
+    }
 
-        TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
+    @Test
+    public void testResolveJavascript() throws Exception {
+        final String filename = "/scripts/main.js";
+        final String contentType = "text/javascript";
 
+        testResolve(filename, contentType);
+    }
+
+    private void testResolve(final String filename, final String contentType) throws URLMappingError, IOException {
         final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        expect(responseMock.getOutputStream()).andReturn(byteArrayOutputStream);
-        responseMock.setContentType("text/css");
+        final FileInputStream fileInputStream = new FileInputStream(
+                resolver.resolvePath(filename)
+        );
+
+        TrackerWebPageRequest requestMock = prepareRequestMock(filename);
+        TrackerWebPageResponse responseMock = prepareResponseMock(contentType, byteArrayOutputStream);
 
         replayAll();
         resolver.resolve(requestMock, responseMock);
         verifyAll();
-        byte[] fileContents = byteArrayOutputStream.toByteArray();
-        byte[] expectedFileContents = new byte[fileContents.length];
-        FileInputStream fileInputStream = new FileInputStream(
-                resolver.resolvePath(filename)
-        );
-        int readBytes = fileInputStream.read(expectedFileContents);
+        assertSameFileContents(byteArrayOutputStream, fileInputStream);
+    }
+
+    private void assertSameFileContents(
+            final ByteArrayOutputStream byteArrayOutputStream,
+            final InputStream fileInputStream) throws IOException {
+        final byte[] fileContents = byteArrayOutputStream.toByteArray();
+        final byte[] expectedFileContents = new byte[fileContents.length];
+        final int readBytes = fileInputStream.read(expectedFileContents);
         Assert.assertEquals(fileContents.length, readBytes);
         Assert.assertEquals(-1, fileInputStream.read());
         Assert.assertArrayEquals(expectedFileContents, fileContents);
+    }
+
+    private TrackerWebPageResponse prepareResponseMock(final String contentType, final ByteArrayOutputStream byteArrayOutputStream) {
+        TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
+        expect(responseMock.getOutputStream()).andReturn(byteArrayOutputStream);
+        responseMock.setContentType(contentType);
+        return responseMock;
+    }
+
+    private TrackerWebPageRequest prepareRequestMock(final String filename) {
+        TrackerWebPageRequest requestMock = createNiceMock(TrackerWebPageRequest.class);
+        expect(requestMock.getURL()).andReturn(filename).anyTimes();
+        return requestMock;
     }
 
     @Test
