@@ -48,29 +48,45 @@ public class URLMapper {
      * @param url to be resolved. If the url ends with a slash, it is removed.
      * @return the appropriate resolver. If exceptions are thrown, and {@link it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver} is returned.
      *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
-     * @throws URLMappingError if the URL cannot be resolved.
+     * @throws URLMappingError          if the URL cannot be resolved.
+     * @throws ServerConfigurationError if something was wrong in the configuration.
      */
     public RequestResolver getResolver(String url) throws ServerConfigurationError, URLMappingError {
-        url = removeTrailingSlash(url);
-        if (url.length() == 0 && homePageResolver != null) {
+        url = fixLeadingAndTrailingSlashes(url);
+        if (isHomepageURL(url)) {
             return homePageResolver;
         } else {
             return findResolver(url);
         }
     }
 
+    private boolean isHomepageURL(final String url) {
+        return url.equals("/");
+    }
+
+    /**
+     * Finds the appropriate resolver for {@param url}.
+     *
+     * @param url is the url to be resolved
+     * @return a not null resolver
+     * @throws ServerConfigurationError if something was wrong in the configurations
+     * @throws URLMappingError          if the url could not be resolved
+     */
     private RequestResolver findResolver(String url) throws ServerConfigurationError, URLMappingError {
-        checkURLSanity(url);
         RequestResolver resolver = visitDefinedMappings(url);
         if (resolver != null) {
             return resolver;
         } else if (staticFilesResolver.couldResolve(url)) {
             return staticFilesResolver;
         }
-        return new MissingPageResolver(url);
+        throw new URLMappingError(
+                HttpURLConnection.HTTP_NOT_FOUND,
+                "Could not find an appropriate resolver for " + url
+        );
     }
 
     private RequestResolver visitDefinedMappings(final String url) throws ServerConfigurationError {
+        // TODO this should not throw ServerConfigurationError as they should be thrown only at configuration time.
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {
                 return mapping.buildResolver();
@@ -79,20 +95,26 @@ public class URLMapper {
         return null;
     }
 
-    private void checkURLSanity(final String url) throws URLMappingError {
-        if (!startsWithSlash(url)) {
-            throw new URLMappingError(
-                    HttpURLConnection.HTTP_NOT_FOUND,
-                    "Invalid URL: does not start with slash."
-            );
+    /**
+     * Return a new url with the last trailing slash removed (if present) and a leading
+     * slash added (if missing)
+     *
+     * @param url the starting url
+     * @return the fixed url
+     */
+    private String fixLeadingAndTrailingSlashes(final String url) {
+        return fixLeadingSlash(fixTrailingSlash(url));
+    }
+
+    private String fixLeadingSlash(final String url) {
+        if (url.startsWith("/")) {
+            return url;
+        } else {
+            return "/" + url;
         }
     }
 
-    private boolean startsWithSlash(final String url) {
-        return url.startsWith("/");
-    }
-
-    private String removeTrailingSlash(final String url) {
+    private String fixTrailingSlash(final String url) {
         if (url.endsWith("/")) {
             return url.substring(0, url.length() - 1);
         } else {
@@ -107,9 +129,9 @@ public class URLMapper {
      *                odd elements are interpreted as patterns, even elements are
      *                interpreted as the fully qualified names of the classes which
      *                resolve such URLs
-     * @throws URLMappingError if the number of elements is not even,
-     *                         if some pattern is not valid or if some classfile cannot be
-     *                         found.
+     * @throws ServerConfigurationError if the number of elements is not even,
+     *                                  if some pattern is not valid or if some classfile cannot be
+     *                                  found.
      */
     public void configure(String... strings) throws ServerConfigurationError {
         if (checkStringsAreEven(strings)) {

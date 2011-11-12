@@ -43,6 +43,7 @@ import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.util.Properties;
 
 
@@ -63,10 +64,10 @@ public class Blogracy extends WebPlugin {
     static private PluginInterface plugin;
 
     // Velocity configuration keys
-    private final String VELOCITY_RESOURCE_LOADER_PATH_KEY = "file.resource.loader.path";
+    private static final String VELOCITY_RESOURCE_LOADER_PATH_KEY = "file.resource.loader.path";
 
     // Misc Keys
-    private final String MESSAGES_BLOGRACY_URL_KEY = "blogracy.url";
+    private static final String MESSAGES_BLOGRACY_URL_KEY = "blogracy.url";
     private static final String PLUGIN_NAME_KEY = "blogracy.name";
 
     // blogracy.internal. keys
@@ -224,14 +225,16 @@ public class Blogracy extends WebPlugin {
             throws IOException {
         String url = request.getURL();
         try {
-            RequestResolver resolver = mapper.getResolver(url);
+            final RequestResolver resolver = mapper.getResolver(url);
             resolver.resolve(request, response);
         } catch (URLMappingError e) {
-            ErrorPageResolver errorResolver = new ErrorPageResolver(e);
+            final ErrorPageResolver errorResolver = new ErrorPageResolver(e);
             errorResolver.resolve(request, response);
-        } catch (Exception e) {
-            //ErrorPageResolver errorResolver = new ErrorPageResolver(e);
-            //errorResolver.resolve(request, response);
+        } catch (ServerConfigurationError serverConfigurationError) {
+            final ErrorPageResolver errorResolver = new ErrorPageResolver(
+                    serverConfigurationError, HttpURLConnection.HTTP_FORBIDDEN
+            );
+            errorResolver.resolve(request, response);
         }
         return true;
     }

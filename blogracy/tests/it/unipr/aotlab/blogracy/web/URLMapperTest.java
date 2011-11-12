@@ -1,5 +1,6 @@
 package it.unipr.aotlab.blogracy.web;
 
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
@@ -31,7 +32,7 @@ public class URLMapperTest {
         mapper.setHomePage(new HomepageResolver());
     }
 
-    @Test(expected = URLMappingError.class)
+    @Test(expected = ServerConfigurationError.class)
     public void testConfigureNonExistentClass() throws Exception {
         URLMapper tempMapper = new URLMapper();
         tempMapper.configure("/fail", "not.existing.class.djsahdsja");
@@ -45,9 +46,12 @@ public class URLMapperTest {
         Assert.assertEquals(withoutSlash.getClass(), withSlash.getClass());
     }
 
-    @Test(expected = URLMappingError.class)
-    public void testRelevantStartingSlash() throws Exception {
-        mapper.getResolver("profile");
+    @Test
+    public void testIrrelevantLeadingSlash() throws Exception {
+        RequestResolver withSlash = mapper.getResolver("/profile");
+        RequestResolver withoutSlash = mapper.getResolver("profile");
+
+        Assert.assertEquals(withoutSlash.getClass(), withSlash.getClass());
     }
 
     public static class NoParamsResolver implements RequestResolver {
@@ -59,7 +63,7 @@ public class URLMapperTest {
         }
     }
 
-    @Test(expected = URLMappingError.class)
+    @Test(expected = ServerConfigurationError.class)
     public void testMismatchConstructorAndUrl() throws Exception {
         URLMapper tempMapper = new URLMapper();
         tempMapper.configure("^/multi/(\\d+)$", "it.unipr.aotlab.blogracy.web.URLMapperTest$NoParamsResolver");
