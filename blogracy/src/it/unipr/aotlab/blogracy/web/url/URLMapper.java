@@ -65,7 +65,7 @@ public class URLMapper {
      * @throws URLMappingError          if the url could not be resolved
      */
     private RequestResolver findResolver(String url) throws ServerConfigurationError, URLMappingError {
-        RequestResolver resolver = visitDefinedMappings(url);
+        RequestResolver resolver = buildResolver(url);
         if (resolver != null) {
             return resolver;
         } else if (staticFilesResolver.couldResolve(url)) {
@@ -77,7 +77,7 @@ public class URLMapper {
         );
     }
 
-    private RequestResolver visitDefinedMappings(final String url) throws ServerConfigurationError {
+    private RequestResolver buildResolver(final String url) throws ServerConfigurationError {
         // TODO this should not throw ServerConfigurationError as they should be thrown only at configuration time.
         for (Mapping mapping : lst) {
             if (mapping.matches(url)) {

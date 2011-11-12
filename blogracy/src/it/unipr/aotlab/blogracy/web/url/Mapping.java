@@ -50,7 +50,7 @@ class Mapping {
     /**
      * This variable is used to hold stuff after a match. We cache the parameters for performance reasons.
      */
-    private String[] tempParameters = null;
+    private Object[] tempParameters = null;
 
     /**
      * Creates a Mapping object that connects pages matching {@param regexpString} to the
@@ -88,11 +88,10 @@ class Mapping {
      * Builds the correct resolver for the url that successfully matched against this mapping
      *
      * @return the appropriate resolver
-     * @throws IllegalStateException if the last call to match was not successful. Stateful programming sucks.
-     * @throws it.unipr.aotlab.blogracy.errors.URLMappingError
-     *                               if the resolver cannot be built (e.g., wrong number of parameters)
+     * @throws IllegalStateException    if the last call to match was not successful. Stateful programming sucks.
+     * @throws ServerConfigurationError if the resolver cannot be built (e.g., wrong number of parameters)
      */
-    public RequestResolver buildResolver() throws IllegalStateException, ServerConfigurationError {
+    public RequestResolver buildResolver() throws ServerConfigurationError {
         // TODO split the resolver constructor loading from the actual resolver building.
         if (tempParameters == null) {
             throw new ServerConfigurationError("buildResolver can be called only after a successful match.");
@@ -113,6 +112,7 @@ class Mapping {
     }
 
     private Class<String>[] buildConstructorFormalParameters() {
+        @SuppressWarnings({"unchecked"})
         Class<String>[] constructorFormalParameters = (Class<String>[]) new Class[tempParameters.length];
         for (int i = 0; i < tempParameters.length; ++i) {
             constructorFormalParameters[i] = String.class;
@@ -120,7 +120,7 @@ class Mapping {
         return constructorFormalParameters;
     }
 
-    private String[] buildParameters(final Matcher m) {
+    private Object[] buildParameters(final Matcher m) {
         List<String> tempParameters = new LinkedList<String>();
         for (int groupIndex = 1; groupIndex <= m.groupCount(); ++groupIndex) {
             String parameter = m.group(groupIndex);
@@ -128,7 +128,7 @@ class Mapping {
                 tempParameters.add(parameter);
             }
         }
-        return tempParameters.toArray(new String[0]);
+        return tempParameters.toArray();
     }
 
     /**
@@ -137,10 +137,12 @@ class Mapping {
      * @param classString the fully qualified name of the class
      * @throws ServerConfigurationError if the relevant classfile dows not exist
      */
+    @SuppressWarnings({"unchecked"})
     protected void setResolverClass(String classString) throws ServerConfigurationError {
         try {
             // WARNING: there may be classloader issues.
             resolverClass = (Class<RequestResolver>) Class.forName(classString);
+
         } catch (ClassNotFoundException e) {
             throw new ServerConfigurationError(e);
         }
