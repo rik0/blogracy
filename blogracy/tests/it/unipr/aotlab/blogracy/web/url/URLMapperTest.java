@@ -1,4 +1,4 @@
-package it.unipr.aotlab.blogracy.web;
+package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
@@ -27,10 +27,10 @@ public class URLMapperTest {
     public void setUp() throws Exception {
         mapper = new URLMapper();
         mapper.configure(
-                "^/$", "it.unipr.aotlab.blogracy.web.URLMapperTest$HomepageResolver", null,
-                "^/profile$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeProfile", null,
-                "^/messages$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages", null,
-                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages", null
+                "^/$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$HomepageResolver", null,
+                "^/profile$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$FakeProfile", null,
+                "^/messages$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$FakeMessages", null,
+                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$FakeMessages", null
         );
         //mapper.setHomePage(new HomepageResolver());
     }
@@ -62,7 +62,7 @@ public class URLMapperTest {
     @Test(expected = ServerConfigurationError.class)
     public void testMismatchConstructorAndUrl() throws Exception {
         URLMapper tempMapper = new URLMapper();
-        tempMapper.configure("^/multi/(\\d+)$", "it.unipr.aotlab.blogracy.web.URLMapperTest$NoParamsResolver");
+        tempMapper.configure("^/multi/(\\d+)$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$NoParamsResolver");
         tempMapper.getResolver("/multi/1");
     }
 
