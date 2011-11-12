@@ -97,41 +97,23 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
     }
 
     private void testResolve(final String filename, final String contentType) throws URLMappingError, IOException {
-        final ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        final FileInputStream fileInputStream = new FileInputStream(
-                resolver.resolvePath(filename)
-        );
-
-        TrackerWebPageRequest requestMock = prepareRequestMock(filename);
-        TrackerWebPageResponse responseMock = prepareResponseMock(contentType, byteArrayOutputStream);
+        final TrackerWebPageRequest requestMock = prepareRequestMock(filename);
+        final TrackerWebPageResponse responseMock = prepareResponseMock(filename, contentType);
 
         replayAll();
         resolver.resolve(requestMock, responseMock);
         verifyAll();
-        assertSameFileContents(byteArrayOutputStream, fileInputStream);
     }
 
-    private void assertSameFileContents(
-            final ByteArrayOutputStream byteArrayOutputStream,
-            final InputStream fileInputStream) throws IOException {
-        final byte[] fileContents = byteArrayOutputStream.toByteArray();
-        final byte[] expectedFileContents = new byte[fileContents.length];
-        final int readBytes = fileInputStream.read(expectedFileContents);
-        Assert.assertEquals(fileContents.length, readBytes);
-        Assert.assertEquals(-1, fileInputStream.read());
-        Assert.assertArrayEquals(expectedFileContents, fileContents);
-    }
-
-    private TrackerWebPageResponse prepareResponseMock(final String contentType, final ByteArrayOutputStream byteArrayOutputStream) {
+    private TrackerWebPageResponse prepareResponseMock(final String filename, final String contentType) throws IOException {
         TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
-        expect(responseMock.getOutputStream()).andReturn(byteArrayOutputStream);
-        responseMock.setContentType(contentType);
+        expect(responseMock.useFile(STATIC_ROOT_DIR.getAbsolutePath(), filename)).andStubReturn(true);
         return responseMock;
     }
 
     private TrackerWebPageRequest prepareRequestMock(final String filename) {
         TrackerWebPageRequest requestMock = createNiceMock(TrackerWebPageRequest.class);
-        expect(requestMock.getURL()).andReturn(filename).anyTimes();
+        expect(requestMock.getURL()).andStubReturn(filename);
         return requestMock;
     }
 

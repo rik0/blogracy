@@ -4,6 +4,8 @@ import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
+import java.io.IOException;
+
 /**
  * Enrico Franchi, 2011 (c)
  * <p/>
@@ -15,5 +17,5 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
  */
 public interface RequestResolver {
     void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response)
-            throws URLMappingError;
+            throws URLMappingError, IOException;
 }

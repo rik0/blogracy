@@ -95,36 +95,22 @@ public class StaticFileResolverImpl implements StaticFileResolver {
     public void resolve(
             final TrackerWebPageRequest request,
             final TrackerWebPageResponse response)
-            throws URLMappingError {
+            throws URLMappingError, IOException {
         final String url = request.getURL();
         final File actualFile = getFileSystemPath(url);
-        final String mimeType = mimeFinder.findMime(actualFile);
-        final OutputStream outputStream = response.getOutputStream();
-
-        // TODO: broken mime finder stuff.
-        if (mimeType == null) {
-            Logger.info("Got null mime type... something is wrong.");
-        }
-
-        Logger.info("Trying to send file "
-                + actualFile.getAbsolutePath() + " of type "
-                + mimeType);
-
-        response.setContentType(mimeType);
+        final String staticFilesDirectoryName = staticFilesDirectory.getAbsolutePath();
 
         try {
-            sendFile(actualFile, outputStream);
+            response.useFile(staticFilesDirectoryName, url);
         } catch (IOException e) {
             if (actualFile.isDirectory()) {
                 Logger.info(actualFile.getAbsolutePath()
                         + " is a directory. Trying to send index.html instead.");
-                response.setContentType("text/html");
-                File indexFile = new File(actualFile, "index.html");
                 response.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
-                // TODO use correct path!
-                response.setHeader("Location", indexFile.toString());
+                response.setHeader("Location", url + "/index.html");
             } else {
                 throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
+
             }
         }
     }
