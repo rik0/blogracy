@@ -291,10 +291,8 @@ public class Blogracy extends WebPlugin {
     private void initializeURLMapper() throws PluginException {
         try {
             mapper.configure(
+                    "^/$", "it.unipr.aotlab.blogracy.web.resolvers.IndexResolver",
                     "^/followers$", "it.unipr.aotlab.blogracy.web.resolvers.Followers"
-            );
-            mapper.setHomePage(
-                    new IndexResolver()
             );
             mapper.setStaticFilesDirectory(
                     getStaticFilesDirectory().getAbsoluteFile()
