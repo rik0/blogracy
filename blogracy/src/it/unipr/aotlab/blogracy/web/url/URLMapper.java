@@ -53,11 +53,15 @@ public class URLMapper {
      */
     public RequestResolver getResolver(String url) throws ServerConfigurationError, URLMappingError {
         url = fixLeadingAndTrailingSlashes(url);
-        if (isHomepageURL(url)) {
+        if (isHomepageURL(url) && shouldUseHomepageResolver()) {
             return homePageResolver;
         } else {
             return findResolver(url);
         }
+    }
+
+    private boolean shouldUseHomepageResolver() {
+        return homePageResolver != null;
     }
 
     private boolean isHomepageURL(final String url) {
