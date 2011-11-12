@@ -8,7 +8,9 @@
     <name>Blogracy</name>
     <url>http://dev.blogracy.net</url>
     <build>
-        <outputDirectory>build/config/plugins/blogracy</outputDirectory>
+        <outputDirectory>build/config/plugins/${artifactId}</outputDirectory>
+        <sourceDirectory>blogracy/src</sourceDirectory>
+        <testSourceDirectory>blogracy/tests</testSourceDirectory>
         <resources>
             <resource>
                 <directory>blogracy/src/resources</directory>
