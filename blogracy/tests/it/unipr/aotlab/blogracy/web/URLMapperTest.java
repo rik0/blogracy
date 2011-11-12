@@ -25,11 +25,12 @@ public class URLMapperTest {
     public void setUp() throws Exception {
         mapper = new URLMapper();
         mapper.configure(
+                "^/$", "it.unipr.aotlab.blogracy.web.URLMapperTest$HomepageResolver",
                 "^/profile$", "it.unipr.aotlab.blogracy.web.FakeProfile",
                 "^/messages$", "it.unipr.aotlab.blogracy.web.FakeMessages",
                 "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.FakeMessages"
         );
-        mapper.setHomePage(new HomepageResolver());
+        //mapper.setHomePage(new HomepageResolver());
     }
 
     @Test(expected = ServerConfigurationError.class)
@@ -93,8 +94,10 @@ public class URLMapperTest {
         );
     }
 
-    private static class HomepageResolver implements RequestResolver {
-        public void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response) throws URLMappingError {
+    public static class HomepageResolver implements RequestResolver {
+        @Override
+        public void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response)
+                throws URLMappingError {
 
         }
     }
