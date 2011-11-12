@@ -9,6 +9,8 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.net.HttpURLConnection;
+
 /**
  * Enrico Franchi, 2011 (c)
  * <p/>
@@ -26,9 +28,9 @@ public class URLMapperTest {
         mapper = new URLMapper();
         mapper.configure(
                 "^/$", "it.unipr.aotlab.blogracy.web.URLMapperTest$HomepageResolver",
-                "^/profile$", "it.unipr.aotlab.blogracy.web.FakeProfile",
-                "^/messages$", "it.unipr.aotlab.blogracy.web.FakeMessages",
-                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.FakeMessages"
+                "^/profile$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeProfile",
+                "^/messages$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages",
+                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages"
         );
         //mapper.setHomePage(new HomepageResolver());
     }
@@ -45,6 +47,7 @@ public class URLMapperTest {
         RequestResolver withoutSlash = mapper.getResolver("/profile");
 
         Assert.assertEquals(withoutSlash.getClass(), withSlash.getClass());
+        Assert.assertEquals(FakeProfile.class, withSlash.getClass());
     }
 
     @Test
@@ -53,15 +56,7 @@ public class URLMapperTest {
         RequestResolver withoutSlash = mapper.getResolver("profile");
 
         Assert.assertEquals(withoutSlash.getClass(), withSlash.getClass());
-    }
-
-    public static class NoParamsResolver implements RequestResolver {
-        @Override
-        public void
-        resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
-                throws URLMappingError {
-            // ok
-        }
+        Assert.assertEquals(FakeProfile.class, withSlash.getClass());
     }
 
     @Test(expected = ServerConfigurationError.class)
@@ -73,14 +68,14 @@ public class URLMapperTest {
 
     @Test
     public void testMultiParameters() throws Exception {
-        mapper.getResolver("/messages/3");
+        RequestResolver resolver = mapper.getResolver("/messages/3");
+        Assert.assertEquals(FakeMessages.class, resolver.getClass());
     }
 
     @Test(expected = URLMappingError.class)
     public void testErrorInResolverConstruction() throws Exception {
         mapper.getResolver("/mapper/foo");
     }
-
 
     @Test
     public void testHomePage() throws Exception {
@@ -94,6 +89,16 @@ public class URLMapperTest {
         );
     }
 
+
+    public static class NoParamsResolver implements RequestResolver {
+        @Override
+        public void
+        resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
+                throws URLMappingError {
+            // ok
+        }
+    }
+
     public static class HomepageResolver implements RequestResolver {
         @Override
         public void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response)
@@ -103,4 +108,38 @@ public class URLMapperTest {
     }
 
 
+    public static class FakeProfile implements RequestResolver {
+        @Override
+        public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+
+        }
+    }
+
+    public static class FakeFollowers implements RequestResolver {
+        @Override
+        public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+
+        }
+    }
+
+    public static class FakeMessages implements RequestResolver {
+        int page;
+
+        public FakeMessages(String page) throws URLMappingError {
+            try {
+                Integer pageNumber = Integer.parseInt(page);
+            } catch (NumberFormatException e) {
+                throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
+            }
+        }
+
+        public FakeMessages() {
+            page = 0;
+        }
+
+        @Override
+        public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+
+        }
+    }
 }
