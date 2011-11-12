@@ -31,7 +31,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 /**
  * User: enrico
@@ -44,8 +43,9 @@ import java.util.regex.PatternSyntaxException;
  * A Mapping is a package local helper class which actually converts a matching URL to the expected resolver.
  */
 class Mapping {
-    private Pattern rex;
-    private Class<RequestResolver> resolverClass;
+    final private Pattern rex;
+    final private Class<RequestResolver> resolverClass;
+    final private Object[] startingParameters;
 
     /**
      * This variable is used to hold stuff after a match. We cache the parameters for performance reasons.
@@ -56,14 +56,22 @@ class Mapping {
      * Creates a Mapping object that connects pages matching {@param regexpString} to the
      * resolver specified by {@param classString}
      *
-     * @param regexpString is the regexp to match
-     * @param classString  is the fully qualified name of the resolver
+     * @param regexpString       is the regexp to match
+     * @param classString        is the fully qualified name of the resolver
+     * @param startingParameters the parameters we should pass to the constructor (null if no parameters)
      * @throws ServerConfigurationError if the mapping cannot be established, e.g., because the
      *                                  regex is not valid or because the specified classfile cannot be found.
      */
-    public Mapping(String regexpString, String classString) throws ServerConfigurationError {
-        setRex(regexpString);
-        setResolverClass(classString);
+    @SuppressWarnings({"unchecked"})
+    public Mapping(String regexpString, String classString, final Object[] startingParameters)
+            throws ServerConfigurationError {
+        try {
+            this.rex = Pattern.compile(regexpString);
+            this.resolverClass = (Class<RequestResolver>) Class.forName(classString);
+            this.startingParameters = startingParameters;
+        } catch (Exception e) {
+            throw new ServerConfigurationError(e);
+        }
     }
 
     /**
@@ -129,37 +137,6 @@ class Mapping {
             }
         }
         return tempParameters.toArray();
-    }
-
-    /**
-     * Set the resolver class object attribute. May have classloading issues.
-     *
-     * @param classString the fully qualified name of the class
-     * @throws ServerConfigurationError if the relevant classfile dows not exist
-     */
-    @SuppressWarnings({"unchecked"})
-    protected void setResolverClass(String classString) throws ServerConfigurationError {
-        try {
-            // WARNING: there may be classloader issues.
-            resolverClass = (Class<RequestResolver>) Class.forName(classString);
-
-        } catch (ClassNotFoundException e) {
-            throw new ServerConfigurationError(e);
-        }
-    }
-
-    /**
-     * Sets the pattern attribute.
-     *
-     * @param regexpString the string to compile
-     * @throws ServerConfigurationError if it is not a valid regex
-     */
-    protected void setRex(String regexpString) throws ServerConfigurationError {
-        try {
-            rex = Pattern.compile(regexpString);
-        } catch (PatternSyntaxException e) {
-            throw new ServerConfigurationError(e);
-        }
     }
 }
 

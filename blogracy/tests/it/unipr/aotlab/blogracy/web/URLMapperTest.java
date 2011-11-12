@@ -27,10 +27,10 @@ public class URLMapperTest {
     public void setUp() throws Exception {
         mapper = new URLMapper();
         mapper.configure(
-                "^/$", "it.unipr.aotlab.blogracy.web.URLMapperTest$HomepageResolver",
-                "^/profile$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeProfile",
-                "^/messages$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages",
-                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages"
+                "^/$", "it.unipr.aotlab.blogracy.web.URLMapperTest$HomepageResolver", null,
+                "^/profile$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeProfile", null,
+                "^/messages$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages", null,
+                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.URLMapperTest$FakeMessages", null
         );
         //mapper.setHomePage(new HomepageResolver());
     }
@@ -92,17 +92,16 @@ public class URLMapperTest {
 
     public static class NoParamsResolver implements RequestResolver {
         @Override
-        public void
-        resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
-                throws URLMappingError {
+        public void resolve(final TrackerWebPageRequest request,
+                            final TrackerWebPageResponse response) throws URLMappingError {
             // ok
         }
     }
 
     public static class HomepageResolver implements RequestResolver {
         @Override
-        public void resolve(TrackerWebPageRequest request, TrackerWebPageResponse response)
-                throws URLMappingError {
+        public void resolve(final TrackerWebPageRequest request,
+                            final TrackerWebPageResponse response) throws URLMappingError {
 
         }
     }
@@ -110,14 +109,16 @@ public class URLMapperTest {
 
     public static class FakeProfile implements RequestResolver {
         @Override
-        public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        public void resolve(final TrackerWebPageRequest request,
+                            final TrackerWebPageResponse response) throws URLMappingError {
 
         }
     }
 
     public static class FakeFollowers implements RequestResolver {
         @Override
-        public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        public void resolve(final TrackerWebPageRequest request,
+                            final TrackerWebPageResponse response) throws URLMappingError {
 
         }
     }

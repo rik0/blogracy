@@ -26,7 +26,7 @@ import java.util.List;
  * <p/>
  * URLMapper is heavily inspired by <a href="https://docs.djangoproject.com/en/dev/topics/http/urls/">Django URL dispatcher</a>.
  * <p/>
- * URLMapper is configured with a list of strings (whose semantics is specified in {@link URLMapper#configure(String...)}.
+ * URLMapper is configured with a list of strings (whose semantics is specified in {@link URLMapper#configure(Object...)}.
  * <p/>
  * About the individual patterns:
  * <ol>
@@ -40,6 +40,7 @@ public class URLMapper {
     List<Mapping> lst;
 
     private StaticFileResolver staticFilesResolver = StaticFileResolvers.getNullStaticFileResolver();
+    private final int ARGUMENT_LIST_MANDATORY_DIVISOR = 3;
 
     /**
      * Returns the appropriate resolver for the required URL.
@@ -117,18 +118,18 @@ public class URLMapper {
     /**
      * Configures the current URL Mapper
      *
-     * @param strings is an array of strings with an even of elements.
-     *                odd elements are interpreted as patterns, even elements are
-     *                interpreted as the fully qualified names of the classes which
-     *                resolve such URLs
+     * @param parameters is an array of parameters with an even of elements.
+     *                   odd elements are interpreted as patterns, even elements are
+     *                   interpreted as the fully qualified names of the classes which
+     *                   resolve such URLs
      * @throws ServerConfigurationError if the number of elements is not even,
      *                                  if some pattern is not valid or if some classfile cannot be
      *                                  found.
      */
-    public void configure(String... strings) throws ServerConfigurationError {
-        if (checkStringsAreEven(strings)) {
-            prepareList(strings);
-            addMappings(strings);
+    public void configure(Object... parameters) throws ServerConfigurationError {
+        if (checkRightArgumentsNumber(parameters)) {
+            prepareList(parameters);
+            addMappings(parameters);
         } else {
             throw new ServerConfigurationError("Odd number of parameters has been inserted.");
         }
@@ -138,17 +139,26 @@ public class URLMapper {
         staticFilesResolver = StaticFileResolvers.getStaticFileResolver(staticRoot);
     }
 
-    private void addMappings(String[] strings) throws ServerConfigurationError {
-        for (int nextIndex = 0; nextIndex < strings.length; nextIndex += 2) {
-            lst.add(new Mapping(strings[nextIndex], strings[nextIndex + 1]));
+    private void addMappings(Object[] strings) throws ServerConfigurationError {
+        for (int nextIndex = 0; nextIndex < strings.length;
+             nextIndex += ARGUMENT_LIST_MANDATORY_DIVISOR) {
+            try {
+                String urlRegex = (String) strings[nextIndex];
+                String resolverClassName = (String) strings[nextIndex + 1];
+                Object[] startingParameters = (Object[]) strings[nextIndex + 2];
+                lst.add(new Mapping(urlRegex, resolverClassName, startingParameters));
+            } catch (ClassCastException e) {
+                throw new ServerConfigurationError(e);
+            }
+
         }
     }
 
-    private void prepareList(String[] strings) {
-        lst = new ArrayList<Mapping>(strings.length / 2);
+    private void prepareList(Object[] strings) {
+        lst = new ArrayList<Mapping>(strings.length / ARGUMENT_LIST_MANDATORY_DIVISOR);
     }
 
-    private boolean checkStringsAreEven(String[] strings) {
-        return strings.length % 2 == 0;
+    private boolean checkRightArgumentsNumber(Object[] strings) {
+        return strings.length % ARGUMENT_LIST_MANDATORY_DIVISOR == 0;
     }
 }
