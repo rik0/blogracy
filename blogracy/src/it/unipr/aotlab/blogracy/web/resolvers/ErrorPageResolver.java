@@ -23,13 +23,11 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import it.unipr.aotlab.blogracy.util.HTMLUtil;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
+import java.io.*;
+import java.util.Formatter;
 
 /**
  * User: enrico
@@ -51,6 +49,28 @@ public class ErrorPageResolver implements RequestResolver {
         status = httpErrorStatus;
     }
 
+    static public String errorString(Exception e) {
+        // TODO: make page more beautiful!
+        Formatter formatter = new Formatter();
+        String headerPage = "<html><head><title>Error!</title></head><body>";
+        String pageTitle = "<h1>Error: %s</h1>";
+        String pageMessage = "<p>%s</p>";
+        String pageTrace = "<pre>%s</pre>";
+        String pageFooter = "</body></html>";
+
+        formatter.format(headerPage);
+        formatter.format(pageTitle, e.toString());
+        formatter.format(pageMessage, e.getMessage());
+
+        StringWriter stringWriter = new StringWriter(512);
+        PrintWriter ost = new PrintWriter(stringWriter);
+        e.printStackTrace(ost);
+        formatter.format(pageTrace, stringWriter.toString());
+        formatter.format(pageFooter);
+
+        return formatter.toString();
+    }
+
     /**
      * {@inheritDoc}
      * <p/>
@@ -58,7 +78,7 @@ public class ErrorPageResolver implements RequestResolver {
      */
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
-        String errorPage = HTMLUtil.errorString(exception);
+        String errorPage = errorString(exception);
         response.setReplyStatus(status);
         response.setContentType("text/html");
         write(response, errorPage);
