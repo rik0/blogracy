@@ -40,9 +40,9 @@ import java.net.HttpURLConnection;
  * Time: 4:10 PM
  */
 public class StaticFileResolverImpl implements StaticFileResolver {
-    private File staticFilesDirectory;
+    private String staticFilesDirectory;
 
-    StaticFileResolverImpl(final File staticFilesDirectory) throws ServerConfigurationError {
+    StaticFileResolverImpl(final String staticFilesDirectory) throws ServerConfigurationError {
         checksValidStaticRootAndSetField(staticFilesDirectory);
     }
 
@@ -52,12 +52,12 @@ public class StaticFileResolverImpl implements StaticFileResolver {
      * @param staticRoot is the path to check
      * @throws ServerConfigurationError if {@param staticRoot} does not exist or is not a directory
      */
-    private void checksValidStaticRootAndSetField(final File staticRoot)
+    private void checksValidStaticRootAndSetField(final String staticRoot)
             throws ServerConfigurationError {
-        if (staticRoot.exists()) {
-            if (staticRoot.isDirectory()) {
+        File staticRootFile = new File(staticRoot);
+        if (staticRootFile.exists()) {
+            if (staticRootFile.isDirectory()) {
                 staticFilesDirectory = staticRoot;
-
             } else {
                 throw new ServerConfigurationError(
                         errorMessageNotDirectory(staticRoot));
@@ -68,16 +68,12 @@ public class StaticFileResolverImpl implements StaticFileResolver {
         }
     }
 
-    private static String errorMessageNotExists(final File staticRoot) {
-        return "Static files root " +
-                staticRoot.toString() +
-                " does not exist.";
+    private static String errorMessageNotExists(final String staticRoot) {
+        return "Static files root " + staticRoot + " does not exist.";
     }
 
-    private static String errorMessageNotDirectory(final File staticRoot) {
-        return "Static files root " +
-                staticRoot.toString() +
-                " exists but is not a directory.";
+    private static String errorMessageNotDirectory(final String staticRoot) {
+        return "Static files root " + staticRoot + " exists but is not a directory.";
     }
 
     /**
@@ -121,10 +117,9 @@ public class StaticFileResolverImpl implements StaticFileResolver {
         */
 
         final String url = request.getURL();
-        final String staticFilesDirectoryName = staticFilesDirectory.getAbsolutePath();
 
         try {
-            boolean didSendTheFile = response.useFile(staticFilesDirectoryName, url);
+            boolean didSendTheFile = response.useFile(staticFilesDirectory, url);
             if (!didSendTheFile) {
                 if (mayBeDirectoryUrl(url)) {
                     redirectToIndexInDirectory(url, response);

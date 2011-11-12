@@ -24,16 +24,14 @@ package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.easymock.EasyMockSupport;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.HttpURLConnection;
 
 import static org.easymock.EasyMock.expect;
@@ -57,7 +55,7 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
      * <p/>
      * TODO: PowerMock may solve the issue
      */
-    final private static File STATIC_ROOT_DIR = new File("blogracy/src/resources/static");
+    final private static String STATIC_ROOT_DIR = "blogracy/src/resources/static";
 
     StaticFileResolver resolver;
 
@@ -68,16 +66,12 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
 
     @Test(expected = ServerConfigurationError.class)
     public void testNonExistingDirectory() throws Exception {
-        RequestResolver failingResolver = StaticFileResolvers.getStaticFileResolver(
-                new File("not_existing")
-        );
+        StaticFileResolvers.getStaticFileResolver("not_existing");
     }
 
     @Test(expected = ServerConfigurationError.class)
     public void testNonDirectory() throws Exception {
-        RequestResolver failingResolver = StaticFileResolvers.getStaticFileResolver(
-                new File("pom.xml")
-        );
+        StaticFileResolvers.getStaticFileResolver("pom.xml");
     }
 
 
@@ -104,7 +98,7 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
         final TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
 
         expect(requestMock.getURL()).andStubReturn(url);
-        expect(responseMock.useFile(STATIC_ROOT_DIR.getAbsolutePath(), url)).andStubReturn(false);
+        expect(responseMock.useFile(STATIC_ROOT_DIR, url)).andStubReturn(false);
         responseMock.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
         responseMock.setHeader("Location", url + "index.html");
 
@@ -120,7 +114,7 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
         final TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
 
         expect(requestMock.getURL()).andStubReturn(url);
-        expect(responseMock.useFile(STATIC_ROOT_DIR.getAbsolutePath(), url)).andStubReturn(false);
+        expect(responseMock.useFile(STATIC_ROOT_DIR, url)).andStubReturn(false);
 
         replayAll();
         resolver.resolve(requestMock, responseMock);
@@ -139,7 +133,7 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
 
     private TrackerWebPageResponse prepareResponseMock(final String filename, final String contentType) throws IOException {
         TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
-        expect(responseMock.useFile(STATIC_ROOT_DIR.getAbsolutePath(), filename)).andStubReturn(true);
+        expect(responseMock.useFile(STATIC_ROOT_DIR, filename)).andStubReturn(true);
         return responseMock;
     }
 

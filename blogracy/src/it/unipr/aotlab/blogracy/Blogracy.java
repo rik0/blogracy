@@ -25,7 +25,6 @@ import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
-import it.unipr.aotlab.blogracy.web.resolvers.IndexResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
 import org.apache.velocity.app.Velocity;
@@ -295,7 +294,7 @@ public class Blogracy extends WebPlugin {
                     "^/followers$", "it.unipr.aotlab.blogracy.web.resolvers.Followers"
             );
             mapper.setStaticFilesDirectory(
-                    getStaticFilesDirectory().getAbsoluteFile()
+                    getStaticFilesDirectory().getAbsolutePath()
             );
         } catch (ServerConfigurationError serverConfigurationError) {
             throw new PluginException(serverConfigurationError);

@@ -27,7 +27,6 @@ import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-import java.io.File;
 import java.net.HttpURLConnection;
 
 /**
@@ -41,7 +40,7 @@ public class StaticFileResolvers {
         return new DummyStaticFileResolver();
     }
 
-    static public StaticFileResolver getStaticFileResolver(File filepath)
+    static public StaticFileResolver getStaticFileResolver(String filepath)
             throws ServerConfigurationError {
         return new StaticFileResolverImpl(filepath);
     }

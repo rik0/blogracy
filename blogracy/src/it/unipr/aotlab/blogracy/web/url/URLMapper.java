@@ -7,7 +7,6 @@ import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolvers;
 
-import java.io.File;
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
@@ -149,7 +148,7 @@ public class URLMapper {
         }
     }
 
-    public void setStaticFilesDirectory(File staticRoot) throws ServerConfigurationError {
+    public void setStaticFilesDirectory(String staticRoot) throws ServerConfigurationError {
         staticFilesResolver = StaticFileResolvers.getStaticFileResolver(staticRoot);
     }
 
