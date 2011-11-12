@@ -95,24 +95,73 @@ public class StaticFileResolverImpl implements StaticFileResolver {
     public void resolve(
             final TrackerWebPageRequest request,
             final TrackerWebPageResponse response)
-            throws URLMappingError, IOException {
+            throws URLMappingError {
+        /*
+        * Keep in mind that due to the underlying TrackerWebPageResponseImpl#useFile(String, String)
+        * implementation, files without extension cannot be processed (why developers assume everybody is using
+        * windows anyway?).
+        *
+        * If someone feels a compelling reason to resolve a file without extension, he may wrote some crazy code
+        * to run around the default implementation of TrackerWebPageResponseImpl, like copy the file to a file with
+        * extension and  send that. Then they could go and meet the original developers with an {@code Object}
+        * implementing  the {@code Bludgeoning} interface and repeatedly call {@code Bludgeoning#hitOnTheHead} passing
+        * the aforementioned developers as actual parameters.
+        *
+        * Ah, when there is no doc, we are always obliged to read the implementations. So perhaps some day this will
+        * not be true anymore.
+        *
+        * Note to self: when you suppose someone else is reading your code and you are doing
+        * some low level stuff like manually checking if a file has an extension, do not use explicative names like
+        * {@code fileHasExtension(filename)} and similar over-engineering techniques: since your code is worth being read only by
+        * true hackers, rather leave the low level stuff and use an equivalent 6502 asm program to explain your goals.
+        *
+        * Besides, actually TrackerWebPageResponseImpl#useFile(String, String)
+        * does set the right {@code Content-Type} headers. Well, <i>right</i> according to the hash table
+        * hardcoded in {@link com.aelitis.azureus.core.util.HTTPUtils}. If your file do not fit I would just
+        * suggest the {@code Bludgeoning} trick once again. My whole idea of having a pluggable mime-type resolver
+        * is just for fools who think there are more than 27 or so different file-types.
+        *
+        * Since {@link com.aelitis.azureus.core.util.HTTPUtils#guessContentTypeFromFileType(String)} returns
+        * the argument if there is no match and that is what is called by
+        * {@link org.gudy.azureus2.pluginsimpl.local.tracker.TrackerWebPageResponseImpl#useStream(String, java.io.InputStream)}
+        * to resolve the first String parameter, you may want to use a pluggable mime-type resolver with the "right"
+        * mime-type (which being no extension will be used as the true content type). Have bloody fun with it.
+        */
+
         final String url = request.getURL();
-        final File actualFile = getFileSystemPath(url);
         final String staticFilesDirectoryName = staticFilesDirectory.getAbsolutePath();
 
         try {
-            response.useFile(staticFilesDirectoryName, url);
-        } catch (IOException e) {
-            if (actualFile.isDirectory()) {
-                Logger.info(actualFile.getAbsolutePath()
-                        + " is a directory. Trying to send index.html instead.");
-                response.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
-                response.setHeader("Location", url + "/index.html");
-            } else {
-                throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
-
+            boolean didSendTheFile = response.useFile(staticFilesDirectoryName, url);
+            if (!didSendTheFile) {
+                if (mayBeDirectoryUrl(url)) {
+                    redirectToIndexInDirectory(url, response);
+                } else {
+                    throw new URLMappingError(
+                            HttpURLConnection.HTTP_NOT_FOUND,
+                            "Could not find " + url
+                    );
+                }
             }
+        } catch (FileNotFoundException e) {
+            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
+        } catch (SecurityException e) {
+            throw new URLMappingError(HttpURLConnection.HTTP_FORBIDDEN, e);
+        } catch (IOException e) {
+            /* we should not get here */
+            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
         }
+
+    }
+
+    private void redirectToIndexInDirectory(final String url, final TrackerWebPageResponse response) {
+        Logger.info(url + " may be a directory. Trying to send index.html instead.");
+        response.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
+        response.setHeader("Location", url + "index.html");
+    }
+
+    private boolean mayBeDirectoryUrl(final String url) {
+        return url.endsWith("/");
     }
 
     @Override

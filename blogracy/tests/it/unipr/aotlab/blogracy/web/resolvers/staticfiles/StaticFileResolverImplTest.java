@@ -34,6 +34,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.*;
+import java.net.HttpURLConnection;
 
 import static org.easymock.EasyMock.expect;
 
@@ -96,6 +97,36 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
         testResolve(filename, contentType);
     }
 
+    @Test
+    public void testDirectoryRedirection() throws Exception {
+        final String url = "/missing/";
+        final TrackerWebPageRequest requestMock = createNiceMock(TrackerWebPageRequest.class);
+        final TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
+
+        expect(requestMock.getURL()).andStubReturn(url);
+        expect(responseMock.useFile(STATIC_ROOT_DIR.getAbsolutePath(), url)).andStubReturn(false);
+        responseMock.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
+        responseMock.setHeader("Location", url + "index.html");
+
+        replayAll();
+        resolver.resolve(requestMock, responseMock);
+        verifyAll();
+    }
+
+    @Test(expected = URLMappingError.class)
+    public void testMissingFile() throws Exception {
+        final String url = "/missing.txt";
+        final TrackerWebPageRequest requestMock = createNiceMock(TrackerWebPageRequest.class);
+        final TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
+
+        expect(requestMock.getURL()).andStubReturn(url);
+        expect(responseMock.useFile(STATIC_ROOT_DIR.getAbsolutePath(), url)).andStubReturn(false);
+
+        replayAll();
+        resolver.resolve(requestMock, responseMock);
+        verifyAll();
+    }
+
     private void testResolve(final String filename, final String contentType) throws URLMappingError, IOException {
         final TrackerWebPageRequest requestMock = prepareRequestMock(filename);
         final TrackerWebPageResponse responseMock = prepareResponseMock(filename, contentType);
@@ -104,6 +135,7 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
         resolver.resolve(requestMock, responseMock);
         verifyAll();
     }
+
 
     private TrackerWebPageResponse prepareResponseMock(final String filename, final String contentType) throws IOException {
         TrackerWebPageResponse responseMock = createNiceMock(TrackerWebPageResponse.class);
