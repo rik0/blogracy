@@ -30,8 +30,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class URLMapperTestStartingParameters {
     private URLMapper mapper;
     private final Integer differentParametersInteger = 1;
@@ -97,7 +95,7 @@ public class URLMapperTestStartingParameters {
 
         @Override
         public void resolve(final TrackerWebPageRequest request,
-                            final TrackerWebPageResponse response) throws URLMappingError, IOException {
+                            final TrackerWebPageResponse response) throws URLMappingError {
         }
 
         public Integer getIntegerParameter() {

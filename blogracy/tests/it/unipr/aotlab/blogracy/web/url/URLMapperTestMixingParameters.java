@@ -30,8 +30,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class URLMapperTestMixingParameters {
     private final String stringOne = "STRING1";
     private final String stringTwo = "STRING2";
@@ -122,7 +120,7 @@ public class URLMapperTestMixingParameters {
         @Override
         public void resolve(final TrackerWebPageRequest request,
                             final TrackerWebPageResponse response)
-                throws URLMappingError, IOException {
+                throws URLMappingError {
 
         }
 
