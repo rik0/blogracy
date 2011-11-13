@@ -38,9 +38,6 @@ public class URLMapperTest {
     private final Integer differentParametersInteger = 1;
     private final Float differentParametersFloat = 4.0f;
 
-    private final String stringOne = "STRING1";
-    private final String stringTwo = "STRING2";
-    private final String stringThree = "STRING3";
 
     @org.junit.Before
     public void setUp() throws Exception {
@@ -65,23 +62,7 @@ public class URLMapperTest {
 
                 "^/missing-starting-parameter2$",
                 "it.unipr.aotlab.blogracy.web.url.URLMapperTest$DifferentStartingArguments",
-                new Object[]{},
-
-                "^/messing-with-parameters",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$ConfusionBetweenStartingAndLaterParameters",
-                new Object[]{stringOne, stringTwo, stringThree},
-
-                "^/messing-with-parameters/(\\w+)$",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$ConfusionBetweenStartingAndLaterParameters",
-                new Object[]{stringOne, stringTwo},
-
-                "^/messing-with-parameters/(\\w+)/(\\w+)$",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$ConfusionBetweenStartingAndLaterParameters",
-                new Object[]{stringOne},
-
-                "^/messing-with-parameters/(\\w+)/(\\w+)/(\\w+)$",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$ConfusionBetweenStartingAndLaterParameters",
-                null
+                new Object[]{}
         );
     }
 
@@ -165,45 +146,6 @@ public class URLMapperTest {
         RequestResolver resolver = mapper.getResolver("/missing-starting-parameter2");
     }
 
-    @Test
-    public void testMixingAndMatchingParameters() throws Exception {
-        // TODO separate in four tests.
-        final String stringA = "STRINGA";
-        final String stringB = "STRINGB";
-        final String stringC = "STRINGC";
-
-        final String basicURL = "/messing-with-parameters/";
-        final String oneParam = basicURL + stringA;
-        final String twoParams = oneParam + "/" + stringB;
-        final String threeParams = twoParams + "/" + stringC;
-
-        ConfusionBetweenStartingAndLaterParameters resolverA =
-                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(basicURL);
-        Assert.assertEquals(stringOne, resolverA.getStringOne());
-        Assert.assertEquals(stringTwo, resolverA.getStringTwo());
-        Assert.assertEquals(stringThree, resolverA.getStringThree());
-
-        ConfusionBetweenStartingAndLaterParameters resolverB =
-                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(oneParam);
-        Assert.assertEquals(stringOne, resolverB.getStringOne());
-        Assert.assertEquals(stringTwo, resolverB.getStringTwo());
-        Assert.assertEquals(stringA, resolverB.getStringThree());
-
-        ConfusionBetweenStartingAndLaterParameters resolverC =
-                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(twoParams);
-        Assert.assertEquals(stringOne, resolverC.getStringOne());
-        Assert.assertEquals(stringA, resolverC.getStringTwo());
-        Assert.assertEquals(stringB, resolverC.getStringThree());
-
-        ConfusionBetweenStartingAndLaterParameters resolverD =
-                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(threeParams);
-        Assert.assertEquals(stringA, resolverD.getStringOne());
-        Assert.assertEquals(stringB, resolverD.getStringTwo());
-        Assert.assertEquals(stringC, resolverD.getStringThree());
-
-
-    }
-
     public static class NoParamsResolver implements RequestResolver {
         @Override
         public void resolve(final TrackerWebPageRequest request,
@@ -281,36 +223,4 @@ public class URLMapperTest {
         }
     }
 
-    public static class ConfusionBetweenStartingAndLaterParameters implements RequestResolver {
-        final private String stringOne;
-        final private String stringTwo;
-        final private String stringThree;
-
-        public ConfusionBetweenStartingAndLaterParameters(final String stringOne,
-                                                          final String stringTwo,
-                                                          final String stringThree) {
-            this.stringOne = stringOne;
-            this.stringTwo = stringTwo;
-            this.stringThree = stringThree;
-        }
-
-        @Override
-        public void resolve(final TrackerWebPageRequest request,
-                            final TrackerWebPageResponse response)
-                throws URLMappingError, IOException {
-
-        }
-
-        public String getStringOne() {
-            return stringOne;
-        }
-
-        public String getStringTwo() {
-            return stringTwo;
-        }
-
-        public String getStringThree() {
-            return stringThree;
-        }
-    }
 }
