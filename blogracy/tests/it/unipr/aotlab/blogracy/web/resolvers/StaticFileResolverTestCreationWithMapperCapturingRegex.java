@@ -22,20 +22,21 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URL;
 
-public class StaticFileResolverTestCreationWithMapper {
+public class StaticFileResolverTestCreationWithMapperCapturingRegex {
     URLMapper mapper;
 
     @Before
     public void setUp() throws Exception {
         mapper = new URLMapper();
         mapper.configure(
-                "^/files/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver",
+                "^/files/(.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver",
                 new Object[]{getTestsStaticFilesRoot()}
         );
     }
@@ -47,7 +48,7 @@ public class StaticFileResolverTestCreationWithMapper {
         return url.getPath();
     }
 
-    @Test
+    @Test(expected = ServerConfigurationError.class)
     public void testResolveMainCss() throws Exception {
         mapper.getResolver("/files/Example.java");
     }

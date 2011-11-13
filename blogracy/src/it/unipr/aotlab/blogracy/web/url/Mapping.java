@@ -96,8 +96,6 @@ class Mapping {
             );
             return instantiateResolver(constructorFormalParameters, constructorActualParameters);
         }
-
-
     }
 
     private RequestResolver instantiateResolver(final Class[] constructorFormalParameters,

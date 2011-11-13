@@ -20,35 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web.resolvers;
+package it.unipr.aotlab.blogracy.web.resolvers.files;
 
-import it.unipr.aotlab.blogracy.web.url.URLMapper;
-import org.junit.Before;
-import org.junit.Test;
-
-import java.net.URL;
-
-public class StaticFileResolverTestCreationWithMapper {
-    URLMapper mapper;
-
-    @Before
-    public void setUp() throws Exception {
-        mapper = new URLMapper();
-        mapper.configure(
-                "^/files/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver",
-                new Object[]{getTestsStaticFilesRoot()}
-        );
-    }
-
-    private String getTestsStaticFilesRoot() {
-        Class<?> myClass = getClass();
-        ClassLoader classLoader = myClass.getClassLoader();
-        URL url = classLoader.getResource(".");
-        return url.getPath();
-    }
-
-    @Test
-    public void testResolveMainCss() throws Exception {
-        mapper.getResolver("/files/Example.java");
-    }
+public class ExampleFile {
 }
