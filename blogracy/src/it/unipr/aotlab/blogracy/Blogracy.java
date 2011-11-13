@@ -292,8 +292,8 @@ public class Blogracy extends WebPlugin {
             Object[] staticFileResolverParameters = new Object[]{getStaticFilesDirectory().getAbsolutePath()};
             mapper.configure(
                     "^/$", "it.unipr.aotlab.blogracy.web.resolvers.IndexResolver", null,
-                    "^/css/(:?.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
-                    "^/scripts/(:?.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
+                    "^/css/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
+                    "^/scripts/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
                     "^/followers$", "it.unipr.aotlab.blogracy.web.resolvers.Followers", null
             );
         } catch (ServerConfigurationError serverConfigurationError) {
