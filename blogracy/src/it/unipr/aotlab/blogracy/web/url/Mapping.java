@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Enrico Franchi.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -32,25 +32,10 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * User: enrico
- * Package: it.unipr.aotlab.blogracy.web
- * Date: 11/3/11
- * Time: 11:47 AM
- */
-
-/**
- * A Mapping is a package local helper class which actually converts a matching URL to the expected resolver.
- */
 class Mapping {
     final private Pattern rex;
     final private Class<? extends RequestResolver> resolverClass;
     final private Object[] startingParameters;
-
-    /**
-     * This variable is used to hold stuff after a match. We cache the parameters for performance reasons.
-     */
-    private Object[] tempParameters = null;
 
     /**
      * Creates a Mapping object that connects pages matching {@param regexpString} to the
@@ -67,46 +52,61 @@ class Mapping {
         try {
             this.rex = Pattern.compile(regexpString);
             this.resolverClass = Class.forName(classString).asSubclass(RequestResolver.class);
-            this.startingParameters = startingParameters;
+            this.startingParameters = (startingParameters != null) ? startingParameters : new Object[0];
         } catch (Exception e) {
             throw new ServerConfigurationError(e);
         }
     }
 
     /**
-     * Return if this is the correct mapping. In case, it changes the state so that buildResolver can
-     * be called without throwing exceptions.
+     * Return the resolver parameters derived from the URL if the mapping matches
+     * such URL, null otherwise.
      *
-     * @param url is checked against the regexp characterizing the current match
-     * @return true if it is a succesful match
+     * @param url is checked against the regexp characterizing the current mapping
+     * @return the list of parameter matched (can be empty) or null
      */
-    public boolean matches(String url) {
+    private List<String> matches(String url) {
         Matcher m = rex.matcher(url);
         if (m.matches()) {
-            tempParameters = buildParameters(m);
-            return true;
+            return buildStartingParameters(m);
         } else {
-            tempParameters = null;
-            return false;
+            return null;
         }
     }
 
     /**
      * Builds the correct resolver for the url that successfully matched against this mapping
      *
-     * @return the appropriate resolver
-     * @throws IllegalStateException    if the last call to match was not successful. Stateful programming sucks.
+     * @param url is checked against the regexp characterizing the current mapping
+     * @return the appropriate resolver or null
      * @throws ServerConfigurationError if the resolver cannot be built (e.g., wrong number of parameters)
      */
-    public RequestResolver buildResolver() throws ServerConfigurationError {
-        // TODO split the resolver constructor loading from the actual resolver building.
-        if (tempParameters == null) {
-            throw new ServerConfigurationError("buildResolver can be called only after a successful match.");
+    public RequestResolver buildResolver(final String url) throws ServerConfigurationError {
+        List<String> urlMatchingParameters = matches(url);
+        if (urlMatchingParameters == null) {
+            return null;
+        } else {
+            Class[] constructorFormalParameters = buildConstructorFormalParameters(
+                    startingParameters,
+                    urlMatchingParameters
+            );
+            Object[] constructorActualParameters = buildConstructorActualParameters(
+                    startingParameters,
+                    urlMatchingParameters
+            );
+            return instantiateResolver(constructorFormalParameters, constructorActualParameters);
         }
-        Class<String> constructorFormalParameters[] = buildConstructorFormalParameters();
+
+
+    }
+
+    private RequestResolver instantiateResolver(final Class[] constructorFormalParameters,
+                                                final Object[] constructorActualParameters)
+            throws ServerConfigurationError {
         try {
-            Constructor<? extends RequestResolver> constructor = resolverClass.getConstructor(constructorFormalParameters);
-            return constructor.newInstance(tempParameters);
+            Constructor<? extends RequestResolver> constructor =
+                    resolverClass.getConstructor(constructorFormalParameters);
+            return constructor.newInstance(constructorActualParameters);
         } catch (NoSuchMethodException e) {
             throw new ServerConfigurationError(e);
         } catch (InvocationTargetException e) {
@@ -118,24 +118,44 @@ class Mapping {
         }
     }
 
-    private Class<String>[] buildConstructorFormalParameters() {
-        @SuppressWarnings({"unchecked"})
-        Class<String>[] constructorFormalParameters = (Class<String>[]) new Class[tempParameters.length];
-        for (int i = 0; i < tempParameters.length; ++i) {
-            constructorFormalParameters[i] = String.class;
+    private Object[] buildConstructorActualParameters(final Object[] startingParameters,
+                                                      final List<String> urlMatchingParameters) {
+        final int totalSize = startingParameters.length + urlMatchingParameters.size();
+        int parameterToInsert = 0;
+        Object[] actualParameters = new Object[totalSize];
+        for (Object o : startingParameters) {
+            actualParameters[parameterToInsert++] = o;
         }
-        return constructorFormalParameters;
+        for (String s : urlMatchingParameters) {
+            actualParameters[parameterToInsert++] = s;
+        }
+        return actualParameters;
     }
 
-    private Object[] buildParameters(final Matcher m) {
-        List<String> tempParameters = new LinkedList<String>();
+    private Class[] buildConstructorFormalParameters(final Object[] startingParameters,
+                                                     final List<String> urlMatchingParameters) {
+        final int totalSize = startingParameters.length + urlMatchingParameters.size();
+        int parameterToInsert = 0;
+        Class[] formalParameters = new Class[totalSize];
+        for (Object o : startingParameters) {
+            formalParameters[parameterToInsert++] = o.getClass();
+        }
+        for (String _ : urlMatchingParameters) {
+            formalParameters[parameterToInsert++] = String.class;
+        }
+        return formalParameters;
+    }
+
+
+    private List<String> buildStartingParameters(final Matcher m) {
+        List<String> startingParameters = new LinkedList<String>();
         for (int groupIndex = 1; groupIndex <= m.groupCount(); ++groupIndex) {
             String parameter = m.group(groupIndex);
             if (parameter != null) {
-                tempParameters.add(parameter);
+                startingParameters.add(parameter);
             }
         }
-        return tempParameters.toArray();
+        return startingParameters;
     }
 }
 

@@ -1,8 +1,29 @@
+/*
+ * Copyright (c)  2011 Enrico Franchi.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import it.unipr.aotlab.blogracy.web.resolvers.MissingPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolvers;
@@ -11,33 +32,8 @@ import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Enrico Franchi, 2011 (mc)a
- * <p/>
- * This program or module is released under the terms of the MIT license.
- * <p/>
- * User: enrico
- * Date: 11/2/11
- * Time: 11:54 AM
- */
-
-/**
- * URLMapper provides the correct RequestResolver for the specified URL.
- * <p/>
- * URLMapper is heavily inspired by <a href="https://docs.djangoproject.com/en/dev/topics/http/urls/">Django URL dispatcher</a>.
- * <p/>
- * URLMapper is configured with a list of strings (whose semantics is specified in {@link URLMapper#configure(Object...)}.
- * <p/>
- * About the individual patterns:
- * <ol>
- * <li>Have patterns start and end with ^ and $ such as "^/profiles$</li>
- * <li>Patterns have to start with /: e.g., "^profiles$ is an error</li>
- * <li>Patterns have to end without /: e.g., "^/profiles$" is ok,
- * "^/profiles/$" does not. In any case we remove the trailing slash from URLs, so it would not match</li>
- * </ol>
- */
 public class URLMapper {
-    List<Mapping> lst;
+    private List<Mapping> lst;
 
     private StaticFileResolver staticFilesResolver = StaticFileResolvers.getNullStaticFileResolver();
     private final int ARGUMENT_LIST_MANDATORY_DIVISOR = 3;
@@ -46,10 +42,10 @@ public class URLMapper {
      * Returns the appropriate resolver for the required URL.
      *
      * @param url to be resolved. If the url ends with a slash, it is removed.
-     * @return the appropriate resolver. If exceptions are thrown, and {@link it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver} is returned.
-     *         If no regex can match the specified URL, a {@link MissingPageResolver} is returned.
-     * @throws URLMappingError          if the URL cannot be resolved.
-     * @throws ServerConfigurationError if something was wrong in the configuration.
+     * @return the appropriate resolver.
+     * @throws URLMappingError          if the URL cannot be resolved by any resolver.
+     * @throws ServerConfigurationError if something was wrong in the configuration, e.g., we have a matching
+     *                                  link, but we cannot instantiate the correspondingly specified class.
      */
     public RequestResolver getResolver(String url) throws ServerConfigurationError, URLMappingError {
         url = fixLeadingAndTrailingSlashes(url);
@@ -57,14 +53,6 @@ public class URLMapper {
 
     }
 
-    /**
-     * Finds the appropriate resolver for {@param url}.
-     *
-     * @param url is the url to be resolved
-     * @return a not null resolver
-     * @throws ServerConfigurationError if something was wrong in the configurations
-     * @throws URLMappingError          if the url could not be resolved
-     */
     private RequestResolver findResolver(String url) throws ServerConfigurationError, URLMappingError {
         RequestResolver resolver = buildResolver(url);
         if (resolver != null) {
@@ -79,10 +67,10 @@ public class URLMapper {
     }
 
     private RequestResolver buildResolver(final String url) throws ServerConfigurationError {
-        // TODO this should not throw ServerConfigurationError as they should be thrown only at configuration time.
         for (Mapping mapping : lst) {
-            if (mapping.matches(url)) {
-                return mapping.buildResolver();
+            RequestResolver resolver = mapping.buildResolver(url);
+            if (resolver != null) {
+                return resolver;
             }
         }
         return null;
@@ -118,10 +106,18 @@ public class URLMapper {
     /**
      * Configures the current URL Mapper
      *
-     * @param parameters is an array of parameters with an even of elements.
-     *                   odd elements are interpreted as patterns, even elements are
-     *                   interpreted as the fully qualified names of the classes which
-     *                   resolve such URLs
+     * @param parameters is an array of parameters with a multiple of three elements.
+     *                   they essentially constitute triplets where:
+     *                   <ol>
+     *                   <li>the first element is the regex used to specify which urls should be matched by
+     *                   the triplet.</li>
+     *                   <li>the second element is the fully qualified name of the class that should resolve
+     *                   the url if requested. Such classes <b>must</b> implement the {@link RequestResolver}
+     *                   interface</li>
+     *                   <li>the third argument is an array of objects that are passed as the first parameters
+     *                   to the constructor of the resolver. null is a valid value and is converted to the
+     *                   empty array.</li>
+     *                   </ol>
      * @throws ServerConfigurationError if the number of elements is not even,
      *                                  if some pattern is not valid or if some classfile cannot be
      *                                  found.
@@ -146,12 +142,18 @@ public class URLMapper {
                 String urlRegex = (String) strings[nextIndex];
                 String resolverClassName = (String) strings[nextIndex + 1];
                 Object[] startingParameters = (Object[]) strings[nextIndex + 2];
-                lst.add(new Mapping(urlRegex, resolverClassName, startingParameters));
+                addMapping(urlRegex, resolverClassName, startingParameters);
             } catch (ClassCastException e) {
                 throw new ServerConfigurationError(e);
             }
 
         }
+    }
+
+    private void addMapping(final String urlRegex,
+                            final String resolverClassName,
+                            final Object[] startingParameters) throws ServerConfigurationError {
+        lst.add(new Mapping(urlRegex, resolverClassName, startingParameters));
     }
 
     private void prepareList(Object[] strings) {
