@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
+package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;

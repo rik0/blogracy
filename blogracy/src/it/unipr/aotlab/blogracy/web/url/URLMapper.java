@@ -25,7 +25,7 @@ package it.unipr.aotlab.blogracy.web.url;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
-import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolver;
+import it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;

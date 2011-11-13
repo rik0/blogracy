@@ -20,12 +20,11 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web.resolvers.staticfiles;
+package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
-import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
