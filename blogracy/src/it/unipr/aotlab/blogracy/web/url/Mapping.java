@@ -110,11 +110,22 @@ class Mapping {
         } catch (NoSuchMethodException e) {
             throw new ServerConfigurationError(e);
         } catch (InvocationTargetException e) {
-            throw new ServerConfigurationError(e);
+            // InvocationTargetException is just a wrapper itself!
+            return unwrapPossibleInternalServerConfigurationErrorAndThrow(e);
         } catch (InstantiationException e) {
             throw new ServerConfigurationError(e);
         } catch (IllegalAccessException e) {
             throw new ServerConfigurationError(e);
+        }
+    }
+
+    private RequestResolver unwrapPossibleInternalServerConfigurationErrorAndThrow(final InvocationTargetException e)
+            throws ServerConfigurationError {
+        final Throwable originalException = e.getCause();
+        if (originalException instanceof ServerConfigurationError) {
+            throw (ServerConfigurationError) originalException;
+        } else {
+            throw new ServerConfigurationError(originalException);
         }
     }
 
