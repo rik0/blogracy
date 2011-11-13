@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.url;
 
+import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
@@ -35,6 +36,16 @@ public class URLMapperTestMixingParameters {
     private final String stringOne = "STRING1";
     private final String stringTwo = "STRING2";
     private final String stringThree = "STRING3";
+
+    final String stringA = "STRINGA";
+    final String stringB = "STRINGB";
+    final String stringC = "STRINGC";
+
+    final String basicURL = "/messing-with-parameters/";
+    final String oneParam = basicURL + stringA;
+    final String twoParams = oneParam + "/" + stringB;
+    final String threeParams = twoParams + "/" + stringC;
+
     private URLMapper mapper;
 
     @org.junit.Before
@@ -60,42 +71,39 @@ public class URLMapperTestMixingParameters {
     }
 
     @Test
-    public void testMixingAndMatchingParameters() throws Exception {
-        // TODO separate in four tests.
-        final String stringA = "STRINGA";
-        final String stringB = "STRINGB";
-        final String stringC = "STRINGC";
+    public void testThreeUrlParameters() throws ServerConfigurationError, URLMappingError {
+        ConfusionBetweenStartingAndLaterParameters resolver =
+                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(threeParams);
+        Assert.assertEquals(stringA, resolver.getStringOne());
+        Assert.assertEquals(stringB, resolver.getStringTwo());
+        Assert.assertEquals(stringC, resolver.getStringThree());
+    }
 
-        final String basicURL = "/messing-with-parameters/";
-        final String oneParam = basicURL + stringA;
-        final String twoParams = oneParam + "/" + stringB;
-        final String threeParams = twoParams + "/" + stringC;
+    @Test
+    public void testTwoUrlParameters() throws ServerConfigurationError, URLMappingError {
+        ConfusionBetweenStartingAndLaterParameters resolver =
+                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(twoParams);
+        Assert.assertEquals(stringOne, resolver.getStringOne());
+        Assert.assertEquals(stringA, resolver.getStringTwo());
+        Assert.assertEquals(stringB, resolver.getStringThree());
+    }
 
-        URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters resolverA =
-                (URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(basicURL);
-        Assert.assertEquals(stringOne, resolverA.getStringOne());
-        Assert.assertEquals(stringTwo, resolverA.getStringTwo());
-        Assert.assertEquals(stringThree, resolverA.getStringThree());
+    @Test
+    public void testOneUrlParameter() throws ServerConfigurationError, URLMappingError {
+        ConfusionBetweenStartingAndLaterParameters resolver =
+                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(oneParam);
+        Assert.assertEquals(stringOne, resolver.getStringOne());
+        Assert.assertEquals(stringTwo, resolver.getStringTwo());
+        Assert.assertEquals(stringA, resolver.getStringThree());
+    }
 
-        URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters resolverB =
-                (URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(oneParam);
-        Assert.assertEquals(stringOne, resolverB.getStringOne());
-        Assert.assertEquals(stringTwo, resolverB.getStringTwo());
-        Assert.assertEquals(stringA, resolverB.getStringThree());
-
-        URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters resolverC =
-                (URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(twoParams);
-        Assert.assertEquals(stringOne, resolverC.getStringOne());
-        Assert.assertEquals(stringA, resolverC.getStringTwo());
-        Assert.assertEquals(stringB, resolverC.getStringThree());
-
-        URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters resolverD =
-                (URLMapperTestMixingParameters.ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(threeParams);
-        Assert.assertEquals(stringA, resolverD.getStringOne());
-        Assert.assertEquals(stringB, resolverD.getStringTwo());
-        Assert.assertEquals(stringC, resolverD.getStringThree());
-
-
+    @Test
+    public void testNoUrlParameters() throws ServerConfigurationError, URLMappingError {
+        ConfusionBetweenStartingAndLaterParameters resolver =
+                (ConfusionBetweenStartingAndLaterParameters) mapper.getResolver(basicURL);
+        Assert.assertEquals(stringOne, resolver.getStringOne());
+        Assert.assertEquals(stringTwo, resolver.getStringTwo());
+        Assert.assertEquals(stringThree, resolver.getStringThree());
     }
 
     public static class ConfusionBetweenStartingAndLaterParameters implements RequestResolver {
