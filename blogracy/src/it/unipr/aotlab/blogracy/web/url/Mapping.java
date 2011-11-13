@@ -44,7 +44,7 @@ import java.util.regex.Pattern;
  */
 class Mapping {
     final private Pattern rex;
-    final private Class<RequestResolver> resolverClass;
+    final private Class<? extends RequestResolver> resolverClass;
     final private Object[] startingParameters;
 
     /**
@@ -62,12 +62,11 @@ class Mapping {
      * @throws ServerConfigurationError if the mapping cannot be established, e.g., because the
      *                                  regex is not valid or because the specified classfile cannot be found.
      */
-    @SuppressWarnings({"unchecked"})
     public Mapping(String regexpString, String classString, final Object[] startingParameters)
             throws ServerConfigurationError {
         try {
             this.rex = Pattern.compile(regexpString);
-            this.resolverClass = (Class<RequestResolver>) Class.forName(classString);
+            this.resolverClass = Class.forName(classString).asSubclass(RequestResolver.class);
             this.startingParameters = startingParameters;
         } catch (Exception e) {
             throw new ServerConfigurationError(e);
@@ -106,7 +105,7 @@ class Mapping {
         }
         Class<String> constructorFormalParameters[] = buildConstructorFormalParameters();
         try {
-            Constructor<RequestResolver> constructor = resolverClass.getConstructor(constructorFormalParameters);
+            Constructor<? extends RequestResolver> constructor = resolverClass.getConstructor(constructorFormalParameters);
             return constructor.newInstance(tempParameters);
         } catch (NoSuchMethodException e) {
             throw new ServerConfigurationError(e);
