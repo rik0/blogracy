@@ -27,8 +27,29 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Use this annotation to mark the parameters that shall be provided at configuration time
+ * to the RequestResolver.
+ * <p/>
+ * For example, a StaticFileResolver needs a String specifying the root from where to resolve
+ * the paths. If none was provided at configuration time, for some bad configuration urls there
+ * could be security issues. Instead we declare:
+ * <p/>
+ * <pre>
+ *     &#64;ConfigurationTimeParameters({String.class})
+ *     public class StaticFileResolver implements RequestResolver {
+ *         // ...
+ *     }
+ * </pre>
+ * <p/>
+ * and the system checks that the root is provided at configuration time.
+ */
+
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ConfigurationTimeParameters {
+    /**
+     * @return the array representing the formal parameters
+     */
     Class<?>[] value() default {};
 }

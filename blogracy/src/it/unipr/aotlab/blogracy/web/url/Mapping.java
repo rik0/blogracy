@@ -27,6 +27,7 @@ import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -55,6 +56,45 @@ class Mapping {
             this.startingParameters = (startingParameters != null) ? startingParameters : new Object[0];
         } catch (Exception e) {
             throw new ServerConfigurationError(e);
+        }
+        checkStartingParameters();
+    }
+
+    private void checkStartingParameters() throws ServerConfigurationError {
+        Class[] declaredFormalParameters = extractFormalParametersAnnotation(resolverClass);
+        if(declaredFormalParameters != null) {
+            Class[] presentedActualParameterClasses = buildActualParametersClassArray(startingParameters);
+            if(!Arrays.equals(presentedActualParameterClasses, declaredFormalParameters)) {
+                String message = buildStaticCheckingParametersErrorMessage(declaredFormalParameters);
+                throw new ServerConfigurationError(message);
+            }
+        }
+    }
+
+    private String buildStaticCheckingParametersErrorMessage(final Class[] declaredFormalParameters) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("RequestResolver ").append(resolverClass.toString());
+        builder.append(" for url ").append(rex.pattern());
+        builder.append(" configured with parameters [");
+        for(Object o : startingParameters) {
+            builder.append(o.toString());
+            builder.append(", ");
+        }
+        builder.append("] but it required parameters of type [");
+        for(Class parameterType : declaredFormalParameters) {
+            builder.append(parameterType.getCanonicalName());
+            builder.append(", ");
+        }
+        builder.append("].");
+        return builder.toString();
+    }
+
+    private Class[] extractFormalParametersAnnotation(final Class<? extends RequestResolver> resolverClass) {
+        ConfigurationTimeParameters parameters = resolverClass.getAnnotation(ConfigurationTimeParameters.class);
+        if(parameters != null) {
+        return parameters.value();
+        } else {
+            return null;
         }
     }
 
@@ -153,6 +193,16 @@ class Mapping {
             formalParameters[parameterToInsert++] = String.class;
         }
         return formalParameters;
+    }
+
+    private Class[] buildActualParametersClassArray(Object[] objects) {
+        final int totalSize = objects.length;
+        Class[] formalParametersArray = new Class[totalSize];
+        int parameterToInsert = 0;
+        for(Object o : objects) {
+            formalParametersArray[parameterToInsert++] = o.getClass();
+        }
+        return formalParametersArray;
     }
 
 
