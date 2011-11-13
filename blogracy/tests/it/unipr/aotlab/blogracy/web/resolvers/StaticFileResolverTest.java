@@ -27,7 +27,6 @@ import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.easymock.EasyMockSupport;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -136,12 +135,4 @@ public class StaticFileResolverTest extends EasyMockSupport {
         expect(requestMock.getURL()).andStubReturn(filename);
         return requestMock;
     }
-
-    @Test
-    public void testCouldResolve() throws Exception {
-        Assert.assertTrue(resolver.couldResolve("css/style.css"));
-        Assert.assertTrue(resolver.couldResolve("scripts/main.js"));
-    }
-
-
 }

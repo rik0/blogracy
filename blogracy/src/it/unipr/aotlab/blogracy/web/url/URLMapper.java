@@ -25,7 +25,6 @@ package it.unipr.aotlab.blogracy.web.url;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
-import it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -34,7 +33,6 @@ import java.util.List;
 public class URLMapper {
     private List<Mapping> lst;
 
-    private StaticFileResolver staticFilesResolver = null;
     private final int ARGUMENT_LIST_MANDATORY_DIVISOR = 3;
 
     /**
@@ -56,13 +54,13 @@ public class URLMapper {
         RequestResolver resolver = buildResolver(url);
         if (resolver != null) {
             return resolver;
-        } else if (staticFilesResolver != null && staticFilesResolver.couldResolve(url)) {
-            return staticFilesResolver;
+        } else {
+            throw new URLMappingError(
+                    HttpURLConnection.HTTP_NOT_FOUND,
+                    "Could not find an appropriate resolver for " + url
+            );
         }
-        throw new URLMappingError(
-                HttpURLConnection.HTTP_NOT_FOUND,
-                "Could not find an appropriate resolver for " + url
-        );
+
     }
 
     private RequestResolver buildResolver(final String url) throws ServerConfigurationError {
@@ -130,10 +128,6 @@ public class URLMapper {
         }
     }
 
-    public void setStaticFilesDirectory(String staticRoot) throws ServerConfigurationError {
-        staticFilesResolver = new StaticFileResolver(staticRoot);
-    }
-
     private void addMappings(Object[] strings) throws ServerConfigurationError {
         for (int nextIndex = 0; nextIndex < strings.length;
              nextIndex += ARGUMENT_LIST_MANDATORY_DIVISOR) {
@@ -160,6 +154,6 @@ public class URLMapper {
     }
 
     private boolean checkRightArgumentsNumber(Object[] strings) {
-        return strings.length % ARGUMENT_LIST_MANDATORY_DIVISOR == 0;
+        return (strings.length % ARGUMENT_LIST_MANDATORY_DIVISOR) == 0;
     }
 }

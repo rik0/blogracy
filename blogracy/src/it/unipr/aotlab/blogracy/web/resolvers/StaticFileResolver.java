@@ -151,13 +151,4 @@ public class StaticFileResolver implements RequestResolver {
     private boolean mayBeDirectoryUrl(final String url) {
         return url.endsWith("/");
     }
-
-    private File getFileSystemPath(final String url) {
-        return new File(staticFilesDirectory, url);
-    }
-
-    public boolean couldResolve(final String url) {
-        File tentativeFile = getFileSystemPath(url);
-        return tentativeFile.exists();
-    }
 }
