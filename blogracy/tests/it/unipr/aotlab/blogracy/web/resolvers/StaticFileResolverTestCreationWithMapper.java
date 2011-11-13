@@ -23,12 +23,17 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
+import org.easymock.EasyMockSupport;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.net.URL;
 
-public class StaticFileResolverTestCreationWithMapper {
+import static org.easymock.EasyMock.expect;
+
+public class StaticFileResolverTestCreationWithMapper extends EasyMockSupport {
     URLMapper mapper;
 
     @Before
@@ -49,6 +54,17 @@ public class StaticFileResolverTestCreationWithMapper {
 
     @Test
     public void testResolveMainCss() throws Exception {
-        mapper.getResolver("/files/Example.java");
+        final String exampleUrl = "/files/ExampleFile.class";
+        RequestResolver resolver = mapper.getResolver(exampleUrl);
+        TrackerWebPageRequest mockRequest = createMock(TrackerWebPageRequest.class);
+        TrackerWebPageResponse mockResponse = createMock(TrackerWebPageResponse.class);
+
+        expect(mockRequest.getURL()).andStubReturn(exampleUrl);
+        expect(mockResponse.useFile(getTestsStaticFilesRoot(), exampleUrl)).andReturn(true);
+
+
+        replayAll();
+        resolver.resolve(mockRequest, mockResponse);
+        verifyAll();
     }
 }

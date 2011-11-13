@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.web.resolvers.files;
+package files;
 
 public class ExampleFile {
 }
