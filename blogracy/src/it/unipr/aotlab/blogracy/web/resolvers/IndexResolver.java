@@ -1,6 +1,8 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.model.hashes.Hash;
+import it.unipr.aotlab.blogracy.model.users.User;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
@@ -16,12 +18,13 @@ import java.io.StringWriter;
  * Time: 3:38 PM
  */
 public class IndexResolver extends AbstractRequestResolver {
-    VelocityContext velocityContext = new VelocityContext();
+    protected VelocityContext velocityContext = new VelocityContext();
     final static private String VIEW_NAME = "index.vm";
     final static private String VIEW_TYPE = "text/html";
 
     @Override
     protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response) {
+        setContext();
         StringWriter writer = new StringWriter();
         Template indexTemplate = loadTemplate();
         indexTemplate.initDocument();
@@ -34,6 +37,40 @@ public class IndexResolver extends AbstractRequestResolver {
         PrintStream ps = new PrintStream(response.getOutputStream());
         ps.print(text);
     }
+
+    private void setContext() {
+        // TODO this stuff should be parametrized or something
+        velocityContext.internalPut("application", "Blogracy");
+        velocityContext.internalPut("user", new User() {
+            @Override
+            public String getLocalNick() {
+                return "The User";
+            }
+
+            @Override
+            public void setLocalNick(final String nick) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public Hash getHash() {
+                return new Hash() {
+                    String s = "42";
+
+                    @Override
+                    public String getStringValue() {
+                        return s;
+                    }
+
+                    @Override
+                    public byte[] getValue() {
+                        return s.getBytes();
+                    }
+                };
+            }
+        });
+    }
+
 
     @Override
     protected String getViewName() {
