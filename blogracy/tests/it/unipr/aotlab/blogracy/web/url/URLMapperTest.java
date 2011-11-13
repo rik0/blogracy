@@ -30,7 +30,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.net.HttpURLConnection;
 
 public class URLMapperTest {
@@ -46,23 +45,7 @@ public class URLMapperTest {
                 "^/$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$HomepageResolver", null,
                 "^/profile$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$Profile", null,
                 "^/messages$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$Messages", null,
-                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$Messages", null,
-
-                "^/starting-parameters$",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$DifferentStartingArguments",
-                new Object[]{differentParametersInteger, differentParametersFloat},
-
-                "^/inverting-starting-parameters$",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$DifferentStartingArguments",
-                new Object[]{differentParametersFloat, differentParametersInteger},
-
-                "^/missing-starting-parameter1$",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$DifferentStartingArguments",
-                new Object[]{differentParametersInteger},
-
-                "^/missing-starting-parameter2$",
-                "it.unipr.aotlab.blogracy.web.url.URLMapperTest$DifferentStartingArguments",
-                new Object[]{}
+                "^/messages/(\\d+)$", "it.unipr.aotlab.blogracy.web.url.URLMapperTest$Messages", null
         );
     }
 
@@ -120,32 +103,6 @@ public class URLMapperTest {
         );
     }
 
-    @Test
-    public void testCreateWithStartingParameters() throws Exception {
-        RequestResolver resolver = mapper.getResolver("/starting-parameters");
-        Assert.assertNotNull(resolver);
-        Assert.assertTrue(resolver instanceof DifferentStartingArguments);
-        DifferentStartingArguments differentStartingArgumentsResolver = (DifferentStartingArguments) resolver;
-        Assert.assertEquals(differentParametersInteger, differentStartingArgumentsResolver.getIntegerParameter());
-        Assert.assertEquals(differentParametersFloat, differentStartingArgumentsResolver.getFloatParameter());
-
-    }
-
-    @Test(expected = ServerConfigurationError.class)
-    public void testCreateWithInvertedStartingParameters() throws Exception {
-        RequestResolver resolver = mapper.getResolver("/inverting-starting-parameters");
-    }
-
-    @Test(expected = ServerConfigurationError.class)
-    public void testCreateWithMissingOneParameters() throws Exception {
-        RequestResolver resolver = mapper.getResolver("/missing-starting-parameter1");
-    }
-
-    @Test(expected = ServerConfigurationError.class)
-    public void testCreateWithMissingAllParameters() throws Exception {
-        RequestResolver resolver = mapper.getResolver("/missing-starting-parameter2");
-    }
-
     public static class NoParamsResolver implements RequestResolver {
         @Override
         public void resolve(final TrackerWebPageRequest request,
@@ -199,28 +156,4 @@ public class URLMapperTest {
 
         }
     }
-
-    public static class DifferentStartingArguments implements RequestResolver {
-        final private Integer integerParameter;
-        final private Float floatParameter;
-
-        public DifferentStartingArguments(final Integer integerParameter, final Float floatParameter) {
-            this.integerParameter = integerParameter;
-            this.floatParameter = floatParameter;
-        }
-
-        @Override
-        public void resolve(final TrackerWebPageRequest request,
-                            final TrackerWebPageResponse response) throws URLMappingError, IOException {
-        }
-
-        public Integer getIntegerParameter() {
-            return integerParameter;
-        }
-
-        public Float getFloatParameter() {
-            return floatParameter;
-        }
-    }
-
 }
