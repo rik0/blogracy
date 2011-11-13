@@ -28,6 +28,8 @@ import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
 import org.apache.velocity.app.Velocity;
+import org.apache.velocity.runtime.RuntimeServices;
+import org.apache.velocity.runtime.log.LogChute;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
 import org.gudy.azureus2.core3.util.SystemProperties;
@@ -54,16 +56,12 @@ public class Blogracy extends WebPlugin {
     private HyperlinkParameter test_param;
     static private Blogracy singleton;
 
-
     static class Accesses {
         static String ALL = "all";
         static String LOCAL = "local";
     }
 
     static private PluginInterface plugin;
-
-    // Velocity configuration keys
-    private static final String VELOCITY_RESOURCE_LOADER_PATH_KEY = "file.resource.loader.path";
 
     // Misc Keys
     private static final String MESSAGES_BLOGRACY_URL_KEY = "blogracy.url";
@@ -269,9 +267,48 @@ public class Blogracy extends WebPlugin {
     private void initVelocity() {
         Properties velocityProperties = new Properties();
         velocityProperties.setProperty(
-                VELOCITY_RESOURCE_LOADER_PATH_KEY,
+                Velocity.FILE_RESOURCE_LOADER_PATH,
                 getTemplateDirectory().getAbsolutePath()
         );
+        // TODO: this should be read from a configuration file
+        velocityProperties.setProperty(
+                Velocity.FILE_RESOURCE_LOADER_CACHE,
+                "false"
+        );
+        Velocity.setProperty(Velocity.RUNTIME_LOG_LOGSYSTEM, new LogChute() {
+            @Override
+            public void init(final RuntimeServices rs) throws Exception {
+                // do nothing
+            }
+
+            @Override
+            public void log(final int level, final String message) {
+                switch (level) {
+                    case DEBUG_ID:
+                    case TRACE_ID:
+                    case INFO_ID:
+                        Logger.info(message);
+                        break;
+                    case WARN_ID:
+                        Logger.warn(message);
+                        break;
+                    case ERROR_ID:
+                        Logger.error(message);
+                        break;
+                }
+            }
+
+            @Override
+            public void log(final int level, final String message, final Throwable t) {
+                final String fullMessage = message + t.getMessage();
+                log(level, message);
+            }
+
+            @Override
+            public boolean isLevelEnabled(final int level) {
+                return true;
+            }
+        });
         Velocity.init(velocityProperties);
     }
 
