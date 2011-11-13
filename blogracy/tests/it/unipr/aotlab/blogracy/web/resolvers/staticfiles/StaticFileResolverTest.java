@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Enrico Franchi.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -36,13 +36,7 @@ import java.net.HttpURLConnection;
 
 import static org.easymock.EasyMock.expect;
 
-/**
- * User: enrico
- * Package: it.unipr.aotlab.blogracy.web.resolvers.staticfiles
- * Date: 11/12/11
- * Time: 8:40 AM
- */
-public class StaticFileResolverImplTest extends EasyMockSupport {
+public class StaticFileResolverTest extends EasyMockSupport {
     /**
      * This test is essentially flawed in the sense that it assumes that the
      * current working directory is the project root (where the build.xml and
@@ -61,17 +55,17 @@ public class StaticFileResolverImplTest extends EasyMockSupport {
 
     @Before
     public void setUp() throws Exception {
-        resolver = StaticFileResolvers.getStaticFileResolver(STATIC_ROOT_DIR);
+        resolver = new StaticFileResolver(STATIC_ROOT_DIR);
     }
 
     @Test(expected = ServerConfigurationError.class)
     public void testNonExistingDirectory() throws Exception {
-        StaticFileResolvers.getStaticFileResolver("not_existing");
+        new StaticFileResolver("not_existing");
     }
 
     @Test(expected = ServerConfigurationError.class)
     public void testNonDirectory() throws Exception {
-        StaticFileResolvers.getStaticFileResolver("pom.xml");
+        new StaticFileResolver("pom.xml");
     }
 
 

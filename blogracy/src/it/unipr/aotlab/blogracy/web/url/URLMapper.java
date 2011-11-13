@@ -26,7 +26,6 @@ import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolver;
-import it.unipr.aotlab.blogracy.web.resolvers.staticfiles.StaticFileResolvers;
 
 import java.net.HttpURLConnection;
 import java.util.ArrayList;
@@ -35,7 +34,7 @@ import java.util.List;
 public class URLMapper {
     private List<Mapping> lst;
 
-    private StaticFileResolver staticFilesResolver = StaticFileResolvers.getNullStaticFileResolver();
+    private StaticFileResolver staticFilesResolver = null;
     private final int ARGUMENT_LIST_MANDATORY_DIVISOR = 3;
 
     /**
@@ -57,7 +56,7 @@ public class URLMapper {
         RequestResolver resolver = buildResolver(url);
         if (resolver != null) {
             return resolver;
-        } else if (staticFilesResolver.couldResolve(url)) {
+        } else if (staticFilesResolver != null && staticFilesResolver.couldResolve(url)) {
             return staticFilesResolver;
         }
         throw new URLMappingError(
@@ -132,7 +131,7 @@ public class URLMapper {
     }
 
     public void setStaticFilesDirectory(String staticRoot) throws ServerConfigurationError {
-        staticFilesResolver = StaticFileResolvers.getStaticFileResolver(staticRoot);
+        staticFilesResolver = new StaticFileResolver(staticRoot);
     }
 
     private void addMappings(Object[] strings) throws ServerConfigurationError {
