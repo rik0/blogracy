@@ -327,6 +327,7 @@ public class Blogracy extends WebPlugin {
             mapper.configure(
                     "^/$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,
                     "^/main$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,
+                    "^/messages$", "it.unipr.aotlab.blogracy.web.resolvers.MessagesResolver", null,
                     "^/css/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
                     "^/scripts/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
                     "^/followers$", "it.unipr.aotlab.blogracy.web.resolvers.Followers", null
