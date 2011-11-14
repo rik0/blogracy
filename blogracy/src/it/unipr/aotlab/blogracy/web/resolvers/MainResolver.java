@@ -1,6 +1,5 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.model.hashes.Hash;
 import it.unipr.aotlab.blogracy.model.users.User;
 import org.apache.velocity.Template;
@@ -33,7 +32,6 @@ public class MainResolver extends AbstractRequestResolver {
                 writer
         );
         String text = writer.toString();
-        Logger.info(text);
         PrintStream ps = new PrintStream(response.getOutputStream());
         ps.print(text);
     }
