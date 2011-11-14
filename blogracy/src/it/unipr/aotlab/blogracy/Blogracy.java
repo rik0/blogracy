@@ -266,15 +266,12 @@ public class Blogracy extends WebPlugin {
 
     private void initVelocity() {
         Properties velocityProperties = new Properties();
+        // TODO: here we are not using the deployed files!
         velocityProperties.setProperty(
                 Velocity.FILE_RESOURCE_LOADER_PATH,
-                getTemplateDirectory().getAbsolutePath()
+                "blogracy/src/resources/templates"
         );
-        // TODO: this should be read from a configuration file
-        velocityProperties.setProperty(
-                Velocity.FILE_RESOURCE_LOADER_CACHE,
-                "false"
-        );
+        Velocity.setProperty(Velocity.FILE_RESOURCE_LOADER_CACHE, false);
         Velocity.setProperty(Velocity.RUNTIME_LOG_LOGSYSTEM, new LogChute() {
             @Override
             public void init(final RuntimeServices rs) throws Exception {
