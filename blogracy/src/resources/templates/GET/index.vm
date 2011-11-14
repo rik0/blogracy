@@ -109,27 +109,35 @@
             </h1>
         </div>
         <div class="row">
-            <div class="span10">
+            <div class="span10  ">
                 <h2>Messages</h2>
 
-                <form>
-                    <fieldset>
-                        <legend>Send a new message</legend>
+                <form class="span10">
+                    <fieldset class="form-stacked">
                         <div class="clearfix">
-                            <label for="messageArea"></label>
+                            <label for="messageArea">Send a new message</label>
+
                             <div class="input">
-                                <textarea class="xxlarge" name="textarea" id="messageArea" rows="3"></textarea>
+                                <textarea class="xxlarge" name="textarea" id="messageArea" rows="3">
+
+                                </textarea>
                             </div>
                         </div>
                     </fieldset>
-                    <div class="actions">
-                        <input type="submit" class="btn primary" value="Save changes">&nbsp;
-                        <button type="reset" class="btn">Cancel</button>
-                    </div>
+                    <fieldset>
+                        <div class="actions">
+                            <input type="submit" class="btn primary" value="Save changes">&nbsp;
+                            <button type="reset" class="btn">Cancel</button>
+                        </div>
+                    </fieldset>
                 </form>
             </div>
             <div class="span4">
-                <h3>Secondary content</h3>
+                <h3>Followers</h3>
+
+                <h3>Followees</h3>
+
+                <h3>Tags</h3>
             </div>
         </div>
     </div>
