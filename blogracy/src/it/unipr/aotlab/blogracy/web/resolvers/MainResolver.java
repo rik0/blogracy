@@ -17,7 +17,7 @@ import java.io.StringWriter;
  * Date: 11/7/11
  * Time: 3:38 PM
  */
-public class IndexResolver extends AbstractRequestResolver {
+public class MainResolver extends AbstractRequestResolver {
     protected VelocityContext velocityContext = new VelocityContext();
     final static private String VIEW_NAME = "index.vm";
     final static private String VIEW_TYPE = "text/html";
