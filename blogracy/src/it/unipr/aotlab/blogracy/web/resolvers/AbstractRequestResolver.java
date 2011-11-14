@@ -22,47 +22,37 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import org.apache.velocity.Template;
-import org.apache.velocity.app.Velocity;
-import org.apache.velocity.exception.ParseErrorException;
-import org.apache.velocity.exception.ResourceNotFoundException;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-import java.io.File;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
 import java.util.Map;
 
 /**
- * User: enrico
- * Package: it.unipr.aotlab.blogracy.web
- * Date: 11/3/11
- * Time: 10:37 AM
+ * An AbstractRequestResolver abstracts the idea of resolving requests according to the
+ * appropriate HTTP commands (e.g.,
+ * {@link AbstractRequestResolver#get(org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest,
+ * org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse)} for get)
  */
 abstract public class AbstractRequestResolver implements RequestResolver {
-    private File TEMPLATES_ROOT_DIRECTORY = Blogracy.getTemplateDirectory();
 
     private Status requestStatus = Status.INVALID;
-
-    protected void setHTMLResponse(TrackerWebPageResponse response) {
-        response.setContentType("text/html");
-    }
-
-    protected OutputStreamWriter outputWriter(final TrackerWebPageResponse response) {
-        return new OutputStreamWriter(response.getOutputStream());
-    }
 
     static protected enum Status {
         GET, POST, PUT, DELETE, INVALID
     }
 
+    /**
+     * @return the type of the HTTP request.
+     */
     final protected Status getRequestStatus() {
         return requestStatus;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     final public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
             throws URLMappingError {
@@ -104,6 +94,13 @@ abstract public class AbstractRequestResolver implements RequestResolver {
 
     }
 
+    /**
+     * Answers to a DELETE HTTP command
+     *
+     * @param request  the request for the client
+     * @param response the response from the server
+     * @throws URLMappingError if something goes bad
+     */
     protected void delete(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
         throw new URLMappingError(
                 HttpURLConnection.HTTP_BAD_METHOD,
@@ -111,6 +108,13 @@ abstract public class AbstractRequestResolver implements RequestResolver {
         );
     }
 
+    /**
+     * Answers to a PUT HTTP command
+     *
+     * @param request  the request for the client
+     * @param response the response from the server
+     * @throws URLMappingError if something goes bad
+     */
     protected void put(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
         throw new URLMappingError(
                 HttpURLConnection.HTTP_BAD_METHOD,
@@ -118,6 +122,13 @@ abstract public class AbstractRequestResolver implements RequestResolver {
         );
     }
 
+    /**
+     * Answers to a POST HTTP command
+     *
+     * @param request  the request for the client
+     * @param response the response from the server
+     * @throws URLMappingError if something goes bad
+     */
     protected void post(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
         throw new URLMappingError(
                 HttpURLConnection.HTTP_BAD_METHOD,
@@ -125,53 +136,19 @@ abstract public class AbstractRequestResolver implements RequestResolver {
         );
     }
 
+    /**
+     * Answers to a GET HTTP command
+     *
+     * @param request  the request for the client
+     * @param response the response from the server
+     * @throws URLMappingError if something goes bad
+     */
     protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
         throw new URLMappingError(
                 HttpURLConnection.HTTP_BAD_METHOD,
                 "Command GET not supported for current resource."
         );
     }
-
-    protected Template loadTemplate()
-            throws ParseErrorException, ResourceNotFoundException {
-        Status currentStatus = getRequestStatus();
-        String htmlViewName = getViewName();
-        String templateName;
-        if (hasSpecialTemplateForStatus(currentStatus, htmlViewName)) {
-            templateName = buildTemplateName(currentStatus, htmlViewName);
-        } else {
-            templateName = htmlViewName;
-        }
-        return Velocity.getTemplate(templateName);
-    }
-
-    protected String buildTemplateName(Status currentStatus, String htmlViewName) {
-        return currentStatus.toString() + "/" + htmlViewName;
-    }
-
-    private boolean hasSpecialTemplateForStatus(final Status currentStatus, final String htmlViewName) {
-        File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentStatus.toString());
-        if (specialTemplateDirectory.exists()) {
-            File templateFile = new File(specialTemplateDirectory, htmlViewName);
-            return templateFile.exists();
-        } else {
-            return false;
-        }
-    }
-
-    /**
-     * Implements this method to specify the name of the view to use.
-     * <p/>
-     * A file with that name must exist either in a subdirectory named COMMAND
-     * (one among GET, POST, etc.) or directly in the templates directory.
-     * <p/>
-     * In the former case it will be chosen only when the request is a GET, POST, etc
-     * respectively. A file directly in the templates directory is used, if exists,
-     * as a fallback for requests without a specific file.
-     *
-     * @return the name of the file.
-     */
-    abstract protected String getViewName();
 
     /**
      * Return the kind of file this resolver is going to send back

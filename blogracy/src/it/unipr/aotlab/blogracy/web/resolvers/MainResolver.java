@@ -2,41 +2,34 @@ package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.model.hashes.Hash;
 import it.unipr.aotlab.blogracy.model.users.User;
-import org.apache.velocity.Template;
-import org.apache.velocity.VelocityContext;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-import java.io.PrintStream;
-import java.io.StringWriter;
-
 /**
- * Created by IntelliJ IDEA.
- * User: enrico
- * Date: 11/7/11
- * Time: 3:38 PM
+ * MainResolver presents the main application page.
  */
-public class MainResolver extends AbstractRequestResolver {
-    protected VelocityContext velocityContext = new VelocityContext();
+public class MainResolver extends VelocityRequestResolver {
     final static private String VIEW_NAME = "index.vm";
     final static private String VIEW_TYPE = "text/html";
 
     @Override
     protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response) {
-        setContext();
-        StringWriter writer = new StringWriter();
-        Template indexTemplate = loadTemplate();
-        indexTemplate.initDocument();
-        indexTemplate.merge(
-                velocityContext,
-                writer
-        );
-        String text = writer.toString();
-        PrintStream ps = new PrintStream(response.getOutputStream());
-        ps.print(text);
+        velocityGet(response);
     }
 
-    private void setContext() {
+
+    @Override
+    protected String getViewName() {
+        return VIEW_NAME;
+    }
+
+    @Override
+    protected String getViewType() {
+        return VIEW_TYPE;
+    }
+
+    @Override
+    protected void setupContext() {
         // TODO this stuff should be parametrized or something
         velocityContext.internalPut("application", "Blogracy");
         velocityContext.internalPut("user", new User() {
@@ -67,16 +60,5 @@ public class MainResolver extends AbstractRequestResolver {
                 };
             }
         });
-    }
-
-
-    @Override
-    protected String getViewName() {
-        return VIEW_NAME;
-    }
-
-    @Override
-    protected String getViewType() {
-        return VIEW_TYPE;
     }
 }
