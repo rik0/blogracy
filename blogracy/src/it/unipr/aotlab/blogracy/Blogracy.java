@@ -224,13 +224,15 @@ public class Blogracy extends WebPlugin {
         try {
             final RequestResolver resolver = mapper.getResolver(url);
             resolver.resolve(request, response);
-        } catch (URLMappingError e) {
-            final ErrorPageResolver errorResolver = new ErrorPageResolver(e);
+        } catch (URLMappingError urlMappingError) {
+            final ErrorPageResolver errorResolver = new ErrorPageResolver(urlMappingError);
+            Logger.error(urlMappingError.getMessage());
             errorResolver.resolve(request, response);
         } catch (ServerConfigurationError serverConfigurationError) {
             final ErrorPageResolver errorResolver = new ErrorPageResolver(
-                    serverConfigurationError, HttpURLConnection.HTTP_FORBIDDEN
+                    serverConfigurationError, HttpURLConnection.HTTP_INTERNAL_ERROR
             );
+            Logger.error(serverConfigurationError.getMessage());
             errorResolver.resolve(request, response);
         }
         return true;
