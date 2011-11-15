@@ -24,13 +24,12 @@ package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.web.post.PostQuery;
+import it.unipr.aotlab.blogracy.web.post.PostQueryParser;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
-import java.util.Map;
 
 public class MessagesResolver extends AbstractRequestResolver {
     @Override
@@ -41,26 +40,25 @@ public class MessagesResolver extends AbstractRequestResolver {
     @Override
     protected void post(final TrackerWebPageRequest request,
                         final TrackerWebPageResponse response) throws URLMappingError {
-        Logger.info(request.getURL());
-        final InputStream inputStream = request.getInputStream();
         byte[] buffer = new byte[4028];
         try {
             System.out.println("Started reading.");
             while(inputStream.read(buffer) != -1) {
                     System.out.write(buffer);
             }
-            System.out.println("Ended reading.");
 
+            System.out.println("Ended reading.");
 
             final Map<String, String> headers = request.getHeaders();
             for(Map.Entry<String, String> pair : headers.entrySet()) {
                 System.out.println("<" + pair.getKey() + ": " + pair.getValue() + ">");
             }
+
+
             inputStream.close();
 
         } catch (IOException e) {
             throw new URLMappingError(HttpURLConnection.HTTP_INTERNAL_ERROR, e);
         }
-
     }
 }
