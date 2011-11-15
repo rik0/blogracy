@@ -29,7 +29,11 @@ import it.unipr.aotlab.blogracy.web.post.PostQueryParser;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.HttpURLConnection;
+import java.net.URISyntaxException;
+import java.util.Map;
 
 public class MessagesResolver extends AbstractRequestResolver {
     @Override
@@ -40,25 +44,20 @@ public class MessagesResolver extends AbstractRequestResolver {
     @Override
     protected void post(final TrackerWebPageRequest request,
                         final TrackerWebPageResponse response) throws URLMappingError {
-        byte[] buffer = new byte[4028];
+        final InputStream inputStream = request.getInputStream();
+        final Map<String, String> headers = (Map<String,String>) request.getHeaders();
+        final PostQueryParser parser = new PostQueryParser();
         try {
-            System.out.println("Started reading.");
-            while(inputStream.read(buffer) != -1) {
-                    System.out.write(buffer);
-            }
+            final PostQuery query = parser.parse(inputStream, headers);
+            String message = query.getStringValue("message");
 
-            System.out.println("Ended reading.");
-
-            final Map<String, String> headers = request.getHeaders();
-            for(Map.Entry<String, String> pair : headers.entrySet()) {
-                System.out.println("<" + pair.getKey() + ": " + pair.getValue() + ">");
-            }
-
-
-            inputStream.close();
+            Logger.info(message);
 
         } catch (IOException e) {
             throw new URLMappingError(HttpURLConnection.HTTP_INTERNAL_ERROR, e);
+        } catch (URISyntaxException e) {
+            throw new URLMappingError(HttpURLConnection.HTTP_INTERNAL_ERROR, e);
         }
+
     }
 }
