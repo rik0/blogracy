@@ -45,8 +45,10 @@ public class MessagesResolver extends AbstractRequestResolver {
     protected void post(final TrackerWebPageRequest request,
                         final TrackerWebPageResponse response) throws URLMappingError {
         final InputStream inputStream = request.getInputStream();
+        @SuppressWarnings("unchecked")
         final Map<String, String> headers = (Map<String,String>) request.getHeaders();
         final PostQueryParser parser = new PostQueryParser();
+
         try {
             final PostQuery query = parser.parse(inputStream, headers);
             String message = query.getStringValue("message");
