@@ -22,7 +22,6 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import com.google.gson.Gson;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -72,10 +71,20 @@ public class ErrorPageResolver implements RequestResolver {
         return formatter.toString();
     }
 
-    public String jsonErrorString(Exception e) {
-        final Gson gson = new Gson();
-        return gson.toJson(e);
+    static public String jsonErrorString(Exception e) {
+        // TODO Try and use GSON.
+        Formatter formatter = new Formatter();
+        formatter.format("{errorMessage:'%s', ", quoteApostrophe(e.getMessage()));
+        StringWriter stringWriter = new StringWriter(512);
+        PrintWriter ost = new PrintWriter(stringWriter);
+        e.printStackTrace(ost);
+        formatter.format("errorTrace:'%s'}", quoteApostrophe(stringWriter.toString()));
+        return formatter.toString();
 
+    }
+
+    private static String quoteApostrophe(final String s) {
+        return s.replaceAll("'", "\'");
     }
 
     /**
