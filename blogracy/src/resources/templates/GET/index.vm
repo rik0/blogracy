@@ -28,7 +28,17 @@
                 url: 'messages',
                 clearForm: true,
                 type: 'POST',
-                success: function() { alert("Fooo!"); }
+                success: function() {
+                    console.log(arguments);
+                },
+                ajaxError: function(event, jqXHR, ajaxSettings, thrownError) {
+                    console.log(event);
+                    console.log(ajaxSettings);
+                    if(ajaxSettings.url == "messages") {
+                        var errorMessage = '<div class="alert-message block-message warning">Crap</div>';
+
+                    }
+                }
             });
         });
 
@@ -49,7 +59,10 @@
         }
 
         .container {
-            width: 820px; /* downsize our container to make the content feel a bit tighter and more cohesive. NOTE: this removes two full columns from the grid, meaning you only go to 14 columns and not 16. */
+            width: 820px; /* downsize our container to make the content feel a bit tighter and more cohesive.
+                           * NOTE: this removes two full columns from the grid, meaning you only go to
+                           * 14 columns and not 16.
+                           */
         }
 
             /* The white background content wrapper */
@@ -109,11 +122,6 @@
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
-        ##          <form action="" class="pull-right">
-        ##            <input class="input-small" type="text" placeholder="Username">
-##            <input class="input-small" type="password" placeholder="Password">
-##            <button class="btn" type="submit">Sign in</button>
-##          </form>
         </div>
     </div>
 </div>
@@ -125,6 +133,9 @@
             <h1>$user.localNick
                 <small>(hardcoded email)</small>
             </h1>
+        </div>
+        <div class="row" id="errorPlace">
+
         </div>
         <div class="row">
             <div class="span10  ">
@@ -141,7 +152,7 @@
                     </fieldset>
                     <fieldset>
                         <div class="actions">
-                            <input type="submit" class="btn primary" value="Save changes">&nbsp;
+                            <input type="submit" class="btn primary" value="Send message">&nbsp;
                             <button type="reset" class="btn">Cancel</button>
                         </div>
                     </fieldset>
