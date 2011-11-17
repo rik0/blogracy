@@ -73,7 +73,7 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
 
     protected Template loadTemplate()
             throws ParseErrorException, ResourceNotFoundException {
-        Status currentStatus = getRequestStatus();
+        HTTPStatus currentStatus = getRequestHTTPStatus();
         String htmlViewName = getViewName();
         String templateName;
         if (hasSpecialTemplateForStatus(currentStatus, htmlViewName)) {
@@ -84,11 +84,11 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
         return Velocity.getTemplate(templateName);
     }
 
-    protected String buildTemplateName(Status currentStatus, String htmlViewName) {
+    protected String buildTemplateName(HTTPStatus currentStatus, String htmlViewName) {
         return currentStatus.toString() + "/" + htmlViewName;
     }
 
-    private boolean hasSpecialTemplateForStatus(final Status currentStatus, final String htmlViewName) {
+    private boolean hasSpecialTemplateForStatus(final HTTPStatus currentStatus, final String htmlViewName) {
         File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentStatus.toString());
         if (specialTemplateDirectory.exists()) {
             File templateFile = new File(specialTemplateDirectory, htmlViewName);

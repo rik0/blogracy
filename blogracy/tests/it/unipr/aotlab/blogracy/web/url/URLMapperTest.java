@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.resolvers.HTTPStatus;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -109,13 +110,32 @@ public class URLMapperTest {
                             final TrackerWebPageResponse response) throws URLMappingError {
             // ok
         }
+
+        @Override
+        public HTTPStatus getRequestHTTPStatus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     public static class HomepageResolver implements RequestResolver {
         @Override
         public void resolve(final TrackerWebPageRequest request,
                             final TrackerWebPageResponse response) throws URLMappingError {
+        }
 
+        @Override
+        public HTTPStatus getRequestHTTPStatus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -126,6 +146,16 @@ public class URLMapperTest {
                             final TrackerWebPageResponse response) throws URLMappingError {
 
         }
+
+        @Override
+        public HTTPStatus getRequestHTTPStatus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+            throw new UnsupportedOperationException();
+        }
     }
 
     public static class Followers implements RequestResolver {
@@ -133,6 +163,16 @@ public class URLMapperTest {
         public void resolve(final TrackerWebPageRequest request,
                             final TrackerWebPageResponse response) throws URLMappingError {
 
+        }
+
+        @Override
+        public HTTPStatus getRequestHTTPStatus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+            throw new UnsupportedOperationException();
         }
     }
 
@@ -154,6 +194,16 @@ public class URLMapperTest {
         @Override
         public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
 
+        }
+
+        @Override
+        public HTTPStatus getRequestHTTPStatus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+            throw new UnsupportedOperationException();
         }
     }
 }

@@ -93,4 +93,14 @@ public class ErrorPageResolver implements RequestResolver {
             e.printStackTrace();
         }
     }
+
+    @Override
+    public HTTPStatus getRequestHTTPStatus() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+        throw new UnsupportedOperationException();
+    }
 }

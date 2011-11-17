@@ -49,4 +49,14 @@ public class MissingPageResolver implements RequestResolver {
         );
         errorPageResolver.resolve(request, response);
     }
+
+    @Override
+   public HTTPStatus getRequestHTTPStatus() {
+       throw new UnsupportedOperationException();
+   }
+
+   @Override
+   public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+       throw new UnsupportedOperationException();
+       }
 }

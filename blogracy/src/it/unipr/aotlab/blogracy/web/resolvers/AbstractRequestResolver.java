@@ -37,17 +37,15 @@ import java.util.Map;
  */
 abstract public class AbstractRequestResolver implements RequestResolver {
 
-    private Status requestStatus = Status.INVALID;
+    private HTTPStatus requestHTTPStatus = HTTPStatus.INVALID;
 
-    static protected enum Status {
-        GET, POST, PUT, DELETE, INVALID
-    }
 
     /**
      * @return the type of the HTTP request.
      */
-    final protected Status getRequestStatus() {
-        return requestStatus;
+    @Override
+    public final HTTPStatus getRequestHTTPStatus() {
+        return requestHTTPStatus;
     }
 
     /**
@@ -58,7 +56,7 @@ abstract public class AbstractRequestResolver implements RequestResolver {
             throws URLMappingError {
         processHeaders(request);
         response.setContentType(getViewType());
-        switch (requestStatus) {
+        switch (requestHTTPStatus) {
             case GET:
                 get(request, response);
                 break;
@@ -83,13 +81,13 @@ abstract public class AbstractRequestResolver implements RequestResolver {
         Map headers = request.getHeaders();
         String status = (String) headers.get("status");
         if (status.startsWith("GET")) {
-            requestStatus = Status.GET;
+            requestHTTPStatus = HTTPStatus.GET;
         } else if (status.startsWith("POST")) {
-            requestStatus = Status.POST;
+            requestHTTPStatus = HTTPStatus.POST;
         } else if (status.startsWith("PUT")) {
-            requestStatus = Status.PUT;
+            requestHTTPStatus = HTTPStatus.PUT;
         } else if (status.startsWith("DELETE")) {
-            requestStatus = Status.DELETE;
+            requestHTTPStatus = HTTPStatus.DELETE;
         }
 
     }
@@ -159,4 +157,13 @@ abstract public class AbstractRequestResolver implements RequestResolver {
      */
     abstract protected String getViewType();
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+        Map headers = request.getHeaders();
+        String xRequestedWith = (String)headers.get("X-Requested-With");
+        return xRequestedWith != null && xRequestedWith.equals("XMLHttpRequest");
+    }
 }

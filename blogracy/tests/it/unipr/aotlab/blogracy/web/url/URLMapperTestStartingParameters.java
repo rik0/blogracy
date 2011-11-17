@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.resolvers.HTTPStatus;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -104,6 +105,16 @@ public class URLMapperTestStartingParameters {
 
         public Float getFloatParameter() {
             return floatParameter;
+        }
+
+        @Override
+        public HTTPStatus getRequestHTTPStatus() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+            throw new UnsupportedOperationException();
         }
     }
 

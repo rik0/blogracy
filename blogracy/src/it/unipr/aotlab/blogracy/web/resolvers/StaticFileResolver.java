@@ -151,4 +151,14 @@ public class StaticFileResolver implements RequestResolver {
     private boolean mayBeDirectoryUrl(final String url) {
         return url.endsWith("/");
     }
+
+    @Override
+    public HTTPStatus getRequestHTTPStatus() {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public boolean isAJAXRequest(final TrackerWebPageRequest request) {
+        throw new UnsupportedOperationException();
+    }
 }
