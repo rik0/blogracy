@@ -234,6 +234,9 @@ public class Blogracy extends WebPlugin {
             );
             Logger.error(serverConfigurationError.getMessage());
             errorResolver.resolve(request, response);
+        } catch (RuntimeException genericException) {
+            genericException.printStackTrace();
+            throw genericException;
         }
         return true;
     }

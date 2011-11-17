@@ -162,8 +162,8 @@ abstract public class AbstractRequestResolver implements RequestResolver {
      */
     @Override
     public boolean isAJAXRequest(final TrackerWebPageRequest request) {
-        Map headers = request.getHeaders();
-        String xRequestedWith = (String)headers.get("X-Requested-With");
-        return xRequestedWith != null && xRequestedWith.equals("XMLHttpRequest");
+        return RequestsUtilities.isAJAXRequest(request);
     }
+
+
 }

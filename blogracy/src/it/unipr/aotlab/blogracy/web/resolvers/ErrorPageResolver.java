@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import com.google.gson.Gson;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -49,7 +50,7 @@ public class ErrorPageResolver implements RequestResolver {
         status = httpErrorStatus;
     }
 
-    static public String errorString(Exception e) {
+    static public String htmlErrorString(Exception e) {
         // TODO: make page more beautiful!
         Formatter formatter = new Formatter();
         String headerPage = "<html><head><title>Error!</title></head><body>";
@@ -71,6 +72,12 @@ public class ErrorPageResolver implements RequestResolver {
         return formatter.toString();
     }
 
+    public String jsonErrorString(Exception e) {
+        final Gson gson = new Gson();
+        return gson.toJson(e);
+
+    }
+
     /**
      * {@inheritDoc}
      * <p/>
@@ -78,10 +85,21 @@ public class ErrorPageResolver implements RequestResolver {
      */
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
-        String errorPage = errorString(exception);
+        String errorPage = prepareOutput(request, response);
         response.setReplyStatus(status);
-        response.setContentType("text/html");
         write(response, errorPage);
+    }
+
+    private String prepareOutput(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
+        String errorPage;
+        if (isAJAXRequest(request)) {
+            errorPage = jsonErrorString(exception);
+            response.setContentType("text/json");
+        } else {
+            errorPage = htmlErrorString(exception);
+            response.setContentType("text/html");
+        }
+        return errorPage;
     }
 
     private void write(final TrackerWebPageResponse response, final String errorPage) {
@@ -101,6 +119,6 @@ public class ErrorPageResolver implements RequestResolver {
 
     @Override
     public boolean isAJAXRequest(final TrackerWebPageRequest request) {
-        throw new UnsupportedOperationException();
+        return RequestsUtilities.isAJAXRequest(request);
     }
 }
