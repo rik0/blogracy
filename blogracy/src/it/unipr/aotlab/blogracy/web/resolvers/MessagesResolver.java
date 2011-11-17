@@ -53,8 +53,11 @@ public class MessagesResolver extends AbstractRequestResolver {
             final PostQuery query = parser.parse(inputStream, headers);
             String message = query.getStringValue("message");
 
-            Logger.info(message);
-
+            if (message != null) {
+                Logger.info(message);
+            } else {
+                throw new URLMappingError(HttpURLConnection.HTTP_BAD_REQUEST, "No message field found!");
+            }
         } catch (IOException e) {
             throw new URLMappingError(HttpURLConnection.HTTP_INTERNAL_ERROR, e);
         } catch (URISyntaxException e) {
