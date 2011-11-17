@@ -23,18 +23,18 @@
 package it.unipr.aotlab.blogracy.web.post;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.logging.Logger;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
-
-import static java.lang.System.getProperty;
 
 /**
  * User: enrico
@@ -43,21 +43,38 @@ import static java.lang.System.getProperty;
  * Time: 11:00 AM
  */
 public class PostQueryParser {
+    private static final String ENCODING = "ISO-8859-1"; // only valid ENCODING according to standard
+
     public PostQuery parse(final InputStream inputStream, final Map<String, String> headers) throws IOException, URLMappingError, URISyntaxException {
-        final String encoding = "ISO-8859-1"; // only valid encoding according to standard
-        final PostQueryImpl postQuery = new PostQueryImpl(encoding);
+        final PostQueryImpl postQuery = new PostQueryImpl(ENCODING);
         final int size = findContentLength(headers);
         final byte[] buffer = new byte[size];
         final int readBytes = inputStream.read(buffer);
-        final URI uri = new URI("/main?" + new String(buffer));
+        final URI uri = new URI("/main?" + new String(buffer)); // ugly kludge
         assert readBytes == size;
 
         // TODO: parse by hand. Their parser looks badly broken for POST data.
-        final List<NameValuePair> params = URLEncodedUtils.parse(uri, getProperty("encoding"));
-        for(NameValuePair pair : params) {
-            postQuery.put(pair.getName(), pair.getValue().getBytes(encoding));
-        }
+        final List<NameValuePair> params = URLEncodedUtils.parse(uri, ENCODING);
+        loadParams(postQuery, params);
         return postQuery;
+    }
+
+    private void loadParams(final PostQueryImpl postQuery, final List<NameValuePair> params) {
+        for(NameValuePair pair : params) {
+            final String pairName = pair.getName();
+            final String pairValue = pair.getValue();
+            if(pairName != null && pairValue != null) {
+                putParam(postQuery, pairName, pairValue);
+            }
+        }
+    }
+
+    private void putParam(final PostQueryImpl postQuery, final String pairName, final String pairValue) {
+        try {
+            postQuery.put(pairName, pairValue.getBytes(ENCODING));
+        } catch (UnsupportedEncodingException e) {
+            Logger.warn(e.getMessage());
+        }
     }
 
     private int findContentLength(final Map<String, String> headers) throws URLMappingError {
