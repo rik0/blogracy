@@ -27,8 +27,8 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import java.util.Map;
 
 public class RequestsUtilities {
-
-    private static final String HEADER_NAME = "X-Requested-With";
+    // headers are converted to lower case!
+    private static final String HEADER_NAME = "x-requested-with";
     private static final String XML_HTTP_REQUEST = "XMLHttpRequest";
 
     static public boolean isAJAXRequest(final TrackerWebPageRequest request) {
