@@ -73,18 +73,35 @@ public class ErrorPageResolver implements RequestResolver {
 
     static public String jsonErrorString(Exception e) {
         // TODO Try and use GSON.
-        Formatter formatter = new Formatter();
-        formatter.format("{errorMessage:'%s', ", quoteApostrophe(e.getMessage()));
+        final String traceString = getTraceString(e);
+        final String quotedMessage = quoteDoubleQuotes(e.getMessage());
+        final String quotedTrace = quoteDoubleQuotes(traceString);
+        final String[] splitQuotedTrace = quotedTrace.split("\n");
+
+        final Formatter formatter = new Formatter();
+        formatter.format("{\"errorMessage\": \"%s\", ", quotedMessage);
+        formatter.format("\"errorTrace\": [");
+        for(final String lst : splitQuotedTrace) {
+            formatter.format("\"%s\"", lst);
+            if(lst != splitQuotedTrace[splitQuotedTrace.length-1]) {
+                formatter.format(",\n");
+            } else {
+                formatter.format("\n");
+            }
+        }
+        formatter.format("]}");
+        return formatter.toString();
+    }
+
+    private static String getTraceString(final Exception e) {
         StringWriter stringWriter = new StringWriter(512);
         PrintWriter ost = new PrintWriter(stringWriter);
         e.printStackTrace(ost);
-        formatter.format("errorTrace:'%s'}", quoteApostrophe(stringWriter.toString()));
-        return formatter.toString();
-
+        return stringWriter.toString();
     }
 
-    private static String quoteApostrophe(final String s) {
-        return s.replaceAll("'", "\'");
+    private static String quoteDoubleQuotes(final String s) {
+        return s.replaceAll("\"", "\\\"");
     }
 
     /**
