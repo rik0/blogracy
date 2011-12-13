@@ -7,6 +7,13 @@
     <version>0.2-SNAPSHOT</version>
     <name>Blogracy</name>
     <url>http://dev.blogracy.net</url>
+    <repositories>
+        <repository>
+            <id>functional-java</id>
+            <url>http://functionaljava.googlecode.com/svn/maven</url>
+        </repository>
+    </repositories>
+
     <build>
         <outputDirectory>build/config/plugins/${artifactId}</outputDirectory>
         <sourceDirectory>blogracy/src</sourceDirectory>
@@ -60,6 +67,11 @@
             <artifactId>easymock</artifactId>
             <version>3.1</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.functionaljava</groupId>
+            <artifactId>fj</artifactId>
+            <version>2.18</version>
         </dependency>
     </dependencies>
 </project>
