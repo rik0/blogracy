@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import org.easymock.EasyMockSupport;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -31,7 +32,6 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
 import static org.easymock.EasyMock.expect;
 
@@ -92,7 +92,7 @@ public class StaticFileResolverTest extends EasyMockSupport {
 
         expect(requestMock.getURL()).andStubReturn(url);
         expect(responseMock.useFile(STATIC_ROOT_DIR, url)).andStubReturn(false);
-        responseMock.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
+        responseMock.setReplyStatus(HttpResponseCode.HTTP_SEE_OTHER);
         responseMock.setHeader("Location", url + "index.html");
 
         replayAll();

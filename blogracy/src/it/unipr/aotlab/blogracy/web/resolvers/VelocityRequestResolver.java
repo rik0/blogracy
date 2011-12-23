@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -34,7 +35,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import java.io.File;
 import java.io.PrintStream;
 import java.io.StringWriter;
-import java.net.HttpURLConnection;
 
 /**
  * A VelocityRequestResolver should ease the creation of pages which make use of the velocity engine.
@@ -81,7 +81,7 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
         final String templateName = getTemplateName(currentRequestType, htmlViewName);
         if (templateName == null) {
             throw new URLMappingError(
-                    HttpURLConnection.HTTP_INTERNAL_ERROR,
+                    HttpResponseCode.HTTP_INTERNAL_ERROR,
                     "Could not resolve template name for a "
                             + currentRequestType + " and a "
                             + ((htmlViewName == null) ? "null" : htmlViewName)

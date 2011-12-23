@@ -23,10 +23,10 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-import java.net.HttpURLConnection;
 
 /**
  * User: enrico
@@ -45,7 +45,7 @@ public class MissingPageResolver implements RequestResolver {
     @Override
     public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
         ErrorPageResolver errorPageResolver = new ErrorPageResolver(
-                new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, message)
+                new URLMappingError(HttpResponseCode.HTTP_NOT_FOUND, message)
         );
         errorPageResolver.resolve(request, response);
     }

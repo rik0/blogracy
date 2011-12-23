@@ -24,13 +24,13 @@ package it.unipr.aotlab.blogracy.web.post;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.List;
@@ -82,7 +82,7 @@ public class PostQueryParser {
         try {
             size = Integer.valueOf(headers.get("content-length"));
         } catch (NumberFormatException e) {
-            throw new URLMappingError(HttpURLConnection.HTTP_INTERNAL_ERROR, e);
+            throw new URLMappingError(HttpResponseCode.HTTP_INTERNAL_ERROR, e);
         }
         return size;
     }

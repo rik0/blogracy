@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.HTTPRequestType;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
@@ -31,7 +32,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.net.HttpURLConnection;
 
 public class URLMapperTest {
     private URLMapper mapper;
@@ -183,7 +183,7 @@ public class URLMapperTest {
             try {
                 Integer pageNumber = Integer.parseInt(page);
             } catch (NumberFormatException e) {
-                throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
+                throw new URLMappingError(HttpResponseCode.HTTP_NOT_FOUND, e);
             }
         }
 

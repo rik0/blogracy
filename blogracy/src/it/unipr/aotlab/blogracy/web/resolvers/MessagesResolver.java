@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.post.PostQuery;
 import it.unipr.aotlab.blogracy.web.post.PostQueryParser;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
@@ -31,7 +32,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URISyntaxException;
 import java.util.Map;
 
@@ -56,12 +56,12 @@ public class MessagesResolver extends AbstractRequestResolver {
             if (message != null) {
                 Logger.info(message);
             } else {
-                throw new URLMappingError(HttpURLConnection.HTTP_BAD_REQUEST, "No message field found!");
+                throw new URLMappingError(HttpResponseCode.HTTP_BAD_REQUEST, "No message field found!");
             }
         } catch (IOException e) {
-            throw new URLMappingError(HttpURLConnection.HTTP_INTERNAL_ERROR, e);
+            throw new URLMappingError(HttpResponseCode.HTTP_INTERNAL_ERROR, e);
         } catch (URISyntaxException e) {
-            throw new URLMappingError(HttpURLConnection.HTTP_INTERNAL_ERROR, e);
+            throw new URLMappingError(HttpResponseCode.HTTP_INTERNAL_ERROR, e);
         }
 
     }

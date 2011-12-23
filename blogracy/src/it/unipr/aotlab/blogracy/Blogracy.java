@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
@@ -44,7 +45,6 @@ import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 import java.util.Properties;
 
 
@@ -234,7 +234,7 @@ public class Blogracy extends WebPlugin {
             errorResolver.resolve(request, response);
         } catch (ServerConfigurationError serverConfigurationError) {
             final ErrorPageResolver errorResolver = new ErrorPageResolver(
-                    serverConfigurationError, HttpURLConnection.HTTP_INTERNAL_ERROR
+                    serverConfigurationError, HttpResponseCode.HTTP_INTERNAL_ERROR
             );
             Logger.error(serverConfigurationError.getMessage());
             errorResolver.resolve(request, response);

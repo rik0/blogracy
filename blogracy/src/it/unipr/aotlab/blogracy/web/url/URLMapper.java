@@ -24,9 +24,9 @@ package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
-import java.net.HttpURLConnection;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -56,7 +56,7 @@ public class URLMapper {
             return resolver;
         } else {
             throw new URLMappingError(
-                    HttpURLConnection.HTTP_NOT_FOUND,
+                    HttpResponseCode.HTTP_NOT_FOUND,
                     "Could not find an appropriate resolver for " + url
             );
         }

@@ -25,6 +25,7 @@ package it.unipr.aotlab.blogracy.web.resolvers;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.url.ConfigurationTimeParameters;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -32,7 +33,6 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.HttpURLConnection;
 
 @ConfigurationTimeParameters({String.class})
 public class StaticFileResolver implements RequestResolver {
@@ -126,25 +126,25 @@ public class StaticFileResolver implements RequestResolver {
                     redirectToIndexInDirectory(url, response);
                 } else {
                     throw new URLMappingError(
-                            HttpURLConnection.HTTP_NOT_FOUND,
+                            HttpResponseCode.HTTP_NOT_FOUND,
                             "Could not find " + url
                     );
                 }
             }
         } catch (FileNotFoundException e) {
-            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
+            throw new URLMappingError(HttpResponseCode.HTTP_NOT_FOUND, e);
         } catch (SecurityException e) {
-            throw new URLMappingError(HttpURLConnection.HTTP_FORBIDDEN, e);
+            throw new URLMappingError(HttpResponseCode.HTTP_FORBIDDEN, e);
         } catch (IOException e) {
             /* we should not get here */
-            throw new URLMappingError(HttpURLConnection.HTTP_NOT_FOUND, e);
+            throw new URLMappingError(HttpResponseCode.HTTP_NOT_FOUND, e);
         }
 
     }
 
     private void redirectToIndexInDirectory(final String url, final TrackerWebPageResponse response) {
         Logger.info(url + " may be a directory. Trying to send index.html instead.");
-        response.setReplyStatus(HttpURLConnection.HTTP_SEE_OTHER);
+        response.setReplyStatus(HttpResponseCode.HTTP_SEE_OTHER);
         response.setHeader("Location", url + "index.html");
     }
 
