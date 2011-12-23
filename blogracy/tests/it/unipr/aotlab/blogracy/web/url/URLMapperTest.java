@@ -24,7 +24,7 @@ package it.unipr.aotlab.blogracy.web.url;
 
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import it.unipr.aotlab.blogracy.web.resolvers.HTTPStatus;
+import it.unipr.aotlab.blogracy.web.resolvers.HTTPRequestType;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
@@ -112,7 +112,7 @@ public class URLMapperTest {
         }
 
         @Override
-        public HTTPStatus getRequestHTTPStatus() {
+        public HTTPRequestType getRequestHTTPRequestType() {
             throw new UnsupportedOperationException();
         }
 
@@ -129,7 +129,7 @@ public class URLMapperTest {
         }
 
         @Override
-        public HTTPStatus getRequestHTTPStatus() {
+        public HTTPRequestType getRequestHTTPRequestType() {
             throw new UnsupportedOperationException();
         }
 
@@ -148,7 +148,7 @@ public class URLMapperTest {
         }
 
         @Override
-        public HTTPStatus getRequestHTTPStatus() {
+        public HTTPRequestType getRequestHTTPRequestType() {
             throw new UnsupportedOperationException();
         }
 
@@ -166,7 +166,7 @@ public class URLMapperTest {
         }
 
         @Override
-        public HTTPStatus getRequestHTTPStatus() {
+        public HTTPRequestType getRequestHTTPRequestType() {
             throw new UnsupportedOperationException();
         }
 
@@ -197,7 +197,7 @@ public class URLMapperTest {
         }
 
         @Override
-        public HTTPStatus getRequestHTTPStatus() {
+        public HTTPRequestType getRequestHTTPRequestType() {
             throw new UnsupportedOperationException();
         }
 

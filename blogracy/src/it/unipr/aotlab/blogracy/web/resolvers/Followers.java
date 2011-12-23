@@ -63,23 +63,23 @@ public class Followers extends AbstractRequestResolver {
 
     protected Template loadTemplate()
             throws ParseErrorException, ResourceNotFoundException {
-        HTTPStatus currentStatus = getRequestHTTPStatus();
+        HTTPRequestType currentRequestType = getRequestHTTPRequestType();
         String htmlViewName = getViewName();
         String templateName;
-        if (hasSpecialTemplateForStatus(currentStatus, htmlViewName)) {
-            templateName = buildTemplateName(currentStatus, htmlViewName);
+        if (hasSpecialTemplateForStatus(currentRequestType, htmlViewName)) {
+            templateName = buildTemplateName(currentRequestType, htmlViewName);
         } else {
             templateName = htmlViewName;
         }
         return Velocity.getTemplate(templateName);
     }
 
-    protected String buildTemplateName(HTTPStatus currentStatus, String htmlViewName) {
-        return currentStatus.toString() + "/" + htmlViewName;
+    protected String buildTemplateName(HTTPRequestType currentRequestType, String htmlViewName) {
+        return currentRequestType.toString() + "/" + htmlViewName;
     }
 
-    private boolean hasSpecialTemplateForStatus(final HTTPStatus currentStatus, final String htmlViewName) {
-        File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentStatus.toString());
+    private boolean hasSpecialTemplateForStatus(final HTTPRequestType currentRequestType, final String htmlViewName) {
+        File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentRequestType.toString());
         if (specialTemplateDirectory.exists()) {
             File templateFile = new File(specialTemplateDirectory, htmlViewName);
             return templateFile.exists();

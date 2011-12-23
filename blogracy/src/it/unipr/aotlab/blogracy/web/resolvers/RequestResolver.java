@@ -41,9 +41,9 @@ public interface RequestResolver {
 
     /**
      * Returns the kind of request we got.
-     * @return the {@link HTTPStatus} expressing the kind of request we are dealing with.
+     * @return the {@link HTTPRequestType} expressing the kind of request we are dealing with.
      */
-    HTTPStatus getRequestHTTPStatus();
+    HTTPRequestType getRequestHTTPRequestType();
 
     /**
      * Returns if we are dealing with an AJAX call.

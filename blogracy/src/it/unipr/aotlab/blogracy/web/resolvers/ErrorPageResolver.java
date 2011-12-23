@@ -139,7 +139,7 @@ public class ErrorPageResolver implements RequestResolver {
     }
 
     @Override
-    public HTTPStatus getRequestHTTPStatus() {
+    public HTTPRequestType getRequestHTTPRequestType() {
         throw new UnsupportedOperationException();
     }
 

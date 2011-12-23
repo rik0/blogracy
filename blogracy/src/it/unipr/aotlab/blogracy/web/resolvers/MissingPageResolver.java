@@ -51,7 +51,7 @@ public class MissingPageResolver implements RequestResolver {
     }
 
     @Override
-   public HTTPStatus getRequestHTTPStatus() {
+   public HTTPRequestType getRequestHTTPRequestType() {
        throw new UnsupportedOperationException();
    }
 

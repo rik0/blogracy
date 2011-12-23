@@ -22,6 +22,6 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-public enum HTTPStatus {
+public enum HTTPRequestType {
     GET, POST, PUT, DELETE, INVALID
 }

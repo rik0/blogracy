@@ -76,14 +76,14 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
 
     protected Template loadTemplate()
             throws ParseErrorException, ResourceNotFoundException, URLMappingError {
-        final HTTPStatus currentStatus = getRequestHTTPStatus();
+        final HTTPRequestType currentRequestType = getRequestHTTPRequestType();
         final String htmlViewName = getViewName();
-        final String templateName = getTemplateName(currentStatus, htmlViewName);
+        final String templateName = getTemplateName(currentRequestType, htmlViewName);
         if (templateName == null) {
             throw new URLMappingError(
                     HttpURLConnection.HTTP_INTERNAL_ERROR,
                     "Could not resolve template name for a "
-                            + currentStatus + " and a "
+                            + currentRequestType + " and a "
                             + ((htmlViewName == null) ? "null" : htmlViewName)
                             + "view name.");
         } else {
@@ -92,22 +92,22 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     }
 
 
-    private String getTemplateName(final HTTPStatus currentStatus, final String htmlViewName) {
+    private String getTemplateName(final HTTPRequestType currentRequestType, final String htmlViewName) {
         final String templateName;
-        if (htmlViewName != null && hasSpecialTemplateForStatus(currentStatus, htmlViewName)) {
-            templateName = buildTemplateName(currentStatus, htmlViewName);
+        if (htmlViewName != null && hasSpecialTemplateForStatus(currentRequestType, htmlViewName)) {
+            templateName = buildTemplateName(currentRequestType, htmlViewName);
         } else {
             templateName = htmlViewName;
         }
         return templateName;
     }
 
-    protected String buildTemplateName(HTTPStatus currentStatus, String htmlViewName) {
-        return currentStatus.toString() + "/" + htmlViewName;
+    protected String buildTemplateName(HTTPRequestType currentRequestType, String htmlViewName) {
+        return currentRequestType.toString() + "/" + htmlViewName;
     }
 
-    private boolean hasSpecialTemplateForStatus(final HTTPStatus currentStatus, final String htmlViewName) {
-        File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentStatus.toString());
+    private boolean hasSpecialTemplateForStatus(final HTTPRequestType currentRequestType, final String htmlViewName) {
+        File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentRequestType.toString());
         if (specialTemplateDirectory.exists()) {
             File templateFile = new File(specialTemplateDirectory, htmlViewName);
             return templateFile.exists();

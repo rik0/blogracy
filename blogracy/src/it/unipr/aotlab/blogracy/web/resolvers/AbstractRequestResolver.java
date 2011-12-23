@@ -37,15 +37,15 @@ import java.util.Map;
  */
 abstract public class AbstractRequestResolver implements RequestResolver {
 
-    private HTTPStatus requestHTTPStatus = HTTPStatus.INVALID;
+    private HTTPRequestType requestHTTPRequestType = HTTPRequestType.INVALID;
 
 
     /**
      * @return the type of the HTTP request.
      */
     @Override
-    public final HTTPStatus getRequestHTTPStatus() {
-        return requestHTTPStatus;
+    public final HTTPRequestType getRequestHTTPRequestType() {
+        return requestHTTPRequestType;
     }
 
     /**
@@ -56,7 +56,7 @@ abstract public class AbstractRequestResolver implements RequestResolver {
             throws URLMappingError {
         processHeaders(request);
         response.setContentType(getViewType());
-        switch (requestHTTPStatus) {
+        switch (requestHTTPRequestType) {
             case GET:
                 get(request, response);
                 break;
@@ -81,13 +81,13 @@ abstract public class AbstractRequestResolver implements RequestResolver {
         Map headers = request.getHeaders();
         String status = (String) headers.get("status");
         if (status.startsWith("GET")) {
-            requestHTTPStatus = HTTPStatus.GET;
+            requestHTTPRequestType = HTTPRequestType.GET;
         } else if (status.startsWith("POST")) {
-            requestHTTPStatus = HTTPStatus.POST;
+            requestHTTPRequestType = HTTPRequestType.POST;
         } else if (status.startsWith("PUT")) {
-            requestHTTPStatus = HTTPStatus.PUT;
+            requestHTTPRequestType = HTTPRequestType.PUT;
         } else if (status.startsWith("DELETE")) {
-            requestHTTPStatus = HTTPStatus.DELETE;
+            requestHTTPRequestType = HTTPRequestType.DELETE;
         }
 
     }
