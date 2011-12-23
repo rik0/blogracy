@@ -23,6 +23,7 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.Blogracy;
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -33,6 +34,7 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import java.io.File;
 import java.io.PrintStream;
 import java.io.StringWriter;
+import java.net.HttpURLConnection;
 
 /**
  * A VelocityRequestResolver should ease the creation of pages which make use of the velocity engine.
@@ -41,7 +43,7 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     protected VelocityContext velocityContext = new VelocityContext();
     private File TEMPLATES_ROOT_DIRECTORY = Blogracy.getTemplateDirectory();
 
-    protected void velocityGet(final TrackerWebPageResponse response) {
+    protected void velocityGet(final TrackerWebPageResponse response) throws URLMappingError {
         setupContext();
         Template indexTemplate = loadTemplate();
         resolveTemplate(response, indexTemplate);
@@ -55,6 +57,7 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     /**
      * Resolves the {@param template} using {@link VelocityRequestResolver#velocityContext}
      * and outputs it in the {@param response}
+     *
      * @param response from {@link RequestResolver#resolve}
      * @param template the appropriate template (typically from {@link it.unipr.aotlab.blogracy.web.resolvers.VelocityRequestResolver#loadTemplate()}
      */
@@ -72,16 +75,31 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
 
 
     protected Template loadTemplate()
-            throws ParseErrorException, ResourceNotFoundException {
-        HTTPStatus currentStatus = getRequestHTTPStatus();
-        String htmlViewName = getViewName();
-        String templateName;
-        if (hasSpecialTemplateForStatus(currentStatus, htmlViewName)) {
+            throws ParseErrorException, ResourceNotFoundException, URLMappingError {
+        final HTTPStatus currentStatus = getRequestHTTPStatus();
+        final String htmlViewName = getViewName();
+        final String templateName = getTemplateName(currentStatus, htmlViewName);
+        if (templateName == null) {
+            throw new URLMappingError(
+                    HttpURLConnection.HTTP_INTERNAL_ERROR,
+                    "Could not resolve template name for a "
+                            + currentStatus + " and a "
+                            + ((htmlViewName == null) ? "null" : htmlViewName)
+                            + "view name.");
+        } else {
+            return Velocity.getTemplate(templateName);
+        }
+    }
+
+
+    private String getTemplateName(final HTTPStatus currentStatus, final String htmlViewName) {
+        final String templateName;
+        if (htmlViewName != null && hasSpecialTemplateForStatus(currentStatus, htmlViewName)) {
             templateName = buildTemplateName(currentStatus, htmlViewName);
         } else {
             templateName = htmlViewName;
         }
-        return Velocity.getTemplate(templateName);
+        return templateName;
     }
 
     protected String buildTemplateName(HTTPStatus currentStatus, String htmlViewName) {

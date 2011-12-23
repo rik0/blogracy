@@ -1,5 +1,6 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.model.hashes.Hash;
 import it.unipr.aotlab.blogracy.model.users.User;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
@@ -13,7 +14,7 @@ public class MainResolver extends VelocityRequestResolver {
     final static private String VIEW_TYPE = "text/html";
 
     @Override
-    protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response) {
+    protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response) throws URLMappingError {
         velocityGet(response);
     }
 
