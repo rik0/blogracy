@@ -1,5 +1,5 @@
 /*
- * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Enrico Franchi.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -20,17 +20,37 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.model.users;
+package it.unipr.aotlab.blogracy.web.resolvers;
 
-import java.util.Map;
+import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
+import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
-/**
- * User: enrico
- * Package: it.unipr.aotlab.blogracy.model.users
- * Date: 10/27/11
- * Time: 12:45 PM
- */
-public interface Profile {
-    Map<String, String> getProperties();
+public class UserResolver extends VelocityRequestResolver {
+    private String userName;
 
+    public UserResolver(String userName) {
+        this.userName = userName;
+
+    }
+
+    @Override
+    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+        super.velocityGet(response);
+    }
+
+    @Override
+    protected void setupContext() {
+
+    }
+
+    @Override
+    protected String getViewName() {
+        return null;
+    }
+
+    @Override
+    protected String getViewType() {
+        return null;
+    }
 }

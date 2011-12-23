@@ -50,7 +50,7 @@ public interface User {
     /**
      * Gets the actual hash representing the user in the DHT.
      *
-     * Notice that the return value shall be valid according to {@link it.unipr.aotlab.blogracy.model.hashes.Hashes.validateHash)}
+     * Notice that the return value shall be valid according to {@link it.unipr.aotlab.blogracy.model.hashes.Hashes#validateHash)}
      *
      * @return the user's hash
      */

@@ -167,7 +167,11 @@ public class Blogracy extends WebPlugin {
         return false;
     }
 
-    private static void setDefaultsProperties(final Integer blogracy_port, final String blogracy_access, final File root_dir, final boolean blogracyEnable) {
+    private static void setDefaultsProperties(
+            final Integer blogracy_port,
+            final String blogracy_access,
+            final File root_dir,
+            final boolean blogracyEnable) {
         defaults.put(WebPlugin.PR_ENABLE, blogracyEnable);
         defaults.put(WebPlugin.PR_DISABLABLE, Boolean.TRUE);
         defaults.put(WebPlugin.PR_PORT, blogracy_port);
@@ -332,6 +336,7 @@ public class Blogracy extends WebPlugin {
             mapper.configure(
                     "^/$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,
                     "^/main$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,
+                    "^/user/([^/]*)", "it.unipr.aotlab.blogracy.web.resolvers.UserResolver", null,
                     "^/messages$", "it.unipr.aotlab.blogracy.web.resolvers.MessagesResolver", null,
                     "^/css/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
                     "^/scripts/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
