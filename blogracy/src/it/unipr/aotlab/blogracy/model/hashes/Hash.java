@@ -32,6 +32,13 @@ public interface Hash {
      */
     String getStringValue();
 
+
+    /**
+     * Returns a printable variant of the hash
+     * @return the printable representation of the hash
+     */
+    String getPrintableValue();
+
     /**
      * Returns the bytes of the hash
      * @return the bytes of the hash

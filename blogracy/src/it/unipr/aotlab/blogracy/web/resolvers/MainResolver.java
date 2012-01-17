@@ -58,6 +58,11 @@ public class MainResolver extends VelocityRequestResolver {
                     public byte[] getValue() {
                         return s.getBytes();
                     }
+
+                    @Override
+                    public String getPrintableValue() {
+                        return s;
+                    }
                 };
             }
         });

@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.model.hashes;
 
+import org.apache.commons.codec.binary.Base64;
 import org.gudy.azureus2.core3.util.SHA1Hasher;
 
 import java.util.Arrays;
@@ -30,6 +31,10 @@ import java.util.Arrays;
  * Generic functions to manipulate hashes are defined in this class.
  */
 public class Hashes {
+
+    private static Base64 base64 = new Base64();
+    private static SHA1Hasher hasher = new SHA1Hasher();
+
     private static class HashImpl implements Hash {
         final byte[] hash;
 
@@ -40,6 +45,11 @@ public class Hashes {
         public String getStringValue() {
             String stringRepr = new String(hash);
             return stringRepr;
+        }
+
+        @Override
+        public String getPrintableValue() {
+            return base64.encodeToString(hash);
         }
 
         public byte[] getValue() {
@@ -82,7 +92,6 @@ public class Hashes {
      * @return the Hash of {@param value}
      */
     static public Hash newHash(String value) {
-        SHA1Hasher hasher = new SHA1Hasher();
         final byte[] hash = hasher.calculateHash(value.getBytes());
         return new HashImpl(hash);
     }

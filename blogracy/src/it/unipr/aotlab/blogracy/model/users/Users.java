@@ -46,7 +46,7 @@ public class Users {
      * @return a new user
      */
     public static User newUser(Hash hash) {
-        return newUser(hash.getStringValue(), hash);
+        return newUser(hash.getPrintableValue(), hash);
     }
 
     /**
