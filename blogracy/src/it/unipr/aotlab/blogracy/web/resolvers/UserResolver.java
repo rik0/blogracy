@@ -23,14 +23,22 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
+import it.unipr.aotlab.blogracy.model.hashes.Hashes;
+import it.unipr.aotlab.blogracy.model.users.User;
+import it.unipr.aotlab.blogracy.model.users.Users;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 public class UserResolver extends VelocityRequestResolver {
+    final static private String VIEW_NAME = "user.vm";
+    final static private String VIEW_TYPE = "text/html";
+
     private String userName;
+    private User user;
 
     public UserResolver(String userName) {
         this.userName = userName;
+        user = Users.newUser(Hashes.newHash(userName));
 
     }
 
@@ -41,16 +49,17 @@ public class UserResolver extends VelocityRequestResolver {
 
     @Override
     protected void setupContext() {
-
+        velocityContext.internalPut("application", "Blogracy");
+        velocityContext.internalPut("user", user);
     }
 
     @Override
     protected String getViewName() {
-        return null;
+        return VIEW_NAME;
     }
 
     @Override
     protected String getViewType() {
-        return null;
+        return VIEW_TYPE;
     }
 }
