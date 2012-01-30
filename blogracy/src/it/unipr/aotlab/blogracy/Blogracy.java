@@ -134,27 +134,50 @@ public class Blogracy extends WebPlugin {
     }
 
     private static void configureIfNotMigrateKey(final File rootDir) {
-        final Integer blogracyPort = COConfigurationManager.getIntParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_PORT, DEFAULT_PORT);
+        final Integer blogracyPort = COConfigurationManager.getIntParameter(
+                PLUGIN_DEFAULT_DEVICE_BLOGRACY_PORT,
+                DEFAULT_PORT
+        );
         if (blogracyPort != DEFAULT_PORT) {
-            COConfigurationManager.setParameter(INTERNAL_CONFIG_PORT_KEY, blogracyPort);
+            COConfigurationManager.setParameter(
+                    INTERNAL_CONFIG_PORT_KEY,
+                    blogracyPort
+            );
         }
 
-        boolean local = COConfigurationManager.getBooleanParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_LOCALONLY);
+        boolean local = COConfigurationManager.getBooleanParameter(
+                PLUGIN_DEFAULT_DEVICE_BLOGRACY_LOCALONLY
+        );
         final String blogracyAccess = Accesses.wantsLocal(local);
         if (!blogracyAccess.equals(DEFAULT_ACCESS)) {
             COConfigurationManager.setParameter(INTERNAL_CONFIG_ACCESS_KEY, blogracyAccess);
         }
         COConfigurationManager.setParameter(INTERNAL_MIGRATED_KEY, Boolean.TRUE);
 
-        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE);
+        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(
+                PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE
+        );
         setDefaultsProperties(blogracyPort, blogracyAccess, rootDir, blogracyEnable);
     }
 
     private static void configureIfMigratedKey(final File root_dir) {
-        final Integer blogracy_port = COConfigurationManager.getIntParameter(INTERNAL_CONFIG_PORT_KEY, DEFAULT_PORT);
-        final String blogracy_access = COConfigurationManager.getStringParameter(INTERNAL_CONFIG_ACCESS_KEY, DEFAULT_ACCESS);
-        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE);
-        setDefaultsProperties(blogracy_port, blogracy_access, root_dir, blogracyEnable);
+        final Integer blogracy_port = COConfigurationManager.getIntParameter(
+                INTERNAL_CONFIG_PORT_KEY,
+                DEFAULT_PORT
+        );
+        final String blogracy_access = COConfigurationManager.getStringParameter(
+                INTERNAL_CONFIG_ACCESS_KEY,
+                DEFAULT_ACCESS
+        );
+        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(
+                PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE
+        );
+        setDefaultsProperties(
+                blogracy_port,
+                blogracy_access,
+                root_dir,
+                blogracyEnable
+        );
     }
 
     private static boolean singletonShouldReturnImmediately() {
