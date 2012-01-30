@@ -24,6 +24,7 @@ package it.unipr.aotlab.blogracy;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.model.config.Configurations;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
@@ -33,7 +34,6 @@ import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.log.LogChute;
 import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
-import org.gudy.azureus2.core3.util.SystemProperties;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
@@ -52,7 +52,6 @@ public class Blogracy extends WebPlugin {
 
     private URLMapper mapper = new URLMapper();
 
-    private static final String BLOGRACY = "blogracy";
     private HyperlinkParameter testParam;
     static private Blogracy singleton;
 
@@ -203,29 +202,29 @@ public class Blogracy extends WebPlugin {
         defaults.put(WebPlugin.PR_ROOT_DIR, rootDir.getAbsolutePath());
         defaults.put(WebPlugin.PR_ENABLE_KEEP_ALIVE, Boolean.TRUE);
         defaults.put(WebPlugin.PR_HIDE_RESOURCE_CONFIG, Boolean.TRUE);
-        defaults.put(WebPlugin.PR_PAIRING_SID, BLOGRACY);
+        defaults.put(WebPlugin.PR_PAIRING_SID, Configurations.BLOGRACY);
 
         defaults.put(WebPlugin.PR_CONFIG_MODEL_PARAMS,
-                new String[]{ConfigSection.SECTION_ROOT, BLOGRACY});
+                new String[]{
+                        ConfigSection.SECTION_ROOT,
+                        Configurations.BLOGRACY
+                }
+        );
     }
 
     private static File createRootDirectoryIfMissingAndGetPath() {
-        File root_dir = getRootDirectory();
+        File root_dir = Configurations.getRootDirectory();
         return createDirIfMissing(root_dir);
     }
 
-    public static File getRootDirectory() {
-        File userPath = new File(SystemProperties.getUserPath());
-        File pluginsDirectoryPath = new File(userPath, "plugins");
-        return new File(pluginsDirectoryPath, BLOGRACY);
-    }
+
 
     public static File getTemplateDirectory() {
-        return new File(getRootDirectory(), "templates");
+        return new File(Configurations.getRootDirectory(), "templates");
     }
 
     public static File getStaticFilesDirectory() {
-        return new File(getRootDirectory(), "static");
+        return new File(Configurations.getRootDirectory(), "static");
     }
 
     private static File createDirIfMissing(File dir) {
