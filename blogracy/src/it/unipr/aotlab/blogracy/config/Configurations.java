@@ -20,7 +20,7 @@
  * THE SOFTWARE.
  */
 
-package it.unipr.aotlab.blogracy.model.config;
+package it.unipr.aotlab.blogracy.config;
 
 import org.gudy.azureus2.core3.util.SystemProperties;
 
@@ -28,7 +28,7 @@ import java.io.File;
 
 /**
  * User: enrico
- * Package: it.unipr.aotlab.blogracy.model.config
+ * Package: it.unipr.aotlab.blogracy.config
  * Date: 1/24/12
  * Time: 11:37 AM
  */
