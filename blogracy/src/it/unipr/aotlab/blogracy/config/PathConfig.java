@@ -22,50 +22,17 @@
 
 package it.unipr.aotlab.blogracy.config;
 
-import org.gudy.azureus2.core3.util.SystemProperties;
-
 import java.io.File;
 
 /**
  * User: enrico
  * Package: it.unipr.aotlab.blogracy.config
- * Date: 1/24/12
- * Time: 11:37 AM
+ * Date: 1/30/12
+ * Time: 11:31 AM
  */
-public class Configurations {
-
-    public static final String BLOGRACY = "blogracy";
-
-    public static File getRootDirectory() {
-        return getPathConfig().getRootDirectory();
-    }
-
-    static public PathConfig getPathConfig() {
-        return new PathConfig() {
-            File userPath = new File(SystemProperties.getUserPath());
-            File pluginsDirectoryPath = new File(userPath, "plugins");
-            public File rootDirectory = new File(pluginsDirectoryPath,
-                    BLOGRACY);
-
-            @Override
-            public File getRootDirectory() {
-                return rootDirectory;
-            }
-
-            @Override
-            public String getRootDirectoryPath() {
-                return rootDirectory.getAbsolutePath();
-            }
-
-            @Override
-            public String getStaticFilesDirectoryPath() {
-                return new File(rootDirectory, "static").getAbsolutePath();
-            }
-
-            @Override
-            public String getTemplatesDirectoryPath() {
-                return new File(rootDirectory, "templates").getAbsolutePath();
-            }
-        };
-    }
+public interface PathConfig {
+    public File getRootDirectory();
+    public String getRootDirectoryPath();
+    public String getStaticFilesDirectoryPath();
+    public String getTemplatesDirectoryPath();
 }

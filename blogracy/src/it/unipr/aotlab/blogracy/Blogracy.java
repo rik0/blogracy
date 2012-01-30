@@ -24,7 +24,7 @@ package it.unipr.aotlab.blogracy;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
-import it.unipr.aotlab.blogracy.model.config.Configurations;
+import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
