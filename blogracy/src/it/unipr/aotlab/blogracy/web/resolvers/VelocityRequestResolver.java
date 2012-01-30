@@ -22,7 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.Blogracy;
+import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import org.apache.velocity.Template;
@@ -41,7 +41,8 @@ import java.io.StringWriter;
  */
 public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     protected VelocityContext velocityContext = new VelocityContext();
-    private File TEMPLATES_ROOT_DIRECTORY = Blogracy.getTemplateDirectory();
+    private File TEMPLATES_ROOT_DIRECTORY =
+            Configurations.getPathConfig().getTemplatesDirectory();
 
     protected void velocityGet(final TrackerWebPageResponse response) throws URLMappingError {
         setupContext();

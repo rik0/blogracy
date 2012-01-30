@@ -59,13 +59,25 @@ public class Configurations {
 
             @Override
             public String getStaticFilesDirectoryPath() {
-                return new File(rootDirectory, "static").getAbsolutePath();
+                return getStaticFilesDirectory().getAbsolutePath();
+            }
+
+            @Override
+            public File getStaticFilesDirectory() {
+                return new File(rootDirectory, "static");
             }
 
             @Override
             public String getTemplatesDirectoryPath() {
-                return new File(rootDirectory, "templates").getAbsolutePath();
+                return getTemplatesDirectory().getAbsolutePath();
             }
+
+            @Override
+            public File getTemplatesDirectory() {
+                return new File(rootDirectory, "templates");
+            }
+
+
         };
     }
 }

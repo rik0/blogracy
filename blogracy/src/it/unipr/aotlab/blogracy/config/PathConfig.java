@@ -33,6 +33,8 @@ import java.io.File;
 public interface PathConfig {
     public File getRootDirectory();
     public String getRootDirectoryPath();
+    public File getStaticFilesDirectory();
     public String getStaticFilesDirectoryPath();
+    public File getTemplatesDirectory();
     public String getTemplatesDirectoryPath();
 }

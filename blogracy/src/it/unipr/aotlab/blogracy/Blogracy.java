@@ -217,16 +217,6 @@ public class Blogracy extends WebPlugin {
         return createDirIfMissing(root_dir);
     }
 
-
-
-    public static File getTemplateDirectory() {
-        return new File(Configurations.getRootDirectory(), "templates");
-    }
-
-    public static File getStaticFilesDirectory() {
-        return new File(Configurations.getRootDirectory(), "static");
-    }
-
     private static File createDirIfMissing(File dir) {
         if (!dir.exists()) {
             boolean createdDir = dir.mkdir();
@@ -355,7 +345,10 @@ public class Blogracy extends WebPlugin {
 
     private void initializeURLMapper() throws PluginException {
         try {
-            Object[] staticFileResolverParameters = new Object[]{getStaticFilesDirectory().getAbsolutePath()};
+            Object[] staticFileResolverParameters = new
+                    Object[]{
+                    Configurations.getPathConfig().getStaticFilesDirectoryPath()
+            };
             mapper.configure(
                     "^/$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,
                     "^/main$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,

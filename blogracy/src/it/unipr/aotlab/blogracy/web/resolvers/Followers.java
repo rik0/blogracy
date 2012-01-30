@@ -22,7 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.Blogracy;
+import it.unipr.aotlab.blogracy.config.Configurations;
 import org.apache.velocity.Template;
 import org.apache.velocity.VelocityContext;
 import org.apache.velocity.app.Velocity;
@@ -42,7 +42,8 @@ import java.io.OutputStreamWriter;
  * Time: 10:53 AM
  */
 public class Followers extends AbstractRequestResolver {
-    private File TEMPLATES_ROOT_DIRECTORY = Blogracy.getTemplateDirectory();
+    private File TEMPLATES_ROOT_DIRECTORY =
+            Configurations.getPathConfig().getTemplatesDirectory();
 
     @Override
     protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
