@@ -53,32 +53,33 @@ public class Blogracy extends WebPlugin {
     private URLMapper mapper = new URLMapper();
 
     private static final String BLOGRACY = "blogracy";
-    private HyperlinkParameter test_param;
+    private HyperlinkParameter testParam;
     static private Blogracy singleton;
 
     static class Accesses {
         static String ALL = "all";
         static String LOCAL = "local";
+
+        static String wantsLocal(boolean local) {
+            return local ? Accesses.LOCAL : Accesses.ALL;
+        }
     }
 
     static private PluginInterface plugin;
 
     // Misc Keys
     private static final String MESSAGES_BLOGRACY_URL_KEY = "blogracy.url";
-    private static final String PLUGIN_NAME_KEY = "blogracy.name";
 
     // blogracy.internal. keys
-    private static final String CONFIG_ACCESS_KEY = "blogracy.internal.config.access";
-    private static final String CONFIG_PORT_KEY = "blogracy.internal.config.port";
-    private static final String DEVICE_ACCESS_KEY = "blogracy.internal.config.access";
-    private static final String INTERNAL_URL_KEY = "blogracy.internal.test.url";
-    private static final String DID_MIGRATE_KEY = "blogracy.internal.migrated";
+    private static final String INTERNAL_CONFIG_ACCESS_KEY = "blogracy.internal.config.access";
+    private static final String INTERNAL_CONFIG_PORT_KEY = "blogracy.internal.config.port";
+    private static final String INTERNAL_TEST_URL_KEY = "blogracy.internal.test.url";
+    private static final String INTERNAL_MIGRATED_KEY = "blogracy.internal.migrated";
 
     // blogracy default keys
-    private static final String DEVICE_PORT_KEY = "Plugin.default.device.blogracy.port";
-    private static final String DEVICE_LOCALONLY_KEY = "Plugin.default.device.blogracy.localonly";
-    private static final String DEVICE_BLOGRACY_ENABLE_KEY = "Plugin.default.device.blogracy.enable";
-
+    private static final String PLUGIN_DEFAULT_DEVICE_BLOGRACY_PORT = "Plugin.default.device.blogracy.port";
+    private static final String PLUGIN_DEFAULT_DEVICE_BLOGRACY_LOCALONLY = "Plugin.default.device.blogracy.localonly";
+    private static final String PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE = "Plugin.default.device.blogracy.enable";
 
     private static Properties defaults = new Properties();
 
@@ -92,9 +93,9 @@ public class Blogracy extends WebPlugin {
 
     static {
         ConfigurationDefaults cd = ConfigurationDefaults.getInstance();
-        cd.addParameter(DID_MIGRATE_KEY, Boolean.TRUE);
-        cd.addParameter(DEVICE_LOCALONLY_KEY, Boolean.TRUE);
-        cd.addParameter(DEVICE_BLOGRACY_ENABLE_KEY, Boolean.TRUE);
+        cd.addParameter(INTERNAL_MIGRATED_KEY, Boolean.TRUE);
+        cd.addParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_LOCALONLY, Boolean.TRUE);
+        cd.addParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE, Boolean.TRUE);
     }
 
     public static Blogracy getSingleton() {
@@ -105,9 +106,9 @@ public class Blogracy extends WebPlugin {
     protected void initStage(int num) {
         if (num == 1) {
             BasicPluginConfigModel config = getConfigModel();
-            test_param = config.addHyperlinkParameter2(INTERNAL_URL_KEY, "");
-            test_param.setEnabled(isPluginEnabled());
-            test_param.setLabelKey(MESSAGES_BLOGRACY_URL_KEY);
+            testParam = config.addHyperlinkParameter2(INTERNAL_TEST_URL_KEY, "");
+            testParam.setEnabled(isPluginEnabled());
+            testParam.setLabelKey(MESSAGES_BLOGRACY_URL_KEY);
         }
     }
 
@@ -122,37 +123,37 @@ public class Blogracy extends WebPlugin {
     public static void load(PluginInterface pluginInterface) {
 
         if (singletonShouldReturnImmediately()) return;
-        File root_dir = createRootDirectoryIfMissingAndGetPath();
+        File rootDir = createRootDirectoryIfMissingAndGetPath();
 
-        if (COConfigurationManager.getBooleanParameter(DID_MIGRATE_KEY)) {
-            configureIfMigratedKey(root_dir);
+        if (COConfigurationManager.getBooleanParameter(INTERNAL_MIGRATED_KEY)) {
+            configureIfMigratedKey(rootDir);
         } else {
-            configureIfNotMigrateKey(root_dir);
+            configureIfNotMigrateKey(rootDir);
         }
 
     }
 
-    private static void configureIfNotMigrateKey(final File root_dir) {
-        final Integer blogracy_port = COConfigurationManager.getIntParameter(DEVICE_PORT_KEY, DEFAULT_PORT);
-        final String blogracy_access;
-        if (blogracy_port != DEFAULT_PORT) {
-            COConfigurationManager.setParameter(CONFIG_PORT_KEY, blogracy_port);
+    private static void configureIfNotMigrateKey(final File rootDir) {
+        final Integer blogracyPort = COConfigurationManager.getIntParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_PORT, DEFAULT_PORT);
+        if (blogracyPort != DEFAULT_PORT) {
+            COConfigurationManager.setParameter(INTERNAL_CONFIG_PORT_KEY, blogracyPort);
         }
 
-        boolean local = COConfigurationManager.getBooleanParameter(DEVICE_LOCALONLY_KEY);
-        blogracy_access = local ? Accesses.LOCAL : Accesses.ALL;
-        if (!blogracy_access.equals(DEFAULT_ACCESS)) {
-            COConfigurationManager.setParameter(DEVICE_ACCESS_KEY, blogracy_access);
+        boolean local = COConfigurationManager.getBooleanParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_LOCALONLY);
+        final String blogracyAccess = Accesses.wantsLocal(local);
+        if (!blogracyAccess.equals(DEFAULT_ACCESS)) {
+            COConfigurationManager.setParameter(INTERNAL_CONFIG_ACCESS_KEY, blogracyAccess);
         }
-        COConfigurationManager.setParameter(DID_MIGRATE_KEY, Boolean.TRUE);
-        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(DEVICE_BLOGRACY_ENABLE_KEY);
-        setDefaultsProperties(blogracy_port, blogracy_access, root_dir, blogracyEnable);
+        COConfigurationManager.setParameter(INTERNAL_MIGRATED_KEY, Boolean.TRUE);
+
+        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE);
+        setDefaultsProperties(blogracyPort, blogracyAccess, rootDir, blogracyEnable);
     }
 
     private static void configureIfMigratedKey(final File root_dir) {
-        final Integer blogracy_port = COConfigurationManager.getIntParameter(CONFIG_PORT_KEY, DEFAULT_PORT);
-        final String blogracy_access = COConfigurationManager.getStringParameter(CONFIG_ACCESS_KEY, DEFAULT_ACCESS);
-        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(DEVICE_BLOGRACY_ENABLE_KEY);
+        final Integer blogracy_port = COConfigurationManager.getIntParameter(INTERNAL_CONFIG_PORT_KEY, DEFAULT_PORT);
+        final String blogracy_access = COConfigurationManager.getStringParameter(INTERNAL_CONFIG_ACCESS_KEY, DEFAULT_ACCESS);
+        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE);
         setDefaultsProperties(blogracy_port, blogracy_access, root_dir, blogracyEnable);
     }
 
@@ -168,15 +169,15 @@ public class Blogracy extends WebPlugin {
     }
 
     private static void setDefaultsProperties(
-            final Integer blogracy_port,
-            final String blogracy_access,
-            final File root_dir,
+            final Integer blogracyPort,
+            final String blogracyAccess,
+            final File rootDir,
             final boolean blogracyEnable) {
         defaults.put(WebPlugin.PR_ENABLE, blogracyEnable);
         defaults.put(WebPlugin.PR_DISABLABLE, Boolean.TRUE);
-        defaults.put(WebPlugin.PR_PORT, blogracy_port);
-        defaults.put(WebPlugin.PR_ACCESS, blogracy_access);
-        defaults.put(WebPlugin.PR_ROOT_DIR, root_dir.getAbsolutePath());
+        defaults.put(WebPlugin.PR_PORT, blogracyPort);
+        defaults.put(WebPlugin.PR_ACCESS, blogracyAccess);
+        defaults.put(WebPlugin.PR_ROOT_DIR, rootDir.getAbsolutePath());
         defaults.put(WebPlugin.PR_ENABLE_KEEP_ALIVE, Boolean.TRUE);
         defaults.put(WebPlugin.PR_HIDE_RESOURCE_CONFIG, Boolean.TRUE);
         defaults.put(WebPlugin.PR_PAIRING_SID, BLOGRACY);
@@ -251,9 +252,9 @@ public class Blogracy extends WebPlugin {
     setupServer() {
         super.setupServer();
 
-        if (test_param != null) {
-            test_param.setEnabled(isPluginEnabled());
-            test_param.setHyperlink(getURL());
+        if (testParam != null) {
+            testParam.setEnabled(isPluginEnabled());
+            testParam.setHyperlink(getURL());
         }
     }
 
