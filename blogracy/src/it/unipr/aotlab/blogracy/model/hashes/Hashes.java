@@ -103,6 +103,7 @@ public class Hashes {
      * @return the Hash of {@param o}
      */
     static public Hash newHash(Object o) {
+        // TODO: implement it properly.
         throw new UnsupportedOperationException();
     }
 
