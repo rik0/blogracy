@@ -48,7 +48,9 @@ class Mapping {
      * @throws ServerConfigurationError if the mapping cannot be established, e.g., because the
      *                                  regex is not valid or because the specified classfile cannot be found.
      */
-    public Mapping(String regexpString, String classString, final Object[] startingParameters)
+    public Mapping(String regexpString,
+                   String classString,
+                   final Object[] startingParameters)
             throws ServerConfigurationError {
         try {
             this.rex = Pattern.compile(regexpString);
@@ -59,6 +61,8 @@ class Mapping {
         }
         checkStartingParameters();
     }
+
+
 
     private void checkStartingParameters() throws ServerConfigurationError {
         Class[] declaredFormalParameters = extractFormalParametersAnnotation(resolverClass);

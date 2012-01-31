@@ -21,10 +21,10 @@
  */
 package it.unipr.aotlab.blogracy;
 
+import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
-import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
@@ -44,6 +44,8 @@ import org.gudy.azureus2.plugins.ui.model.BasicPluginConfigModel;
 import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Properties;
 
@@ -54,6 +56,8 @@ public class Blogracy extends WebPlugin {
 
     private HyperlinkParameter testParam;
     static private Blogracy singleton;
+
+    private static final String URL_CONFIGURATION_FILE = "server.config";
 
     static class Accesses {
         static String ALL = "all";
@@ -112,10 +116,11 @@ public class Blogracy extends WebPlugin {
     }
 
     /**
-     * This method is effectively called when a new instance of this plugin should be created.
+     * This method is effectively called when a new instance of this plugin
+     * should be created.
      * <p/>
-     * We found this feature not documented. Perhaps we should not rely on that.
-     * We also ensure that Blogracy is a singleton.
+     * We found this feature not documented. Perhaps we should not rely
+     * on that. We also ensure that Blogracy is a singleton.
      *
      * @param pluginInterface is the same old access point for plugins
      */
@@ -149,13 +154,20 @@ public class Blogracy extends WebPlugin {
         );
         final String blogracyAccess = Accesses.wantsLocal(local);
         if (!blogracyAccess.equals(DEFAULT_ACCESS)) {
-            COConfigurationManager.setParameter(INTERNAL_CONFIG_ACCESS_KEY, blogracyAccess);
+            COConfigurationManager.setParameter(
+                    INTERNAL_CONFIG_ACCESS_KEY,
+                    blogracyAccess
+            );
         }
-        COConfigurationManager.setParameter(INTERNAL_MIGRATED_KEY, Boolean.TRUE);
-
-        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(
-                PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE
+        COConfigurationManager.setParameter(
+                INTERNAL_MIGRATED_KEY,
+                Boolean.TRUE
         );
+
+        final boolean blogracyEnable =
+                COConfigurationManager.getBooleanParameter(
+                        PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE
+                );
         setDefaultsProperties(blogracyPort, blogracyAccess, rootDir, blogracyEnable);
     }
 
@@ -164,13 +176,15 @@ public class Blogracy extends WebPlugin {
                 INTERNAL_CONFIG_PORT_KEY,
                 DEFAULT_PORT
         );
-        final String blogracy_access = COConfigurationManager.getStringParameter(
-                INTERNAL_CONFIG_ACCESS_KEY,
-                DEFAULT_ACCESS
-        );
-        final boolean blogracyEnable = COConfigurationManager.getBooleanParameter(
-                PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE
-        );
+        final String blogracy_access =
+                COConfigurationManager.getStringParameter(
+                        INTERNAL_CONFIG_ACCESS_KEY,
+                        DEFAULT_ACCESS
+                );
+        final boolean blogracyEnable =
+                COConfigurationManager.getBooleanParameter(
+                        PLUGIN_DEFAULT_DEVICE_BLOGRACY_ENABLE
+                );
         setDefaultsProperties(
                 blogracy_port,
                 blogracy_access,
@@ -235,25 +249,42 @@ public class Blogracy extends WebPlugin {
 
 
     @Override
-    public boolean generateSupport(TrackerWebPageRequest request, TrackerWebPageResponse response)
+    public boolean generateSupport(
+            TrackerWebPageRequest request,
+            TrackerWebPageResponse response)
             throws IOException {
         String url = request.getURL();
         try {
             final RequestResolver resolver = mapper.getResolver(url);
             resolver.resolve(request, response);
         } catch (URLMappingError urlMappingError) {
-            final ErrorPageResolver errorResolver = new ErrorPageResolver(urlMappingError);
+            final ErrorPageResolver errorPageResolver = new ErrorPageResolver(
+                    urlMappingError
+            );
             Logger.error(urlMappingError.getMessage());
-            errorResolver.resolve(request, response);
+            urlMappingError.printStackTrace();
+            errorPageResolver.resolve(request, response);
         } catch (ServerConfigurationError serverConfigurationError) {
-            final ErrorPageResolver errorResolver = new ErrorPageResolver(
-                    serverConfigurationError, HttpResponseCode.HTTP_INTERNAL_ERROR
+            final ErrorPageResolver errorPageResolver = new ErrorPageResolver(
+                    serverConfigurationError,
+                    HttpResponseCode.HTTP_INTERNAL_ERROR
             );
             Logger.error(serverConfigurationError.getMessage());
-            errorResolver.resolve(request, response);
+            serverConfigurationError.printStackTrace();
+            errorPageResolver.resolve(request, response);
         } catch (RuntimeException genericException) {
+            final ErrorPageResolver errorPageResolver = new ErrorPageResolver(
+                    genericException,
+                    HttpResponseCode.HTTP_INTERNAL_ERROR
+            );
+            Logger.error(genericException.getMessage());
             genericException.printStackTrace();
-            throw genericException;
+            try {
+                errorPageResolver.resolve(request, response);
+            } catch (RuntimeException e) {
+                e.printStackTrace();
+                throw e;
+            }
         }
         return true;
     }
@@ -277,7 +308,8 @@ public class Blogracy extends WebPlugin {
     }
 
     @Override
-    public void initialize(PluginInterface pluginInterface) throws PluginException {
+    public void initialize(PluginInterface pluginInterface)
+            throws PluginException {
         initializePluginInterface(pluginInterface);
         initializeLogger();
         initializeURLMapper();
@@ -318,7 +350,10 @@ public class Blogracy extends WebPlugin {
             }
 
             @Override
-            public void log(final int level, final String message, final Throwable t) {
+            public void log(
+                    final int level,
+                    final String message,
+                    final Throwable t) {
                 final String fullMessage = message + t.getMessage();
                 log(level, message);
             }
@@ -335,7 +370,8 @@ public class Blogracy extends WebPlugin {
         singleton = this;
     }
 
-    private void initializePluginInterface(final PluginInterface pluginInterface) {
+    private void initializePluginInterface(
+            final PluginInterface pluginInterface) {
         plugin = pluginInterface;
     }
 
@@ -345,21 +381,14 @@ public class Blogracy extends WebPlugin {
 
     private void initializeURLMapper() throws PluginException {
         try {
-            Object[] staticFileResolverParameters = new
-                    Object[]{
-                    Configurations.getPathConfig().getStaticFilesDirectoryPath()
-            };
             mapper.configure(
-                    "^/$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,
-                    "^/main$", "it.unipr.aotlab.blogracy.web.resolvers.MainResolver", null,
-                    "^/user/([^/]*)", "it.unipr.aotlab.blogracy.web.resolvers.UserResolver", null,
-                    "^/messages$", "it.unipr.aotlab.blogracy.web.resolvers.MessagesResolver", null,
-                    "^/css/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
-                    "^/scripts/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", staticFileResolverParameters,
-                    "^/followers$", "it.unipr.aotlab.blogracy.web.resolvers.Followers", null
+                    new FileReader(new File(Configurations.getPathConfig()
+                            .getRootDirectory(), URL_CONFIGURATION_FILE))
             );
         } catch (ServerConfigurationError serverConfigurationError) {
             throw new PluginException(serverConfigurationError);
+        } catch (FileNotFoundException fileNotFoundException) {
+            throw new PluginException(fileNotFoundException);
         }
     }
 }

@@ -22,27 +22,36 @@
 
 package it.unipr.aotlab.blogracy.web.url;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonIOException;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 
+import java.io.Reader;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 
 public class URLMapper {
-    private List<Mapping> lst;
+    private List<Mapping> lst = null;
 
     private final int ARGUMENT_LIST_MANDATORY_DIVISOR = 3;
 
-    /**
-     * Returns the appropriate resolver for the required URL.
+    /** Returns the appropriate resolver for the required URL.
      *
-     * @param url to be resolved. If the url ends with a slash, it is removed.
+     * @param url to be resolved. If the url ends with a slash, it is
+     * removed.
      * @return the appropriate resolver.
-     * @throws URLMappingError          if the URL cannot be resolved by any resolver.
-     * @throws ServerConfigurationError if something was wrong in the configuration, e.g., we have a matching
-     *                                  link, but we cannot instantiate the correspondingly specified class.
+     * @throws URLMappingError if the URL cannot be resolved by any
+     * resolver.
+     * @throws ServerConfigurationError if something was
+     * wrong in the configuration, e.g., we have a matching link, but we
+     * cannot instantiate the correspondingly specified class.
      */
     public RequestResolver getResolver(String url) throws ServerConfigurationError, URLMappingError {
         url = fixLeadingAndTrailingSlashes(url);
@@ -64,6 +73,7 @@ public class URLMapper {
     }
 
     private RequestResolver buildResolver(final String url) throws ServerConfigurationError {
+        if(lst == null) return null;
         for (Mapping mapping : lst) {
             RequestResolver resolver = mapping.buildResolver(url);
             if (resolver != null) {
@@ -150,10 +160,44 @@ public class URLMapper {
     }
 
     private void prepareList(Object[] strings) {
-        lst = new ArrayList<Mapping>(strings.length / ARGUMENT_LIST_MANDATORY_DIVISOR);
+        if(lst == null) {
+            lst = new ArrayList<Mapping>(strings.length / ARGUMENT_LIST_MANDATORY_DIVISOR);
+        }
     }
 
     private boolean checkRightArgumentsNumber(Object[] strings) {
         return (strings.length % ARGUMENT_LIST_MANDATORY_DIVISOR) == 0;
+    }
+
+    private static class MappingBuilder {
+        private String regexpString = "";
+        private String classString = "";
+        private Object[] startingParameters = {};
+
+        private MappingBuilder() {}
+
+        public Mapping buildMapper() throws ServerConfigurationError {
+            return new Mapping(regexpString, classString, startingParameters);
+        }
+    }
+
+    public void configure(final Reader reader)
+            throws ServerConfigurationError {
+        List<MappingBuilder> builderList;
+        try {
+            Gson gson = new Gson();
+            Type listType =
+                new TypeToken<List<MappingBuilder>>(){}
+                .getType();
+            builderList = gson.fromJson(reader, listType);
+        } catch (JsonIOException e) {
+            throw new ServerConfigurationError(e);
+        } catch (JsonSyntaxException e) {
+            throw new ServerConfigurationError(e);
+        }
+        lst = new LinkedList<Mapping>();
+        for(MappingBuilder builder : builderList) {
+            lst.add(builder.buildMapper());
+        }
     }
 }
