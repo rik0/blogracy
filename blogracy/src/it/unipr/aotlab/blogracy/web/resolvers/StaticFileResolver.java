@@ -35,7 +35,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-@ConfigurationTimeParameters({String.class})
+@ConfigurationTimeParameters({})
 public class StaticFileResolver implements RequestResolver {
     private String staticFilesDirectory;
 
@@ -44,6 +44,16 @@ public class StaticFileResolver implements RequestResolver {
         checksValidStaticRootAndSetField(staticFilesDirectory);
     }
 
+    /**
+     * This constructor shall not be called as it throws an exception
+     * automatically. The idea is that if the url specification was wrong
+     * (in the sense that a capturing regex was used -- () vs. (:?) --) this
+     * constructor is selected instead and the exception is thrown
+     *
+     * @param staticFilesDirectory is the directory specified in the conf
+     * @param ignoredPseudoUrl is a match resulting from the wrong url
+     * @throws ServerConfigurationError <b>always</b>
+     */
     public StaticFileResolver(final String staticFilesDirectory,
                               final String ignoredPseudoUrl)
             throws ServerConfigurationError {
