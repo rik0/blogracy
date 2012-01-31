@@ -132,11 +132,13 @@
     </target>
 
     <target name="build-bat"
-            description="Builds a BAT file">
+            description="Builds a BAT file"
+            depends="build">
         <file file="blogracy.bat" basedir="." name="blogracy.bat"/>
+        <property refid="full-classpath" name="var.full-classpath"/>
         <!-- do not indent! keep it on the left margin! -->
         <echo output="blogracy.bat">
-            echo "Windows not supported."
+java -Xmx128m -Dazureus.config.path=${vuze.config.dir} -cp ${var.full-classpath} org.gudy.azureus2.ui.common.Main --ui=console
         </echo>
     </target>
 
