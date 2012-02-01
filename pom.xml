@@ -5,9 +5,13 @@
     <groupId>it.unipr.aotlab.blogracy</groupId>
     <artifactId>blogracy</artifactId>
     <packaging>jar</packaging>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.3-SNAPSHOT</version>
     <name>Blogracy</name>
     <url>http://dev.blogracy.net</url>
+
+    <properties>
+        <vuzeconf>build/config</vuzeconf>
+    </properties>
 
     <scm>
         <connection>scm:git:git://github.com/rik0/blogracy.git</connection>
@@ -76,13 +80,15 @@
         </pluginRepository>
       </pluginRepositories>
 
+
     <build>
         <outputDirectory>
-            build/config/plugins/${project.artifactId}
+            ${vuzeconf}/plugins/${project.artifactId}
         </outputDirectory>
         <resources>
             <resource>
                 <directory>src/main/config</directory>
+                <filtering>true</filtering>
             </resource>
             <resource>
                 <directory>src/main/resources</directory>
@@ -119,7 +125,7 @@
                     <extraJvmArguments>-Xms128m</extraJvmArguments>
                     <extraJvmArguments>-Xmx512m</extraJvmArguments>
                     <extraJvmArguments>
-                        -Dazureus.config.path=build/config
+                        -Dazureus.config.path=${vuzeconf}
                     </extraJvmArguments>
                     <platforms>
                         <platform>windows</platform>
@@ -192,7 +198,6 @@
             <artifactId>vuze</artifactId>
             <version>4700</version>
         </dependency>
-        <!--  Gson: Java to Json conversion -->
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
