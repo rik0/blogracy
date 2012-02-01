@@ -54,7 +54,9 @@
     </repositories>
 
     <build>
-        <outputDirectory>build/config/plugins/${artifactId}</outputDirectory>
+        <outputDirectory>
+            build/config/plugins/${project.artifactId}
+        </outputDirectory>
         <resources>
         </resources>
         <testResources>
@@ -62,7 +64,56 @@
                 <directory>${basedir}/src/main/resources</directory>
             </testResource>
         </testResources>
+        <plugins>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>appassembler-maven-plugin</artifactId>
+                <version>1.1</version>
+
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <goals>
+                            <goal>assemble</goal>
+                        </goals>
+                    </execution>
+                </executions>
+
+                <configuration>
+                    <!-- Set the target configuration directory to be used in the bin scripts -->
+                    <!--<configurationDirectory>conf</configurationDirectory>-->
+                    <!-- Copy the contents from "/src/main/config" to the target
+              configuration directory in the assembled application -->
+                    <!--<copyConfigurationDirectory>true</copyConfigurationDirectory>-->
+                    <!-- Include the target configuration directory in the beginning of
+             the classpath declaration in the bin scripts -->
+                    <!--<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>-->
+                    <!-- set alternative assemble directory -->
+                    <assembleDirectory>${project.basedir}</assembleDirectory>
+                    <!-- Extra JVM arguments that will be included in the bin scripts -->
+
+                    <extraJvmArguments>-Xms128m</extraJvmArguments>
+                    <extraJvmArguments>-Xmx512m</extraJvmArguments>
+
+                    <!-- Generate bin scripts for windows and unix pr default -->
+                    <platforms>
+                        <platform>windows</platform>
+                        <platform>unix</platform>
+                    </platforms>
+                    <programs>
+                        <program>
+                            <mainClass>
+                                org.gudy.azureus2.ui.common.Main
+                            </mainClass>
+
+                            <name>blogracy</name>
+                        </program>
+                    </programs>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.velocity</groupId>
@@ -116,6 +167,19 @@
             <groupId>vuze</groupId>
             <artifactId>vuze</artifactId>
             <version>4700</version>
+        </dependency>
+        <!--  Gson: Java to Json conversion -->
+        <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.1</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>appassembler-maven-plugin</artifactId>
+            <version>1.1</version>
+            <scope>compile</scope>
         </dependency>
     </dependencies>
 </project>
