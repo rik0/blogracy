@@ -114,7 +114,9 @@
                     </execution>
                 </executions>
                 <configuration>
-                    <configurationDirectory>conf</configurationDirectory>
+                    <configurationDirectory>
+                        ${project.build.outputDirectory}
+                    </configurationDirectory>
                     <copyConfigurationDirectory>
                         true
                     </copyConfigurationDirectory>
