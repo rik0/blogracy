@@ -51,13 +51,42 @@
             <id>functional-java</id>
             <url>http://functionaljava.googlecode.com/svn/maven</url>
         </repository>
+        <repository>
+              <id>Codehaus Snapshots</id>
+              <url>http://nexus.codehaus.org/snapshots/</url>
+              <snapshots>
+                <enabled>true</enabled>
+              </snapshots>
+              <releases>
+                <enabled>false</enabled>
+              </releases>
+            </repository>
     </repositories>
+
+    <pluginRepositories>
+        <pluginRepository>
+          <id>Codehaus Snapshots</id>
+          <url>http://repository.codehaus.org/releases/</url>
+          <snapshots>
+            <enabled>true</enabled>
+          </snapshots>
+          <releases>
+            <enabled>true</enabled>
+          </releases>
+        </pluginRepository>
+      </pluginRepositories>
 
     <build>
         <outputDirectory>
             build/config/plugins/${project.artifactId}
         </outputDirectory>
         <resources>
+            <resource>
+                <directory>src/main/config</directory>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+            </resource>
         </resources>
         <testResources>
             <testResource>
@@ -68,7 +97,7 @@
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>appassembler-maven-plugin</artifactId>
-                <version>1.1</version>
+                <version>1.2-SNAPSHOT</version>
 
                 <executions>
                     <execution>
@@ -78,24 +107,20 @@
                         </goals>
                     </execution>
                 </executions>
-
                 <configuration>
-                    <!-- Set the target configuration directory to be used in the bin scripts -->
-                    <!--<configurationDirectory>conf</configurationDirectory>-->
-                    <!-- Copy the contents from "/src/main/config" to the target
-              configuration directory in the assembled application -->
-                    <!--<copyConfigurationDirectory>true</copyConfigurationDirectory>-->
-                    <!-- Include the target configuration directory in the beginning of
-             the classpath declaration in the bin scripts -->
-                    <!--<includeConfigurationDirectoryInClasspath>true</includeConfigurationDirectoryInClasspath>-->
-                    <!-- set alternative assemble directory -->
+                    <configurationDirectory>conf</configurationDirectory>
+                    <copyConfigurationDirectory>
+                        true
+                    </copyConfigurationDirectory>
+                    <includeConfigurationDirectoryInClasspath>
+                        true
+                    </includeConfigurationDirectoryInClasspath>
                     <assembleDirectory>${project.basedir}</assembleDirectory>
-                    <!-- Extra JVM arguments that will be included in the bin scripts -->
-
                     <extraJvmArguments>-Xms128m</extraJvmArguments>
                     <extraJvmArguments>-Xmx512m</extraJvmArguments>
-
-                    <!-- Generate bin scripts for windows and unix pr default -->
+                    <extraJvmArguments>
+                        -Dazureus.config.path=build/config
+                    </extraJvmArguments>
                     <platforms>
                         <platform>windows</platform>
                         <platform>unix</platform>
@@ -105,7 +130,11 @@
                             <mainClass>
                                 org.gudy.azureus2.ui.common.Main
                             </mainClass>
-
+                            <commandLineArguments>
+                                <commandLineArgument>
+                                    --ui=console
+                                </commandLineArgument>
+                            </commandLineArguments>
                             <name>blogracy</name>
                         </program>
                     </programs>
@@ -130,11 +159,6 @@
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>1.2.8</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>1.7.1</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -178,7 +202,7 @@
         <dependency>
             <groupId>org.codehaus.mojo</groupId>
             <artifactId>appassembler-maven-plugin</artifactId>
-            <version>1.1</version>
+            <version>1.2-SNAPSHOT</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

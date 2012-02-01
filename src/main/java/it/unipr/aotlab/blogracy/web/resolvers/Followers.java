@@ -41,9 +41,11 @@ import java.io.OutputStreamWriter;
  * Date: 11/3/11
  * Time: 10:53 AM
  */
+
+// TODO: check if I'm necessary
 public class Followers extends AbstractRequestResolver {
-    private File TEMPLATES_ROOT_DIRECTORY =
-            Configurations.getPathConfig().getTemplatesDirectory();
+    private String TEMPLATES_ROOT_DIRECTORY =
+            Configurations.getPathConfig().getTemplatesDirectoryPath();
 
     @Override
     protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {

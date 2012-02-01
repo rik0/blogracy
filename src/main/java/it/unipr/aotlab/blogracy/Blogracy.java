@@ -43,10 +43,7 @@ import org.gudy.azureus2.plugins.ui.config.HyperlinkParameter;
 import org.gudy.azureus2.plugins.ui.model.BasicPluginConfigModel;
 import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.Properties;
 
 
@@ -57,7 +54,7 @@ public class Blogracy extends WebPlugin {
     private HyperlinkParameter testParam;
     static private Blogracy singleton;
 
-    private static final String URL_CONFIGURATION_FILE = "server.config";
+    static private final String URL_CONFIG_NAME = "blogracyUrl.config";
 
     static class Accesses {
         static String ALL = "all";
@@ -227,7 +224,10 @@ public class Blogracy extends WebPlugin {
     }
 
     private static File createRootDirectoryIfMissingAndGetPath() {
-        File root_dir = Configurations.getPathConfig().getRootDirectory();
+        File root_dir = new File(
+                Configurations.getPathConfig()
+                        .getRootDirectoryPath()
+        );
         return createDirIfMissing(root_dir);
     }
 
@@ -381,14 +381,14 @@ public class Blogracy extends WebPlugin {
 
     private void initializeURLMapper() throws PluginException {
         try {
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
             mapper.configure(
-                    new FileReader(new File(Configurations.getPathConfig()
-                            .getRootDirectory(), URL_CONFIGURATION_FILE))
+                   new InputStreamReader(
+                           classLoader.getResourceAsStream(URL_CONFIG_NAME)
+                   )
             );
         } catch (ServerConfigurationError serverConfigurationError) {
             throw new PluginException(serverConfigurationError);
-        } catch (FileNotFoundException fileNotFoundException) {
-            throw new PluginException(fileNotFoundException);
         }
     }
 }

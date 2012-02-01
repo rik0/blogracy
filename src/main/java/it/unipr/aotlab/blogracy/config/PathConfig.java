@@ -22,8 +22,6 @@
 
 package it.unipr.aotlab.blogracy.config;
 
-import java.io.File;
-
 /**
  * User: enrico
  * Package: it.unipr.aotlab.blogracy.config
@@ -31,10 +29,7 @@ import java.io.File;
  * Time: 11:31 AM
  */
 public interface PathConfig {
-    public File getRootDirectory();
-    public String getRootDirectoryPath();
-    public File getStaticFilesDirectory();
     public String getStaticFilesDirectoryPath();
-    public File getTemplatesDirectory();
     public String getTemplatesDirectoryPath();
+    public String getRootDirectoryPath();
 }

@@ -22,8 +22,9 @@
 
 package it.unipr.aotlab.blogracy.config;
 
-import java.io.File;
-import java.net.URL;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Properties;
 
 /**
  * User: enrico
@@ -33,52 +34,49 @@ import java.net.URL;
  */
 public class Configurations {
 
-    static public String getTestsStaticFilesRoot() {
-        Class<?> myClass = Configurations.class;
-        ClassLoader classLoader = myClass.getClassLoader();
-        URL url = classLoader.getResource(".");
-        return url.getPath();
+    public static final String BLOGRACY = "blogracy";
+    private static final String PATHS_FILE = "blogracyPaths.properties";
+    private static final String BLOGRACY_PATHS_STATIC = "blogracy.paths.static";
+    private static final String BLOGRACY_PATHS_TEMPLATES = "blogracy.paths.templates";
+    private static final String BLOGRACY_PATHS_ROOT = "blogracy.paths.root";
+
+    static private Properties loadPathProperties() throws IOException {
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        InputStream is = loader.getResourceAsStream(PATHS_FILE);
+
+        if (is != null) {
+            Properties properties = new Properties();
+            properties.load(is);
+            return properties;
+        } else {
+            return new Properties();
+        }
     }
 
-    public static final String BLOGRACY = "blogracy";
-    static String rootDirectoryPath = getTestsStaticFilesRoot();
-    static File rootDirectory = new File(rootDirectoryPath);
-
     static public PathConfig getPathConfig() {
-        return new PathConfig() {
-            // TODO: this should absolutely come from the outside!
+        try {
+            return new PathConfig() {
+                // TODO: this should absolutely come from the outside!
+                Properties pathProperties = loadPathProperties();
 
-            @Override
-            public File getRootDirectory() {
-                return rootDirectory;
-            }
+                @Override
+                public String getStaticFilesDirectoryPath() {
+                    return pathProperties.getProperty(BLOGRACY_PATHS_STATIC);
+                }
 
-            @Override
-            public String getRootDirectoryPath() {
-                return rootDirectory.getAbsolutePath();
-            }
+                @Override
+                public String getTemplatesDirectoryPath() {
+                    return pathProperties.getProperty(BLOGRACY_PATHS_TEMPLATES);
+                }
 
-            @Override
-            public String getStaticFilesDirectoryPath() {
-                return getStaticFilesDirectory().getAbsolutePath();
-            }
-
-            @Override
-            public File getStaticFilesDirectory() {
-                return new File(rootDirectory, "static");
-            }
-
-            @Override
-            public String getTemplatesDirectoryPath() {
-                return getTemplatesDirectory().getAbsolutePath();
-            }
-
-            @Override
-            public File getTemplatesDirectory() {
-                return new File(rootDirectory, "templates");
-            }
-
-
-        };
+                @Override
+                public String getRootDirectoryPath() {
+                    return pathProperties.getProperty(BLOGRACY_PATHS_ROOT);
+                }
+            };
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 }

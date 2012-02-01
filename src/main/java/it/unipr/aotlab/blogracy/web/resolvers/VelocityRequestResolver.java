@@ -41,8 +41,8 @@ import java.io.StringWriter;
  */
 public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     protected VelocityContext velocityContext = new VelocityContext();
-    private File TEMPLATES_ROOT_DIRECTORY =
-            Configurations.getPathConfig().getTemplatesDirectory();
+    private String TEMPLATES_ROOT_DIRECTORY =
+            Configurations.getPathConfig().getTemplatesDirectoryPath();
 
     protected void velocityGet(final TrackerWebPageResponse response) throws URLMappingError {
         setupContext();
