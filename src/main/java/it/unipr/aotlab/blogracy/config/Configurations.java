@@ -42,6 +42,7 @@ public class Configurations {
 
     static public PathConfig getPathConfig() {
         return new PathConfig() {
+            // TODO: this should absolutely come from the outside!
             File userPath = new File(SystemProperties.getUserPath());
             File pluginsDirectoryPath = new File(userPath, "plugins");
             public File rootDirectory = new File(pluginsDirectoryPath,

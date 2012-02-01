@@ -36,8 +36,8 @@ public class StaticFileResolverTestCreationWithMapperCapturingRegex {
     public void setUp() throws Exception {
         mapper = new URLMapper();
         mapper.configure(
-                "^/files/(.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver",
-                new Object[]{getTestsStaticFilesRoot()}
+                "^/files/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers" +
+                ".StaticFileResolver", null
         );
     }
 

@@ -32,23 +32,21 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.net.URL;
 
 import static org.easymock.EasyMock.expect;
 
 public class StaticFileResolverTest extends EasyMockSupport {
-    /**
-     * This test is essentially flawed in the sense that it assumes that the
-     * current working directory is the project root (where the build.xml and
-     * pom.xml are. Consequently, we assume that the directory where we have
-     * resources is blogracy/src/resources/...
-     * <p/>
-     * This may not be the case, of course. If you have troubles running this
-     * test file, you may want to improve it. Unfortunately, depending on
-     * Files is an awful idea and something we should drop asap.
-     * <p/>
-     * TODO: PowerMock may solve the issue
-     */
-    final private static String STATIC_ROOT_DIR = "blogracy/src/resources/static";
+
+    static private String getTestsStaticFilesRoot() {
+        Class<?> myClass = StaticFileResolverTest.class;
+        ClassLoader classLoader = myClass.getClassLoader();
+        URL url = classLoader.getResource(".");
+        return url.getPath();
+    }
+
+
+    final private static String STATIC_ROOT_DIR = getTestsStaticFilesRoot();
 
     StaticFileResolver resolver;
 

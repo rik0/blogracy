@@ -31,7 +31,8 @@ public class StaticFileResolverTestWrongMapperConf {
     public void testNullArrayToMapper() throws Exception {
         URLMapper mapper = new URLMapper();
         mapper.configure(
-                "^/files/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver", null
+                "^/files/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver",
+                new Object[]{"some conf"}
         );
     }
 }

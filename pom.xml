@@ -55,13 +55,13 @@
 
     <build>
         <outputDirectory>build/config/plugins/${artifactId}</outputDirectory>
-        <sourceDirectory>blogracy/src</sourceDirectory>
-        <testSourceDirectory>blogracy/tests</testSourceDirectory>
         <resources>
-            <resource>
-                <directory>blogracy/src/resources</directory>
-            </resource>
         </resources>
+        <testResources>
+            <testResource>
+                <directory>${basedir}/src/main/resources</directory>
+            </testResource>
+        </testResources>
     </build>
     <dependencies>
         <dependency>
