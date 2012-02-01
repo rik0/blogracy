@@ -32,7 +32,7 @@ public class StaticFileResolverTestWrongMapperConf {
         URLMapper mapper = new URLMapper();
         mapper.configure(
                 "^/files/(?:.*)$", "it.unipr.aotlab.blogracy.web.resolvers.StaticFileResolver",
-                new Object[]{"some conf"}
+                null
         );
     }
 }

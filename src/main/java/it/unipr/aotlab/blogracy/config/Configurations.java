@@ -22,9 +22,8 @@
 
 package it.unipr.aotlab.blogracy.config;
 
-import org.gudy.azureus2.core3.util.SystemProperties;
-
 import java.io.File;
+import java.net.URL;
 
 /**
  * User: enrico
@@ -34,15 +33,20 @@ import java.io.File;
  */
 public class Configurations {
 
+    static public String getTestsStaticFilesRoot() {
+        Class<?> myClass = Configurations.class;
+        ClassLoader classLoader = myClass.getClassLoader();
+        URL url = classLoader.getResource(".");
+        return url.getPath();
+    }
+
     public static final String BLOGRACY = "blogracy";
+    static String rootDirectoryPath = getTestsStaticFilesRoot();
+    static File rootDirectory = new File(rootDirectoryPath);
 
     static public PathConfig getPathConfig() {
         return new PathConfig() {
             // TODO: this should absolutely come from the outside!
-            File userPath = new File(SystemProperties.getUserPath());
-            File pluginsDirectoryPath = new File(userPath, "plugins");
-            public File rootDirectory = new File(pluginsDirectoryPath,
-                    BLOGRACY);
 
             @Override
             public File getRootDirectory() {

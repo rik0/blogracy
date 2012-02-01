@@ -22,7 +22,6 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
@@ -35,7 +34,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 
-@ConfigurationTimeParameters({})
+@ConfigurationTimeParameters({String.class})
 public class StaticFileResolver implements RequestResolver {
     private String staticFilesDirectory;
 
@@ -60,10 +59,6 @@ public class StaticFileResolver implements RequestResolver {
         throw new ServerConfigurationError(
                 "Use non capturing regex in the server configuration!"
         );
-    }
-    
-    public StaticFileResolver() throws ServerConfigurationError {
-        this(Configurations.getPathConfig().getStaticFilesDirectoryPath());
     }
 
     /**
