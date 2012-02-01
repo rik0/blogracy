@@ -9,36 +9,42 @@ Blogracy is a simple peer-to-peer social networking system, built on top of Bitt
 The installation process is not yet streamlined. Essentially Blogracy runs as a Vuze
 plugin. We do not distribute Jars anymore.
 
-The build system uses Ant and Maven. If you have a working ant and maven
-installation things should be rather smooth. We basically use maven just for
-dependency management and ant for everything else.
+The build system uses Maven. If you have a working  maven
+installation things should be rather smooth.
 
+### Getting Vuze ###
 
-### Maven Ant Tasks ###
-In order to have ant and maven work together, we use Maven Ant Tasks. Documentation
-is not extremely exhaustive. In principle you should not have to download Maven
-Ant Tasks: we have an ant target (`mvn-ant-tasks-download`)
-which downloads it automagically. Our system works with version 2.1.3.
+Vuze is not packaged for Maven right now. This may change in the future.
+Right now, it is necessary to:
 
-We have been reported cases where the download process did not succeed. A 
-maven-ant-tasks-2.1.3.jar is downloaded in the lib directory, but the file is
-broken. This is easy to veryfy with 
-
-```unzip -t lib/maven-ant-tasks-2.1.3.jar```
-
-If the file is broken, an error will occur. Manually downloading the file and
-placing it in the lib directory fixes the issue.
-
-### Maven ###
-Maven should just work out of the box (if installed). Essentially we use maven
-ant tasks to have ant call the maven tasks necessary to download the relevant
-libraries (at the present moment `velocity-engine`, `commons-cli`, `junit`, `log4j`).
-The actual set of dependencies may change without updating this document. 
-Refer to the `pom.xml` file and the `build.xml` ant script for information.
-
-Maven does not put stuff in the lib directory, but places them in its own
-local repository. See maven docs for more information. However, in Ant we
-have the proper value of the classpath to use which takes this into account.
+1. Download Vuze jar (and sources) from main Vuze site.
+   A link which is working at the present time is:
+   http://sourceforge.net/projects/azureus/files/vuze/Vuze_4700.jar
+   for the classes and:
+   http://sourceforge.net/projects/azureus/files/vuze/Vuze_4700_sources.jar
+   for the sources.
+2. In the same directory where the files have been downloaded, execute
+   the following command (notice that it should be placed on just one line).
+   The trailing \ are the standard way unix shells allow a command to
+   be split on more lines (easier to cut and paste)
+```
+mvn install:install-file -DgroupId=vuze \
+    -DartifactId=vuze                   \
+    -Dpackaging=jar                     \
+    -Dversion=4700                      \
+    -DgeneratePom=true                  \
+    -Dfile=Vuze_4700.jar
+```
+3. To install also the sources:
+```
+mvn install:install-file -DgroupId=vuze \
+    -DartifactId=vuze                   \
+    -Dpackaging=jar                     \
+    -Dversion=4700                      \
+    -DgeneratePom=true                  \
+    -Dfile=Vuze_4700_sources.jar        \
+    -Dclassifier=sources
+```
 
 ### Blogracy.bat and Blogracy.sh ###
 
@@ -48,12 +54,6 @@ upgrades its libraries versions or when something does not seem to work
 properly. Therefore, they should not be edited by hand. It is ok to do it
 to try things, but remember, they will be re-generated. Please do not put
 them under version control, either.
-
-### Vuze ###
-
-We use ant to download Vuze. We use the `Vuze_4700.jar` from the devs page.
-Again, should it be corrupted, feel free to manually download that and
-the sources package and place it in the lib directory. 
 
 ## Compile and Build  ##
 
@@ -100,7 +100,7 @@ The former is not a specification. Is just an example.
 
 It is still possible to have the thing run with a GUI. We do not have time
 to make it automated, though. Moreover, the plugin is meant to be used headless
-through a web-browser, and is consequently not necessary.
+through a it.unipr.aotlab.it.unipr.aotlab.blogracy.web-browser, and is consequently not necessary.
 
 Some information about the old GUI version may be found in old/README.
 It is utterly incomplete.

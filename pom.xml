@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>it.unipr.aotlab.blogracy</groupId>
@@ -7,6 +8,44 @@
     <version>0.2-SNAPSHOT</version>
     <name>Blogracy</name>
     <url>http://dev.blogracy.net</url>
+
+    <scm>
+        <connection>scm:git:git://github.com/rik0/blogracy.git</connection>
+        <developerConnection>scm:git:git://github.com:rik0/blogracy.git
+        </developerConnection>
+        <url>https://github.com/rik0/blogracy</url>
+    </scm>
+
+    <issueManagement>
+        <url>https://github.com/rik0/blogracy/issues</url>
+        <system>GitHub Issues</system>
+    </issueManagement>
+
+    <inceptionYear>2011</inceptionYear>
+
+
+    <developers>
+        <developer>
+            <id>rik0</id>
+            <name>Enrico Franchi</name>
+            <email>enrico.franchi@gmail.com</email>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+        </developer>
+        <developer>
+            <id>tomamic</id>
+            <name>Michele Tomaiuolo</name>
+            <email>...</email>
+            <roles>
+                <role>architect</role>
+                <role>developer</role>
+            </roles>
+        </developer>
+    </developers>
+
+
     <repositories>
         <repository>
             <id>functional-java</id>
