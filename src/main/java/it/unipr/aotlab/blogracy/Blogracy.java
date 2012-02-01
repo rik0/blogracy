@@ -227,7 +227,7 @@ public class Blogracy extends WebPlugin {
     }
 
     private static File createRootDirectoryIfMissingAndGetPath() {
-        File root_dir = Configurations.getRootDirectory();
+        File root_dir = Configurations.getPathConfig().getRootDirectory();
         return createDirIfMissing(root_dir);
     }
 

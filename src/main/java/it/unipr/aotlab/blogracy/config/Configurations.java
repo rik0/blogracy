@@ -36,10 +36,6 @@ public class Configurations {
 
     public static final String BLOGRACY = "blogracy";
 
-    public static File getRootDirectory() {
-        return getPathConfig().getRootDirectory();
-    }
-
     static public PathConfig getPathConfig() {
         return new PathConfig() {
             // TODO: this should absolutely come from the outside!
