@@ -46,23 +46,50 @@ mvn install:install-file -DgroupId=vuze \
     -Dclassifier=sources
 ```
 
-### Blogracy.bat and Blogracy.sh ###
+### Getting Blogracy ###
 
-Consequently, we can generate the `blogracy.bat` and `blogracy.sh` which are the
-preferred way to run the system. These files should be regenerated if maven
-upgrades its libraries versions or when something does not seem to work 
-properly. Therefore, they should not be edited by hand. It is ok to do it
-to try things, but remember, they will be re-generated. Please do not put
-them under version control, either.
+The preferred way to obtain blogracy sources is with git. Blogracy main
+repository is hosted at git://github.com/rik0/blogracy.git. However,
+if you intend to contribute to blogracy, we strongly encourage you to make a
+fork and then pull request the modifications.
 
-## Compile and Build  ##
+#### Fork ####
 
-Should be taken care of by ant. Classfiles are placed in `build/config/plugins/blogracy`.
-We also place there relevant files (the `messages` package and the `plugin.properties`
-file which is used by Vuze to load our plugin).
+1. Create a fork through GitHub repository
+2. The fork repository will be at git@github.com:<USERNAME>/blogracy.git
+   where <USERNAME> is your actual username
+3. ```
+git clone git@github.com:<USERNAME>/blogracy.git
+```
 
-It is not necessary to create a jar file, the classfiles suffice. However, the plugin.properties
-file must be there. Essentially the config directory must be something like
+If you are using Eclipse, issue the command directly in the workspace or
+move the sources afterwards.
+
+#### Read-Only ####
+
+To get the sources "read only" simply:
+```
+git://github.com/rik0/blogracy.git
+```
+
+### Compile ###
+
+To compile the project, it is sufficient to issue
+```
+mvn compile
+```
+in the project directory. This compiles all the Java sources and moves them
+to the build directory (by default build/config/plugins/blogracy).
+The classes, the resource files (those in src/resources) and the
+configuration files (in src/config) are copied in the build directory.
+
+That is a subdirectory of Vuze config directory (build/config). Vuze build
+directory can be specified setting the property azureus.config.path. It can
+be done from the command line with -Dazureus.config.path=build/config.
+
+For blogracy to work the the plugin.properties file must be in
+build/config/plugins/blogracy. Essentially the config directory must be
+something like:
 
 ```
 +- build/config
@@ -71,48 +98,74 @@ file must be there. Essentially the config directory must be something like
          - plugin.properties
          - it/unipr/aotlab/blogracy/*.class
          - messages/Messages.properties
+         - static
+         - templates
+         - blogracyUrl.config
+         - blogracyPaths.properties
+         - ...
 ```
+
+### Maven and the IDE ###
+
+Maven pom files are simply a description of a project. Such description can
+be easily interpreted by an IDE and can be used to build the project.
+
+Suppose that Blogracy sources have been cloned to ~/src/blogracy.
+Create a new Eclipse project in the same directory from scratch. The
+project is not working at this point: two more steps are needed.
+
+Close Eclipse and then move in the project directory to issue:
+```
+mvn -Declipse.workspace=/<PATH OF YOUR WORKSPACE> eclipse:add-maven-repo
+```
+This sets correctly the classpath of the workspace so that the maven
+repository is recognized.
+
+The last step is just:
+```
+mvn eclipse:eclipse
+```
+
+that updates the eclipse project with stuff coming from maven. Repeat this
+last step when something changes in the pom file.
+
+Feel free to read more documentation regarding integrating Eclipse with
+Maven. There is also an excellent plugin that can be installed in Eclipse.
+We however found that this first project setup phase is easier
+this way.
+
+With IntelliJ things mostly work out of the box.
 
 ## Run ##
 We do not use GUI or SWT. Consequently we run the Vuze console version
-(see the `--ui=console` option in blogracy run scripts). We do not depend from
-STW, as a consequence. You do not need to have those installed. Running such 
+(`--ui=console` option). We do not depend from
+STW, as a consequence. You do not need to have those installed. Running such
 scripts from the GUI may not work. Use the Terminal, Luke!
 
 It is however important to tell Vuze that the config directory it shall use is
 `build/config` (because we deploy there our plugin). This is done with the
 `-Dazureus.config.path=build/config` option of the VM.
 
-The main class to run Vuze is `org.gudy.azureus2.ui.common.Main`. To have an idea,
-the command which is inside the blogracy.sh file built for my system is, at the
-present moment:
+The main class to run Vuze is `org.gudy.azureus2.ui.common.Main`.
 
+### Executing Blogracy inside the IDE ###
+
+Use the information above to create the appropriate configuration in the IDE.
+
+### Executables ###
+Run from the terminal:
 ```
-#!/bin/sh
-
-java -Xmx128m -Dazureus.config.path=build/config        \
-            -cp SOME_CLASSPATH                          \
-            org.gudy.azureus2.ui.common.Main            \
-                --ui=console
+mvn package appassembler:assemble
 ```
 
-The former is not a specification. Is just an example.
-
-It is still possible to have the thing run with a GUI. We do not have time
-to make it automated, though. Moreover, the plugin is meant to be used headless
-through a it.unipr.aotlab.it.unipr.aotlab.blogracy.web-browser, and is consequently not necessary.
-
-Some information about the old GUI version may be found in old/README.
-It is utterly incomplete.
-
-## IDE ##
-Most IDEs should play nice with Ant. Just pay attention to the notion of 
-Working Directory. Please do not commit your IDE specific stuff.
-
+This will create a bin directory where a shell script and a bat file exist.
+```
+sh bin/blogracy
+```
+works on Unix systems (cygwin included). The bat file works for windows.
+Do not absolutely put those scripts under version control.
 
 ## Authors ##
-
-The original core was written by Alan Nonnato as his master's theses project.
 
 The code of the present versions is mostly written by Enrico Franchi and Michele Tomaiuolo.
 
