@@ -27,7 +27,8 @@ Right now, it is necessary to:
    the following command (notice that it should be placed on just one line).
    The trailing \ are the standard way unix shells allow a command to
    be split on more lines (easier to cut and paste)
-```
+
+```bash
 mvn install:install-file -DgroupId=vuze \
     -DartifactId=vuze                   \
     -Dpackaging=jar                     \
@@ -35,14 +36,39 @@ mvn install:install-file -DgroupId=vuze \
     -DgeneratePom=true                  \
     -Dfile=Vuze_4700.jar
 ```
+
 3. To install also the sources:
-```
+
+```bash
 mvn install:install-file -DgroupId=vuze \
     -DartifactId=vuze                   \
     -Dpackaging=jar                     \
     -Dversion=4700                      \
     -DgeneratePom=true                  \
     -Dfile=Vuze_4700_sources.jar        \
+    -Dclassifier=sources
+```
+
+If you are using windows copy and paste the following commands instead:
+
+```bat
+mvn install:install-file -DgroupId=vuze ^
+    -DartifactId=vuze                   ^
+    -Dpackaging=jar                     ^
+    -Dversion=4700                      ^
+    -DgeneratePom=true                  ^
+    -Dfile=Vuze_4700.jar
+```
+
+and
+
+```bat
+mvn install:install-file -DgroupId=vuze ^
+    -DartifactId=vuze                   ^
+    -Dpackaging=jar                     ^
+    -Dversion=4700                      ^
+    -DgeneratePom=true                  ^
+    -Dfile=Vuze_4700_sources.jar        ^
     -Dclassifier=sources
 ```
 
