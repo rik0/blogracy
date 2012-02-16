@@ -43,10 +43,12 @@ public class MessagesResolver extends AbstractRequestResolver {
 
     @Override
     protected void post(final TrackerWebPageRequest request,
-                        final TrackerWebPageResponse response) throws URLMappingError {
+                        final TrackerWebPageResponse response)
+            throws URLMappingError {
         final InputStream inputStream = request.getInputStream();
         @SuppressWarnings("unchecked")
-        final Map<String, String> headers = (Map<String,String>) request.getHeaders();
+        final Map<String, String> headers =
+                (Map<String,String>) request.getHeaders();
         final PostQueryParser parser = new PostQueryParser();
 
         try {
@@ -56,7 +58,9 @@ public class MessagesResolver extends AbstractRequestResolver {
             if (message != null) {
                 Logger.info(message);
             } else {
-                throw new URLMappingError(HttpResponseCode.HTTP_BAD_REQUEST, "No message field found!");
+                throw new URLMappingError(
+                        HttpResponseCode.HTTP_BAD_REQUEST,
+                        "No message field found!");
             }
         } catch (IOException e) {
             throw new URLMappingError(HttpResponseCode.HTTP_INTERNAL_ERROR, e);

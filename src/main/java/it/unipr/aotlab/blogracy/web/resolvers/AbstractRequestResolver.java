@@ -52,7 +52,8 @@ abstract public class AbstractRequestResolver implements RequestResolver {
      * {@inheritDoc}
      */
     @Override
-    final public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response)
+    final public void resolve(final TrackerWebPageRequest request,
+                              final TrackerWebPageResponse response)
             throws URLMappingError {
         processHeaders(request);
         response.setContentType(getViewType());
@@ -99,7 +100,9 @@ abstract public class AbstractRequestResolver implements RequestResolver {
      * @param response the response from the server
      * @throws URLMappingError if something goes bad
      */
-    protected void delete(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+    protected void delete(final TrackerWebPageRequest request,
+                          final TrackerWebPageResponse response)
+            throws URLMappingError {
         throw new URLMappingError(
                 HttpResponseCode.HTTP_BAD_METHOD,
                 "Command DELETE not supported for current resource."
@@ -113,7 +116,9 @@ abstract public class AbstractRequestResolver implements RequestResolver {
      * @param response the response from the server
      * @throws URLMappingError if something goes bad
      */
-    protected void put(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+    protected void put(final TrackerWebPageRequest request,
+                       final TrackerWebPageResponse response)
+            throws URLMappingError {
         throw new URLMappingError(
                 HttpResponseCode.HTTP_BAD_METHOD,
                 "Command PUT not supported for current resource."
@@ -127,7 +132,9 @@ abstract public class AbstractRequestResolver implements RequestResolver {
      * @param response the response from the server
      * @throws URLMappingError if something goes bad
      */
-    protected void post(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+    protected void post(final TrackerWebPageRequest request,
+                        final TrackerWebPageResponse response)
+            throws URLMappingError {
         throw new URLMappingError(
                 HttpResponseCode.HTTP_BAD_METHOD,
                 "Command POST not supported for current resource."
@@ -141,7 +148,9 @@ abstract public class AbstractRequestResolver implements RequestResolver {
      * @param response the response from the server
      * @throws URLMappingError if something goes bad
      */
-    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+    protected void get(final TrackerWebPageRequest request,
+                       final TrackerWebPageResponse response)
+            throws URLMappingError {
         throw new URLMappingError(
                 HttpResponseCode.HTTP_BAD_METHOD,
                 "Command GET not supported for current resource."

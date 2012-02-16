@@ -28,7 +28,8 @@ import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
 public interface RequestResolver {
     /**
-     * Takes an input request from the webserver and a response object, processes the request and writes output to the response.
+     * Takes an input request from the webserver and a response object,
+     * processes the request and writes output to the response.
      *
      * Ah, writing servlet containers from scratch! How fun is that!
      *
@@ -41,7 +42,8 @@ public interface RequestResolver {
 
     /**
      * Returns the kind of request we got.
-     * @return the {@link HTTPRequestType} expressing the kind of request we are dealing with.
+     * @return the {@link HTTPRequestType} expressing the kind of request we
+     * are dealing with.
      */
     HTTPRequestType getRequestHTTPRequestType();
 

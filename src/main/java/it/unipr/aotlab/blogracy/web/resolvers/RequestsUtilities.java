@@ -34,6 +34,7 @@ public class RequestsUtilities {
     static public boolean isAJAXRequest(final TrackerWebPageRequest request) {
         Map headers = request.getHeaders();
         String xRequestedWith = (String) headers.get(HEADER_NAME);
-        return xRequestedWith != null && xRequestedWith.equals(XML_HTTP_REQUEST);
+        return (xRequestedWith != null &&
+                xRequestedWith.equals (XML_HTTP_REQUEST));
     }
 }

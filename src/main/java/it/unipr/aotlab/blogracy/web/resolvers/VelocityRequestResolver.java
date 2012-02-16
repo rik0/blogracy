@@ -38,6 +38,8 @@ import java.io.StringWriter;
 
 /**
  * A VelocityRequestResolver should ease the creation of pages which make use of the velocity engine.
+ *
+ * Probably you just want to use this if in doubt.
  */
 public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     protected VelocityContext velocityContext = new VelocityContext();
