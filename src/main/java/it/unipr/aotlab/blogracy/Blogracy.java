@@ -36,6 +36,10 @@ import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabase;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseException;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.logging.LoggerChannel;
@@ -402,19 +406,14 @@ public class Blogracy extends WebPlugin {
     }
     
     // TODO: probably to move to Network and implementing classes
-    public void addDownload(String fileHash, String cacheDirectory) {
+    public void addDownload(final String fileHash, final String downloadDirectory, final String fileName) {
     	// add magnet-uri to download manager
 		try {
-			String fileName = fileHash;
-			int dot = fileHash.lastIndexOf(".");
-			if (dot >= 0) {
-				fileHash = fileHash.substring(0, dot);
-			}
 	    	URL magnetURI = new URL("magnet:?xt=urn:btih:" + fileHash);
             ResourceDownloader rdl = plugin.getUtilities().getResourceDownloaderFactory().create(magnetURI);
             InputStream is = rdl.download();
             Torrent torrent = plugin.getTorrentManager().createFromBEncodedInputStream(is);
-        	Download download = plugin.getDownloadManager().addDownload(torrent, null, new File(cacheDirectory));
+        	Download download = plugin.getDownloadManager().addDownload(torrent, null, new File(downloadDirectory));
         	download.renameDownload(fileName);
             plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_INFORMATION, fileHash + " added to download list!");
 		} catch (MalformedURLException e1) {
@@ -425,6 +424,44 @@ public class Blogracy extends WebPlugin {
 			plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR, "Torrent exception for: " + fileHash);
         } catch (DownloadException e1) {
 			plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR, "Download exception for: " + fileHash);
+		}
+    }
+    
+    // TODO: probably to move to Network and implementing classes
+    public void addIndirectDownload(final String key, final String downloadDirectory) {
+    	final long TIMEOUT = 5 * 60 * 1000; // 5 mins
+    	DistributedDatabase ddb = plugin.getDistributedDatabase();
+		try {
+			ddb.read(
+	            new DistributedDatabaseListener() {
+	            	public void event(DistributedDatabaseEvent event) {
+	            		int	type = event.getType();
+	            		if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
+	            			// ...
+	            		} else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
+	            			// ...
+	            		} else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
+	            			try {
+	            				String fileHash = (String)event.getValue().getValue(String.class);
+	            				int btih = fileHash.indexOf("xt=urn:btih:");
+	            				if (btih >= 0) {
+	            					fileHash = fileHash.substring(btih + "xt=urn:btih:".length());
+		            				int amp = fileHash.indexOf('&');
+		            				if (amp >= 0) fileHash = fileHash.substring(0, amp);
+	            				}
+            					addDownload(fileHash, downloadDirectory, fileHash + ".rss");
+	            			} catch (DistributedDatabaseException e) {
+	            				plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR, "Error retrieving a value from the DDB: " + key);
+	            			}
+	            		}
+	            	}				
+			    },
+                ddb.createKey(key.getBytes()),
+                TIMEOUT,
+                DistributedDatabase.OP_EXHAUSTIVE_READ
+			);
+		} catch (DistributedDatabaseException e) {
+			plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR, "Problem reading from the DDB");
 		}
 
     }

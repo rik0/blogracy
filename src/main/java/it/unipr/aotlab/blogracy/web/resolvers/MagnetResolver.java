@@ -170,8 +170,12 @@ public class MagnetResolver implements RequestResolver {
                     "/" + fileName
             );
             if (!didSendTheFile) {
-            	// may fileName have extension??
-            	Blogracy.getSingleton().addDownload(fileHash, cacheDirectory);
+            	// may fileName have an extension?
+    			int dot = fileName.lastIndexOf(".");
+    			if (dot >= 0) {
+    				fileHash = fileName.substring(0, dot);
+    			}
+            	Blogracy.getSingleton().addDownload(fileHash, cacheDirectory, fileName);
             	
                 throw new URLMappingError(
                         HttpResponseCode.HTTP_UNAVAILABLE,
