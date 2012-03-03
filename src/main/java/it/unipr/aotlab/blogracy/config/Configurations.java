@@ -37,6 +37,7 @@ public class Configurations {
     public static final String BLOGRACY = "blogracy";
     private static final String PATHS_FILE = "blogracyPaths.properties";
     private static final String BLOGRACY_PATHS_STATIC = "blogracy.paths.static";
+    private static final String BLOGRACY_PATHS_CACHED = "blogracy.paths.cached";
     private static final String BLOGRACY_PATHS_TEMPLATES = "blogracy.paths.templates";
     private static final String BLOGRACY_PATHS_ROOT = "blogracy.paths.root";
 
@@ -62,6 +63,11 @@ public class Configurations {
                 @Override
                 public String getStaticFilesDirectoryPath() {
                     return pathProperties.getProperty(BLOGRACY_PATHS_STATIC);
+                }
+
+                @Override
+                public String getCachedFilesDirectoryPath() {
+                    return pathProperties.getProperty(BLOGRACY_PATHS_CACHED);
                 }
 
                 @Override
