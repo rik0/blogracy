@@ -36,14 +36,23 @@ import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.config.impl.ConfigurationDefaults;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
+import org.gudy.azureus2.plugins.download.Download;
+import org.gudy.azureus2.plugins.download.DownloadException;
+import org.gudy.azureus2.plugins.logging.LoggerChannel;
+import org.gudy.azureus2.plugins.torrent.Torrent;
+import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 import org.gudy.azureus2.plugins.ui.config.ConfigSection;
 import org.gudy.azureus2.plugins.ui.config.HyperlinkParameter;
 import org.gudy.azureus2.plugins.ui.model.BasicPluginConfigModel;
+import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
+import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
 import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
 import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Properties;
 
 
@@ -372,7 +381,7 @@ public class Blogracy extends WebPlugin {
 
     private void initializePluginInterface(
             final PluginInterface pluginInterface) {
-        plugin = pluginInterface;
+        plugin = pluginInterface;        
     }
 
     private void initializeLogger() {
@@ -390,6 +399,34 @@ public class Blogracy extends WebPlugin {
         } catch (ServerConfigurationError serverConfigurationError) {
             throw new PluginException(serverConfigurationError);
         }
+    }
+    
+    // TODO: probably to move to Network and implementing classes
+    public void addDownload(String fileHash, String cacheDirectory) {
+    	// add magnet-uri to download manager
+		try {
+			String fileName = fileHash;
+			int dot = fileHash.lastIndexOf(".");
+			if (dot >= 0) {
+				fileHash = fileHash.substring(0, dot);
+			}
+	    	URL magnetURI = new URL("magnet:?xt=urn:btih:" + fileHash);
+            ResourceDownloader rdl = plugin.getUtilities().getResourceDownloaderFactory().create(magnetURI);
+            InputStream is = rdl.download();
+            Torrent torrent = plugin.getTorrentManager().createFromBEncodedInputStream(is);
+        	Download download = plugin.getDownloadManager().addDownload(torrent, null, new File(cacheDirectory));
+        	download.renameDownload(fileName);
+            plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_INFORMATION, fileHash + " added to download list!");
+		} catch (MalformedURLException e1) {
+			plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR,"Error generating MagnetURI for: " + fileHash);
+		} catch (ResourceDownloaderException e1) {
+			plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR, "Resource download exception for: " + fileHash);
+		} catch (TorrentException e1) {
+			plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR, "Torrent exception for: " + fileHash);
+        } catch (DownloadException e1) {
+			plugin.getLogger().getTimeStampedChannel("Blogracy").logAlert(LoggerChannel.LT_ERROR, "Download exception for: " + fileHash);
+		}
+
     }
 }
 
