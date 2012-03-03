@@ -30,6 +30,7 @@ package it.unipr.aotlab.blogracy.config;
  */
 public interface PathConfig {
     public String getStaticFilesDirectoryPath();
+    public String getCachedFilesDirectoryPath();
     public String getTemplatesDirectoryPath();
     public String getRootDirectoryPath();
 }
