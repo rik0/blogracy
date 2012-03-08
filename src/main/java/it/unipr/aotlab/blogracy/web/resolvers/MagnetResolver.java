@@ -22,25 +22,39 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.url.ConfigurationTimeParameters;
+
+import org.gudy.azureus2.plugins.download.DownloadException;
+import org.gudy.azureus2.plugins.logging.LoggerChannel;
+import org.gudy.azureus2.plugins.torrent.Torrent;
+import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
+import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
+import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.MalformedURLException;
+import java.net.URL;
 
 @ConfigurationTimeParameters({String.class})
 public class MagnetResolver implements RequestResolver {
     private String cacheDirectory;
+    private String fileHash;
 
     public MagnetResolver(final String cacheDirectory)
             throws ServerConfigurationError {
-        checksValidCache(cacheDirectory);
+        throw new ServerConfigurationError(
+                "Use capturing regex in the server configuration!"
+        );
     }
 
     /**
@@ -54,11 +68,10 @@ public class MagnetResolver implements RequestResolver {
      * @throws ServerConfigurationError <b>always</b>
      */
     public MagnetResolver(final String cacheDirectory,
-                              final String ignoredPseudoUrl)
+                              final String fileHash)
             throws ServerConfigurationError {
-        throw new ServerConfigurationError(
-                "Use non capturing regex in the server configuration!"
-        );
+        checksValidCache(cacheDirectory);
+        this.fileHash = fileHash;
     }
 
     /**
@@ -149,22 +162,25 @@ public class MagnetResolver implements RequestResolver {
         * the true content type). Have bloody fun with it.
         */
 
-        final String url = request.getURL();
+        final String fileName = fileHash;
 
         try {
             boolean didSendTheFile = response.useFile(
                     cacheDirectory,
-                    url
+                    "/" + fileName
             );
             if (!didSendTheFile) {
-                if (mayBeDirectoryUrl(url)) {
-                    redirectToIndexInDirectory(url, response);
-                } else {
-                    throw new URLMappingError(
-                            HttpResponseCode.HTTP_NOT_FOUND,
-                            "Could not find " + url
-                    );
-                }
+            	// may fileName have an extension?
+    			int dot = fileName.lastIndexOf(".");
+    			if (dot >= 0) {
+    				fileHash = fileName.substring(0, dot);
+    			}
+            	Blogracy.getSingleton().addDownload(fileHash, cacheDirectory, fileName);
+            	
+                throw new URLMappingError(
+                        HttpResponseCode.HTTP_UNAVAILABLE,
+                        "File not (yet) available: " + fileName
+                );
             }
         } catch (FileNotFoundException e) {
             throw new URLMappingError(HttpResponseCode.HTTP_NOT_FOUND, e);
