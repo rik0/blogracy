@@ -47,16 +47,6 @@ public class MagnetResolver implements RequestResolver {
         );
     }
 
-    /**
-     * This constructor shall not be called as it throws an exception
-     * automatically. The idea is that if the url specification was wrong
-     * (in the sense that a capturing regex was used -- () vs. (:?) --) this
-     * constructor is selected instead and the exception is thrown
-     *
-     * @param staticFilesDirectory is the directory specified in the conf
-     * @param ignoredPseudoUrl     is a match resulting from the wrong url
-     * @throws ServerConfigurationError <b>always</b>
-     */
     public MagnetResolver(final String cacheDirectory,
                           final String fileHash)
             throws ServerConfigurationError {
@@ -67,7 +57,7 @@ public class MagnetResolver implements RequestResolver {
     /**
      * Checks if {@param staticRoot} exists and is a directory
      *
-     * @param staticRoot is the path to check
+     * @param cache is the path to check
      * @throws ServerConfigurationError if {@param staticRoot} does not exist
      *                                  or is not a directory
      */
