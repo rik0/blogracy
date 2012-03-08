@@ -40,7 +40,8 @@ public class Logger {
     static LoggerChannel loggerChannel = null;
     static org.gudy.azureus2.plugins.logging.Logger logger = null;
     static SimpleChannel simpleChannel = new SimpleChannel() {
-        java.util.logging.Logger defaultLogger = java.util.logging.Logger.getAnonymousLogger();
+        java.util.logging.Logger defaultLogger =
+                java.util.logging.Logger.getAnonymousLogger();
 
         @Override
         public void info(String s) {
@@ -63,9 +64,10 @@ public class Logger {
      * @param pluginInterface is used to get Vuze logger
      * @param pluginChannelName is the name of the channel for this plugin
      */
-    public static void initialize(PluginInterface pluginInterface, String pluginChannelName) {
+    public static void initialize(PluginInterface pluginInterface,
+                                  String pluginChannelName) {
         logger = pluginInterface.getLogger();
-        loggerChannel = logger.getChannel(pluginChannelName);
+        loggerChannel = logger.getTimeStampedChannel(pluginChannelName);
         simpleChannel = new SimpleChannel() {
             @Override
             public void info(String msg) {

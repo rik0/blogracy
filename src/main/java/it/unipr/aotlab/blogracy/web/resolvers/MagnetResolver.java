@@ -28,22 +28,12 @@ import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.url.ConfigurationTimeParameters;
-
-import org.gudy.azureus2.plugins.download.DownloadException;
-import org.gudy.azureus2.plugins.logging.LoggerChannel;
-import org.gudy.azureus2.plugins.torrent.Torrent;
-import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
-import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
-import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
 
 @ConfigurationTimeParameters({String.class})
 public class MagnetResolver implements RequestResolver {
@@ -64,11 +54,11 @@ public class MagnetResolver implements RequestResolver {
      * constructor is selected instead and the exception is thrown
      *
      * @param staticFilesDirectory is the directory specified in the conf
-     * @param ignoredPseudoUrl is a match resulting from the wrong url
+     * @param ignoredPseudoUrl     is a match resulting from the wrong url
      * @throws ServerConfigurationError <b>always</b>
      */
     public MagnetResolver(final String cacheDirectory,
-                              final String fileHash)
+                          final String fileHash)
             throws ServerConfigurationError {
         checksValidCache(cacheDirectory);
         this.fileHash = fileHash;
@@ -79,7 +69,7 @@ public class MagnetResolver implements RequestResolver {
      *
      * @param staticRoot is the path to check
      * @throws ServerConfigurationError if {@param staticRoot} does not exist
-     * or is not a directory
+     *                                  or is not a directory
      */
     private void checksValidCache(final String cache)
             throws ServerConfigurationError {
@@ -115,7 +105,7 @@ public class MagnetResolver implements RequestResolver {
             final TrackerWebPageRequest request,
             final TrackerWebPageResponse response)
             throws URLMappingError {
-       /*
+        /*
         * Keep in mind that due to the underlying
         * TrackerWebPageResponseImpl#useFile(String, String)
         * implementation, files without extension cannot be processed
@@ -170,13 +160,17 @@ public class MagnetResolver implements RequestResolver {
                     "/" + fileName
             );
             if (!didSendTheFile) {
-            	// may fileName have an extension?
-    			int dot = fileName.lastIndexOf(".");
-    			if (dot >= 0) {
-    				fileHash = fileName.substring(0, dot);
-    			}
-            	Blogracy.getSingleton().addDownload(fileHash, cacheDirectory, fileName);
-            	
+                // may fileName have an extension?
+                int dot = fileName.lastIndexOf(".");
+                if (dot >= 0) {
+                    fileHash = fileName.substring(0, dot);
+                }
+                Blogracy.getSingleton().addDownload(
+                        fileHash,
+                        cacheDirectory,
+                        fileName
+                );
+
                 throw new URLMappingError(
                         HttpResponseCode.HTTP_UNAVAILABLE,
                         "File not (yet) available: " + fileName
@@ -195,7 +189,8 @@ public class MagnetResolver implements RequestResolver {
 
     private void redirectToIndexInDirectory(
             final String url, final TrackerWebPageResponse response) {
-        Logger.info(url + " may be a directory. Trying to send index.html instead.");
+        Logger.info(url + " may be a directory. Trying to send index.html " +
+                "instead.");
         response.setReplyStatus(HttpResponseCode.HTTP_SEE_OTHER);
         response.setHeader("Location", url + "index.html");
     }

@@ -192,7 +192,8 @@ sh bin/blogracy
 works on Unix systems (cygwin included). The bat file works for windows.
 Do not absolutely put those scripts under version control. 
 
-Sometimes issues with running the project within an IDE arise. In this case, please build these scripts and try running them.
+Sometimes issues with running the project within an IDE arise. In this case,
+please build these scripts and try running them.
 
 ## Authors ##
 
