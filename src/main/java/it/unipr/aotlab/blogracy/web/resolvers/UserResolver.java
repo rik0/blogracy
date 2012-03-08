@@ -39,7 +39,6 @@ public class UserResolver extends VelocityRequestResolver {
     public UserResolver(String userName) {
         this.userName = userName;
         user = Users.newUser(Hashes.newHash(userName));
-
     }
 
     @Override
