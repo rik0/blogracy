@@ -535,7 +535,6 @@ public class Blogracy extends WebPlugin {
 
             torrentMagnetURI = torrent.getMagnetURI();
 
-            //Aggiungo il torrent alla lista dei download per il seeding
             plugin.getDownloadManager().addDownload(
                     torrent,
                     null, //torrentFile,
