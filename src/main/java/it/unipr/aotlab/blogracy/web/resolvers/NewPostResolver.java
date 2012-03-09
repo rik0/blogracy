@@ -65,6 +65,7 @@ public class NewPostResolver extends AbstractRequestResolver {
     	try {
 			PostQuery query = parser.parse(request.getInputStream(), request.getHeaders());
 			String text = query.getStringValue("text");
+			Blogracy.getSingleton().
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
