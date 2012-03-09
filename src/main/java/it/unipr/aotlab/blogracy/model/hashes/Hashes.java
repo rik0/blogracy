@@ -23,6 +23,7 @@
 package it.unipr.aotlab.blogracy.model.hashes;
 
 import org.apache.commons.codec.binary.Base64;
+import org.gudy.azureus2.core3.util.Base32;
 import org.gudy.azureus2.core3.util.SHA1Hasher;
 
 import java.util.Arrays;
@@ -49,7 +50,8 @@ public class Hashes {
 
         @Override
         public String getPrintableValue() {
-            return base64.encodeToString(hash);
+            //return base64.encodeToString(hash);
+            return Base32.encode(hash);
         }
 
         public byte[] getValue() {

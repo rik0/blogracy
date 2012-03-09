@@ -62,6 +62,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import org.gudy.azureus2.core3.util.SHA1Hasher;
+import org.gudy.azureus2.core3.util.Base32;
+
 /*
 import com.sun.syndication.feed.synd.SyndContent;
 import com.sun.syndication.feed.synd.SyndContentImpl;
@@ -429,9 +432,20 @@ public class Blogracy extends WebPlugin {
     public void addDownload(final String fileHash,
                             final String downloadDirectory,
                             final String fileName) {
-        // add magnet-uri to download manager
         try {
             URL magnetURI = new URL("magnet:?xt=urn:btih:" + fileHash);
+            addDownload(magnetURI, downloadDirectory, fileName);
+        } catch (MalformedURLException e1) {
+            Logger.error("Error generating MagnetURI for: " + fileName);
+        }
+    }
+
+    // TODO: probably to move to Network and implementing classes
+    public void addDownload(final URL magnetURI,
+                            final String downloadDirectory,
+                            final String fileName) {
+        // add magnet-uri to download manager
+        try {
             ResourceDownloader rdl =
                     plugin.getUtilities()
                             .getResourceDownloaderFactory().create(magnetURI);
@@ -445,55 +459,65 @@ public class Blogracy extends WebPlugin {
                     new File(downloadDirectory)
             );
             download.renameDownload(fileName);
-            Logger.info(fileHash + " added to download list!");
-        } catch (MalformedURLException e1) {
-            Logger.error("Error generating MagnetURI for: " + fileHash);
+            Logger.info(fileName + " added to download list!");
         } catch (ResourceDownloaderException e1) {
-            Logger.error("Resource download exception for: " + fileHash);
+            Logger.error("Resource download exception for: " + fileName);
         } catch (TorrentException e1) {
-            Logger.error("Torrent exception for: " + fileHash);
+            Logger.error("Torrent exception for: " + fileName);
         } catch (DownloadException e1) {
-            Logger.error("Download exception for: " + fileHash);
+            Logger.error("Download exception for: " + fileName);
         }
     }
 
+    // TODO: unused, remove?
+    static String getHashFromMagnetURI(String uri) {
+    	String hash = null;
+        int btih = uri.indexOf("xt=urn:btih:");
+        if (btih >= 0) {
+            hash = uri.substring(btih + "xt=urn:btih:".length());
+            int amp = hash.indexOf('&');
+            if (amp >= 0) hash = hash.substring(0, amp);
+        }
+        return hash;
+    }
+    
     // TODO: probably to move to Network and implementing classes
-    public void addIndirectDownload(final String key, final String downloadDirectory) {
+    public void addIndirectDownload(final String key,
+                                    final String downloadDirectory,
+                                    final String fileName) {
         final long TIMEOUT = 5 * 60 * 1000; // 5 mins
         DistributedDatabase ddb = plugin.getDistributedDatabase();
         try {
-            ddb.read(
-                    new DistributedDatabaseListener() {
-                        public void event(DistributedDatabaseEvent event) {
-                            final int type = event.getType();
-                            if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
-                                // ...
-                            } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
-                                // ...
-                            } else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
-                                try {
-                                    String fileHash = (String) event.getValue().getValue(String.class);
-                                    int btih = fileHash.indexOf("xt=urn:btih:");
-                                    if (btih >= 0) {
-                                        fileHash = fileHash.substring(btih + "xt=urn:btih:".length());
-                                        int amp = fileHash.indexOf('&');
-                                        if (amp >= 0)
-                                            fileHash = fileHash.substring(0, amp);
-                                    }
-                                    addDownload(fileHash, downloadDirectory, fileHash + ".rss");
-                                } catch (DistributedDatabaseException e) {
-                                    Logger.error("Error retrieving a value " +
-                                            "from the DDB: " + key);
-                                }
-                            }
-                        }
-                    },
-                    ddb.createKey(key.getBytes()),
-                    TIMEOUT,
-                    DistributedDatabase.OP_EXHAUSTIVE_READ
-            );
+        	ddb.read(
+                new DistributedDatabaseListener() {
+       				public void event(DistributedDatabaseEvent event) {
+       					final int type = event.getType();
+       					if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
+       						// ...
+       					} else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
+       						// ...
+       					} else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
+       						try {
+       							String value = (String) event.getValue().getValue(String.class);
+       							URL magnetURI = new URL(value);
+       							addDownload(magnetURI, downloadDirectory, fileName);
+       						} catch (MalformedURLException e1) {
+       							Logger.error("Error retrieving a value " +
+       									"from the DDB: " + key);
+       						} catch (DistributedDatabaseException e) {
+       							Logger.error("Error retrieving a value " +
+       									"from the DDB: " + key);
+       						}
+       					}
+       				}
+       			},
+       			ddb.createKey(
+       				key.getBytes()),
+           			TIMEOUT,
+           			DistributedDatabase.OP_EXHAUSTIVE_READ
+       			);
         } catch (DistributedDatabaseException e) {
-            Logger.error("Problem reading from the DDB");
+        	Logger.error("Problem reading from the DDB");
         }
     }
 
@@ -505,53 +529,50 @@ public class Blogracy extends WebPlugin {
                     new URL("udp://tracker.openbittorrent.com:80")
             );
             torrent.setComplete(file.getParentFile());
-            File torrentFile = new File(file.getAbsolutePath() + ".torrent");
-            if (torrentFile.exists()) torrentFile.delete();
-            torrent.writeToFile(torrentFile);
+            //File torrentFile = new File(file.getAbsolutePath() + ".torrent");
+            //if (torrentFile.exists()) torrentFile.delete();
+            //torrent.writeToFile(torrentFile);
 
             torrentMagnetURI = torrent.getMagnetURI();
-            System.out.println("m-uri: " + torrentMagnetURI.toString() + ";");
 
-            //Aggiungo il torrent alla lista dei download per il seeding
             plugin.getDownloadManager().addDownload(
-                    torrent, torrentFile,
-                    torrentFile.getParentFile()
+                    torrent,
+                    null, //torrentFile,
+                    file.getParentFile()
             );
-        } catch (MalformedURLException e1) {
-            System.err.println("MalformedURL Exception!");
-            e1.printStackTrace();
-        } catch (TorrentException e1) {
-            System.err.println("Torrent Exception!");
-            e1.printStackTrace();
-        } catch (DownloadException e1) {
-            System.err.println("Download Exception!");
-            e1.printStackTrace();
-        } catch (IOException e1) {
-            System.err.println("IO Exception!");
-            e1.printStackTrace();
+        } catch (MalformedURLException e) {
+            Logger.error("MalformedURL Exception while sharing file " + file.getName());
+        } catch (TorrentException e) {
+            Logger.error("Torrent Exception while sharing file " + file.getName());
+            e.printStackTrace();
+        } catch (DownloadException e) {
+            Logger.error("Download Exception while sharing file " + file.getName());
+            e.printStackTrace();
+        } catch (IOException e) {
+            Logger.error("IO Exception while sharing file " + file.getName());
+            e.printStackTrace();
         }
         return torrentMagnetURI;
     }
 
-    public void shareText(String text) {
+    public URL shareMessage(String message) {
+        URL torrentMagnetURI = null;
         try {
             String folder = defaults.get(WebPlugin.PR_ROOT_DIR).toString();
-            String hash = Hashes.newHash(text).getStringValue();
+            String hash = Hashes.newHash(message).getPrintableValue();
             String fullFileName = folder + "/cache/" + hash + ".txt";
 
             java.io.FileWriter w = new java.io.FileWriter(fullFileName);
-            w.write(text);
+            w.write(message);
             w.close();
 
-            URL postUri = shareFile(new File(fullFileName));
-            //updateFeed(user, postUri, text);
-        } catch (MalformedURLException e1) {
-            System.err.println("MalformedURL Exception!");
-            e1.printStackTrace();
-        } catch (IOException e1) {
-            System.err.println("IO Exception!");
-            e1.printStackTrace();
+            torrentMagnetURI = shareFile(new File(fullFileName));
+            //updateFeed(user, magnetUri, message);
+        } catch (IOException e) {
+            Logger.error("IO Exception while sharing a message");
+            e.printStackTrace();
         }
+        return torrentMagnetURI;
     }
 
     /*
