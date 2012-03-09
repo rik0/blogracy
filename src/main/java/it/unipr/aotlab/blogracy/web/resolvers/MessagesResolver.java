@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
@@ -57,6 +58,7 @@ public class MessagesResolver extends AbstractRequestResolver {
 
             if (message != null) {
                 Logger.info(message);
+                Blogracy.getSingleton().shareMessage(message);
             } else {
                 throw new URLMappingError(
                         HttpResponseCode.HTTP_BAD_REQUEST,
