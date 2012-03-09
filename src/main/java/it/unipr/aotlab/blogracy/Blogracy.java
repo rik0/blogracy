@@ -62,6 +62,9 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import org.gudy.azureus2.core3.util.SHA1Hasher;
+import org.gudy.azureus2.core3.util.Base32;
+
 /*
 import com.sun.syndication.feed.synd.SyndContent;
 import com.sun.syndication.feed.synd.SyndContentImpl;
@@ -505,17 +508,18 @@ public class Blogracy extends WebPlugin {
                     new URL("udp://tracker.openbittorrent.com:80")
             );
             torrent.setComplete(file.getParentFile());
+            //torrent.save();
             File torrentFile = new File(file.getAbsolutePath() + ".torrent");
             if (torrentFile.exists()) torrentFile.delete();
             torrent.writeToFile(torrentFile);
 
             torrentMagnetURI = torrent.getMagnetURI();
-            System.out.println("m-uri: " + torrentMagnetURI.toString() + ";");
 
             //Aggiungo il torrent alla lista dei download per il seeding
             plugin.getDownloadManager().addDownload(
-                    torrent, torrentFile,
-                    torrentFile.getParentFile()
+                    torrent,
+                    torrentFile,
+                    file.getParentFile()
             );
         } catch (MalformedURLException e1) {
             System.err.println("MalformedURL Exception!");
@@ -533,18 +537,19 @@ public class Blogracy extends WebPlugin {
         return torrentMagnetURI;
     }
 
-    public void shareText(String text) {
+    public URL shareMessage(String message) {
+        URL torrentMagnetURI = null;
         try {
             String folder = defaults.get(WebPlugin.PR_ROOT_DIR).toString();
-            String hash = Hashes.newHash(text).getStringValue();
+            String hash = Hashes.newHash(message).getPrintableValue();
             String fullFileName = folder + "/cache/" + hash + ".txt";
 
             java.io.FileWriter w = new java.io.FileWriter(fullFileName);
-            w.write(text);
+            w.write(message);
             w.close();
 
-            URL postUri = shareFile(new File(fullFileName));
-            //updateFeed(user, postUri, text);
+            torrentMagnetURI = shareFile(new File(fullFileName));
+            //updateFeed(user, magnetUri, message);
         } catch (MalformedURLException e1) {
             System.err.println("MalformedURL Exception!");
             e1.printStackTrace();
@@ -552,6 +557,7 @@ public class Blogracy extends WebPlugin {
             System.err.println("IO Exception!");
             e1.printStackTrace();
         }
+        return torrentMagnetURI;
     }
 
     /*
