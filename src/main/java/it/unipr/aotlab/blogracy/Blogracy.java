@@ -524,6 +524,7 @@ public class Blogracy extends WebPlugin {
     public URL shareFile(File file) {
         URL torrentMagnetURI = null;
         try {
+        	// the announce-url should not be needed...
             Torrent torrent = plugin.getTorrentManager().createFromDataFile(
                     file,
                     new URL("udp://tracker.openbittorrent.com:80")
@@ -547,9 +548,6 @@ public class Blogracy extends WebPlugin {
             e.printStackTrace();
         } catch (DownloadException e) {
             Logger.error("Download Exception while sharing file " + file.getName());
-            e.printStackTrace();
-        } catch (IOException e) {
-            Logger.error("IO Exception while sharing file " + file.getName());
             e.printStackTrace();
         }
         return torrentMagnetURI;
