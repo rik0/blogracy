@@ -42,7 +42,9 @@ public class UserResolver extends VelocityRequestResolver {
     }
 
     @Override
-    protected void get(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+    protected void get(final TrackerWebPageRequest request,
+                       final TrackerWebPageResponse response)
+            throws URLMappingError {
         super.velocityGet(response);
     }
 

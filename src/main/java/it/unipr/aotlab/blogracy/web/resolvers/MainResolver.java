@@ -14,7 +14,9 @@ public class MainResolver extends VelocityRequestResolver {
     final static private String VIEW_TYPE = "text/html";
 
     @Override
-    protected void get(TrackerWebPageRequest request, TrackerWebPageResponse response) throws URLMappingError {
+    protected void get(TrackerWebPageRequest request,
+                       TrackerWebPageResponse response)
+            throws URLMappingError {
         velocityGet(response);
     }
 

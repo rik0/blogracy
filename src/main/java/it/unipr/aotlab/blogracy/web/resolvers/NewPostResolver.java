@@ -22,31 +22,16 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
-import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
-import it.unipr.aotlab.blogracy.logging.Logger;
-import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.post.PostQuery;
 import it.unipr.aotlab.blogracy.web.post.PostQueryParser;
 import it.unipr.aotlab.blogracy.web.url.ConfigurationTimeParameters;
-
-import org.gudy.azureus2.plugins.download.DownloadException;
-import org.gudy.azureus2.plugins.logging.LoggerChannel;
-import org.gudy.azureus2.plugins.torrent.Torrent;
-import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
-import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
-import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
 import java.net.URISyntaxException;
-import java.net.URL;
 
 @ConfigurationTimeParameters({String.class})
 public class NewPostResolver extends AbstractRequestResolver {
@@ -60,24 +45,28 @@ public class NewPostResolver extends AbstractRequestResolver {
      * {@inheritDoc}
      */
     @Override
-    protected void post(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
-    	PostQueryParser parser = new PostQueryParser();
-    	try {
-			PostQuery query = parser.parse(request.getInputStream(), request.getHeaders());
-			String text = query.getStringValue("text");
-			Blogracy.getSingleton().
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (URISyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-    			
+    protected void post(final TrackerWebPageRequest request,
+                        final TrackerWebPageResponse response)
+            throws URLMappingError {
+        PostQueryParser parser = new PostQueryParser();
+        try {
+            PostQuery query = parser.parse(
+                    request.getInputStream(),
+                    request.getHeaders()
+            );
+            String text = query.getStringValue("text");
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (URISyntaxException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+
     }
 
-	@Override
-	protected String getViewType() {
-		return VIEW_TYPE;
-	}
+    @Override
+    protected String getViewType() {
+        return VIEW_TYPE;
+    }
 }

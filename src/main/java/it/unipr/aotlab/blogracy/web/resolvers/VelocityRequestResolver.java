@@ -38,13 +38,16 @@ import java.io.StringWriter;
 
 /**
  * A VelocityRequestResolver should ease the creation of pages which make use of the velocity engine.
+ * <p/>
+ * Probably you just want to use this if in doubt.
  */
 public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     protected VelocityContext velocityContext = new VelocityContext();
     private String TEMPLATES_ROOT_DIRECTORY =
             Configurations.getPathConfig().getTemplatesDirectoryPath();
 
-    protected void velocityGet(final TrackerWebPageResponse response) throws URLMappingError {
+    protected void velocityGet(final TrackerWebPageResponse response)
+            throws URLMappingError {
         setupContext();
         Template indexTemplate = loadTemplate();
         resolveTemplate(response, indexTemplate);
@@ -62,7 +65,8 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
      * @param response from {@link RequestResolver#resolve}
      * @param template the appropriate template (typically from {@link it.unipr.aotlab.blogracy.web.resolvers.VelocityRequestResolver#loadTemplate()}
      */
-    protected void resolveTemplate(final TrackerWebPageResponse response, final Template template) {
+    protected void resolveTemplate(final TrackerWebPageResponse response,
+                                   final Template template) {
         StringWriter writer = new StringWriter();
         template.initDocument();
         template.merge(
@@ -76,10 +80,13 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
 
 
     protected Template loadTemplate()
-            throws ParseErrorException, ResourceNotFoundException, URLMappingError {
+            throws ParseErrorException,
+            ResourceNotFoundException, URLMappingError {
         final HTTPRequestType currentRequestType = getRequestHTTPRequestType();
         final String htmlViewName = getViewName();
-        final String templateName = getTemplateName(currentRequestType, htmlViewName);
+        final String templateName = getTemplateName(
+                currentRequestType,
+                htmlViewName);
         if (templateName == null) {
             throw new URLMappingError(
                     HttpResponseCode.HTTP_INTERNAL_ERROR,
@@ -93,9 +100,11 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
     }
 
 
-    private String getTemplateName(final HTTPRequestType currentRequestType, final String htmlViewName) {
+    private String getTemplateName(final HTTPRequestType currentRequestType,
+                                   final String htmlViewName) {
         final String templateName;
-        if (htmlViewName != null && hasSpecialTemplateForStatus(currentRequestType, htmlViewName)) {
+        if (htmlViewName != null && hasSpecialTemplateForStatus(
+                currentRequestType, htmlViewName)) {
             templateName = buildTemplateName(currentRequestType, htmlViewName);
         } else {
             templateName = htmlViewName;
@@ -103,14 +112,21 @@ public abstract class VelocityRequestResolver extends AbstractRequestResolver {
         return templateName;
     }
 
-    protected String buildTemplateName(HTTPRequestType currentRequestType, String htmlViewName) {
+    protected String buildTemplateName(
+            HTTPRequestType currentRequestType,
+            String htmlViewName) {
         return currentRequestType.toString() + "/" + htmlViewName;
     }
 
-    private boolean hasSpecialTemplateForStatus(final HTTPRequestType currentRequestType, final String htmlViewName) {
-        File specialTemplateDirectory = new File(TEMPLATES_ROOT_DIRECTORY, currentRequestType.toString());
+    private boolean hasSpecialTemplateForStatus(
+            final HTTPRequestType currentRequestType,
+            final String htmlViewName) {
+        File specialTemplateDirectory = new File(
+                TEMPLATES_ROOT_DIRECTORY, currentRequestType.toString());
         if (specialTemplateDirectory.exists()) {
-            File templateFile = new File(specialTemplateDirectory, htmlViewName);
+            File templateFile = new File(
+                    specialTemplateDirectory,
+                    htmlViewName);
             return templateFile.exists();
         } else {
             return false;

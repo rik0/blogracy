@@ -142,7 +142,7 @@ project is not working at this point: two more steps are needed.
 
 Close Eclipse and then move in the project directory to issue:
 ```
-mvn -Declipse.workspace=/<PATH OF YOUR WORKSPACE> eclipse:add-maven-repo
+mvn -Declipse.workspace=/<PATH OF YOUR WORKSPACE> eclipse:configure-workspace
 ```
 This sets correctly the classpath of the workspace so that the maven
 repository is recognized.
@@ -163,6 +163,7 @@ this way.
 With IntelliJ things mostly work out of the box.
 
 ## Run ##
+
 We do not use GUI or SWT. Consequently we run the Vuze console version
 (`--ui=console` option). We do not depend from
 STW, as a consequence. You do not need to have those installed. Running such
@@ -189,7 +190,10 @@ This will create a bin directory where a shell script and a bat file exist.
 sh bin/blogracy
 ```
 works on Unix systems (cygwin included). The bat file works for windows.
-Do not absolutely put those scripts under version control.
+Do not absolutely put those scripts under version control. 
+
+Sometimes issues with running the project within an IDE arise. In this case,
+please build these scripts and try running them.
 
 ## Authors ##
 

@@ -110,13 +110,15 @@ public class ErrorPageResolver implements RequestResolver {
      * Notice that this specific implementation does not throw anything.
      */
     @Override
-    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
+    public void resolve(final TrackerWebPageRequest request,
+                        final TrackerWebPageResponse response) {
         String errorPage = prepareOutput(request, response);
         response.setReplyStatus(status);
         write(response, errorPage);
     }
 
-    private String prepareOutput(final TrackerWebPageRequest request, final TrackerWebPageResponse response) {
+    private String prepareOutput(final TrackerWebPageRequest request,
+                                 final TrackerWebPageResponse response) {
         String errorPage;
         if (isAJAXRequest(request)) {
             errorPage = jsonErrorString(exception);
@@ -128,7 +130,8 @@ public class ErrorPageResolver implements RequestResolver {
         return errorPage;
     }
 
-    private void write(final TrackerWebPageResponse response, final String errorPage) {
+    private void write(final TrackerWebPageResponse response,
+                       final String errorPage) {
         Writer writer = new OutputStreamWriter(response.getOutputStream());
         try {
             writer.write(errorPage);

@@ -43,7 +43,9 @@ public class MissingPageResolver implements RequestResolver {
     }
 
     @Override
-    public void resolve(final TrackerWebPageRequest request, final TrackerWebPageResponse response) throws URLMappingError {
+    public void resolve(final TrackerWebPageRequest request,
+                        final TrackerWebPageResponse response)
+            throws URLMappingError {
         ErrorPageResolver errorPageResolver = new ErrorPageResolver(
                 new URLMappingError(HttpResponseCode.HTTP_NOT_FOUND, message)
         );
