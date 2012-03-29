@@ -535,12 +535,23 @@ public class Blogracy extends WebPlugin {
             //torrent.writeToFile(torrentFile);
 
             torrentMagnetURI = torrent.getMagnetURI();
-
-            plugin.getDownloadManager().addDownload(
+            Download download = plugin.getDownloadManager().addDownload(
                     torrent,
                     null, //torrentFile,
                     file.getParentFile()
             );
+
+            String name = getHashFromMagnetURI(torrentMagnetURI.toString());
+            int index = file.getName().lastIndexOf('.');
+            if (0 < index && index <= file.getName().length() - 2 ) {
+            	name = name + file.getName().substring(index);
+            }
+
+            download.renameDownload(name);
+            
+            System.out.println("file: " + file.getName() + " name: " + name
+            		+ " uri: " + getHashFromMagnetURI(torrentMagnetURI.toString()));
+            		
         } catch (MalformedURLException e) {
             Logger.error("MalformedURL Exception while sharing file " + file.getName());
         } catch (TorrentException e) {
