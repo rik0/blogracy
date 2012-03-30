@@ -52,6 +52,8 @@ public class PostQueryParser {
         final int readBytes = inputStream.read(buffer);
         final URI uri = new URI("/main?" + new String(buffer)); // ugly kludge
         assert readBytes == size;
+        
+        System.out.println(uri.toASCIIString()); // TODO: remove
 
         // TODO: parse by hand. Their parser looks badly broken for POST data.
         final List<NameValuePair> params = URLEncodedUtils.parse(uri, ENCODING);
