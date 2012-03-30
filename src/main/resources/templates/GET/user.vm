@@ -25,7 +25,7 @@
         // wait for the DOM to be loaded
         $(function() {
             $('#message-send').ajaxForm({
-                url: 'messages',
+                url: '/messages',
                 clearForm: true,
                 type: 'POST',
                 success: function() {
@@ -162,6 +162,13 @@
                         </div>
                     </fieldset>
                 </form>
+                <div class="span10" id="user-feed">
+                    <ul>
+					#foreach( $entry in $feed.entries )
+						<li>$entry.description.value</li>
+					#end
+					</ul>
+                </div>
             </div>
             <div class="span4">
                 <h3>Followers</h3>

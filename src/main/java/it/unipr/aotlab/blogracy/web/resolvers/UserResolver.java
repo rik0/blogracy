@@ -22,6 +22,7 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
 import it.unipr.aotlab.blogracy.model.users.User;
@@ -29,16 +30,21 @@ import it.unipr.aotlab.blogracy.model.users.Users;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
+import com.sun.syndication.feed.synd.SyndFeed;
+
 public class UserResolver extends VelocityRequestResolver {
     final static private String VIEW_NAME = "user.vm";
     final static private String VIEW_TYPE = "text/html";
 
     private String userName;
     private User user;
+    private SyndFeed feed;
 
     public UserResolver(String userName) {
         this.userName = userName;
         user = Users.newUser(Hashes.newHash(userName));
+        //user = Users.newUser(Hashes.fromString(userName));
+        feed = Blogracy.getSingleton().getFeed(user);
     }
 
     @Override
@@ -52,6 +58,7 @@ public class UserResolver extends VelocityRequestResolver {
     protected void setupContext() {
         velocityContext.internalPut("application", "Blogracy");
         velocityContext.internalPut("user", user);
+        velocityContext.internalPut("feed", feed);
     }
 
     @Override

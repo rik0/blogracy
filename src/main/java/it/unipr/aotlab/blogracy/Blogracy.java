@@ -26,6 +26,7 @@ import it.unipr.aotlab.blogracy.errors.ServerConfigurationError;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
+import it.unipr.aotlab.blogracy.model.users.User;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
@@ -592,17 +593,18 @@ public class Blogracy extends WebPlugin {
         return torrentMagnetURI;
     }
 
-    public SyndFeed getFeed(String user) {
+    public SyndFeed getFeed(User user) {
+    	System.out.println("Getting feed: " + user.getHash().getPrintableValue());
         SyndFeed feed = null;
         try {
             String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
-            File feedFile = new File(folder + File.separator + user + ".rss");
+            File feedFile = new File(folder + File.separator + user.getHash().getPrintableValue() + ".rss");
             feed = new SyndFeedInput().build(new XmlReader(feedFile));
             System.out.println("Feed loaded");
         } catch (Exception e) {
             feed = new SyndFeedImpl();
             feed.setFeedType("rss_2.0");
-            feed.setTitle(user);
+            feed.setTitle(user.getHash().getPrintableValue());
             feed.setLink("http://www.blogracy.net");
             feed.setDescription("This feed has been created using ROME (Java syndication utilities");
             feed.setEntries(new ArrayList());
@@ -611,7 +613,7 @@ public class Blogracy extends WebPlugin {
         return feed;
     }
 
-    public void updateFeed(String user, URL uri, String text, URL attachment) {
+    public void updateFeed(User user, URL uri, String text, URL attachment) {
         try {
             SyndFeed feed = getFeed(user);
 
@@ -642,15 +644,15 @@ public class Blogracy extends WebPlugin {
             
             feed.getEntries().add(entry);
             String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
-            File feedFile = new File(folder + File.separator + user + ".rss");
+            File feedFile = new File(folder + File.separator + user.getHash().getPrintableValue() + ".rss");
             new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
 
             URL feedUri = shareFile(feedFile);
             new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
             
             DistributedDatabase ddb = plugin.getDistributedDatabase();
-            DistributedDatabaseKey key = ddb.createKey(user);
-            DistributedDatabaseValue value = ddb.createValue(feedUri); 
+            DistributedDatabaseKey key = ddb.createKey(user.getHash().getStringValue());
+            DistributedDatabaseValue value = ddb.createValue(feedUri.toString()); 
             ddb.write(new DistributedDatabaseListener() {
 				@Override
 				public void event(DistributedDatabaseEvent arg0) { }

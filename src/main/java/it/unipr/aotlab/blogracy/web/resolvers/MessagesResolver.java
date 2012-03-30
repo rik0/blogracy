@@ -26,6 +26,8 @@ import it.unipr.aotlab.blogracy.Blogracy;
 import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
+import it.unipr.aotlab.blogracy.model.hashes.Hashes;
+import it.unipr.aotlab.blogracy.model.users.Users;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.post.PostQuery;
 import it.unipr.aotlab.blogracy.web.post.PostQueryParser;
@@ -134,7 +136,7 @@ public class MessagesResolver extends AbstractRequestResolver {
             }
             
             if (messageURI != null || attachmentURI != null) {
-            	Blogracy.getSingleton().updateFeed("mic", messageURI, message, attachmentURI);
+            	Blogracy.getSingleton().updateFeed(Users.newUser(Hashes.newHash("mic")), messageURI, message, attachmentURI);
             }
             
         } catch (MultipartStream.MalformedStreamException e) {
