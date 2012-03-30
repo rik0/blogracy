@@ -524,12 +524,13 @@ public class Blogracy extends WebPlugin {
     public URL shareFile(File file) {
         URL torrentMagnetURI = null;
         try {
+        	File folder = new File(Configurations.getPathConfig().getCachedFilesDirectoryPath());
         	// the announce-url should not be needed...
             Torrent torrent = plugin.getTorrentManager().createFromDataFile(
                     file,
                     new URL("udp://tracker.openbittorrent.com:80")
             );
-            torrent.setComplete(file.getParentFile());
+            torrent.setComplete(folder);
             //File torrentFile = new File(file.getAbsolutePath() + ".torrent");
             //if (torrentFile.exists()) torrentFile.delete();
             //torrent.writeToFile(torrentFile);
@@ -538,7 +539,7 @@ public class Blogracy extends WebPlugin {
             Download download = plugin.getDownloadManager().addDownload(
                     torrent,
                     null, //torrentFile,
-                    file.getParentFile()
+                    folder
             );
 
             String name = getHashFromMagnetURI(torrentMagnetURI.toString());
@@ -567,9 +568,9 @@ public class Blogracy extends WebPlugin {
     public URL shareMessage(String message) {
         URL torrentMagnetURI = null;
         try {
-            String folder = defaults.get(WebPlugin.PR_ROOT_DIR).toString();
+            String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
             String hash = Hashes.newHash(message).getPrintableValue();
-            String fullFileName = folder + "/cache/" + hash + ".txt";
+            String fullFileName = folder + File.separator + hash + ".txt";
 
             java.io.FileWriter w = new java.io.FileWriter(fullFileName);
             w.write(message);

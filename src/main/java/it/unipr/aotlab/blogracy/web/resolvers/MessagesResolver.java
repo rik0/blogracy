@@ -23,6 +23,7 @@
 package it.unipr.aotlab.blogracy.web.resolvers;
 
 import it.unipr.aotlab.blogracy.Blogracy;
+import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
@@ -35,6 +36,8 @@ import org.apache.commons.fileupload.MultipartStream;
 import org.apache.commons.fileupload.ParameterParser;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
@@ -71,28 +74,43 @@ public class MessagesResolver extends AbstractRequestResolver {
 			    while (nextPart) {
 				    String partHeaders = multipartStream.readHeaders();
 				    System.out.println("h!" + partHeaders);
-				    
+				    String[] splittedHeaders = partHeaders.split("\n");
 			        final Map<String, String> partInfo =
-			                (Map<String,String>) parser.parse(partHeaders, ';');
+			                (Map<String,String>) parser.parse(splittedHeaders[0].trim(), ';');
 
-		            java.util.Iterator iterator = partInfo.keySet().iterator();  
-		            while (iterator.hasNext()) {  
+		            java.util.Iterator iterator = partInfo.keySet().iterator();
+		            while (iterator.hasNext()) {
 		            	String key = iterator.next().toString();
 		            	String value = partInfo.get(key);
 		            	
-		            	System.out.println(key + " " + value);  
+		            	System.out.println(key + " " + value);
 		            }
-			        
+
 			        if ("message".equals(partInfo.get("name"))) {
-			        	ByteArrayOutputStream out = new ByteArrayOutputStream();
-			        	message = out.toString();
+			        	ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
+			        	multipartStream.readBodyData(msgOut);
+			        	message = msgOut.toString();
+			        	System.out.println("m!" + message);
 			        } else if ("file".equals(partInfo.get("name"))) {
-			        	System.out.print("d!");
-			        	multipartStream.readBodyData(System.out);
+			        	String filename = partInfo.get("filename");
+			        	if (filename != null) {
+			        		/*filename = filename.trim();
+			        		System.out.println("e!" + filename.charAt(filename.length()-1));
+			        		if (filename.startsWith("\"") && filename.endsWith("\"")) {
+			        			filename = filename.substring(1, filename.length() - 1);
+			        		}*/
+				        	System.out.println("f!" + filename);
+				        	// File tmp = File.createTempFile(filename.substring(0, index - 1), filename.substring(index));
+				            String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
+				            File tmp = new File(folder + File.separator + filename);
+				        	System.out.println("f!" + tmp.getAbsolutePath());
+				        	multipartStream.readBodyData(new FileOutputStream(tmp));
+				        	Blogracy.getSingleton().shareFile(tmp);
+			        	}
 			        }
 				    nextPart = multipartStream.readBoundary();
 			    }
-        	} else {            
+        	} else {
                 final PostQueryParser parser = new PostQueryParser();
 	            final PostQuery query = parser.parse(inputStream, headers);
 	            message = query.getStringValue("message");
