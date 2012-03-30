@@ -524,22 +524,35 @@ public class Blogracy extends WebPlugin {
     public URL shareFile(File file) {
         URL torrentMagnetURI = null;
         try {
+        	File folder = new File(Configurations.getPathConfig().getCachedFilesDirectoryPath());
+        	// the announce-url should not be needed...
             Torrent torrent = plugin.getTorrentManager().createFromDataFile(
                     file,
                     new URL("udp://tracker.openbittorrent.com:80")
             );
-            torrent.setComplete(file.getParentFile());
+            torrent.setComplete(folder);
             //File torrentFile = new File(file.getAbsolutePath() + ".torrent");
             //if (torrentFile.exists()) torrentFile.delete();
             //torrent.writeToFile(torrentFile);
 
             torrentMagnetURI = torrent.getMagnetURI();
-
-            plugin.getDownloadManager().addDownload(
+            Download download = plugin.getDownloadManager().addDownload(
                     torrent,
                     null, //torrentFile,
-                    file.getParentFile()
+                    folder
             );
+
+            String name = getHashFromMagnetURI(torrentMagnetURI.toString());
+            int index = file.getName().lastIndexOf('.');
+            if (0 < index && index <= file.getName().length() - 2 ) {
+            	name = name + file.getName().substring(index);
+            }
+
+            download.renameDownload(name);
+            
+            System.out.println("file: " + file.getName() + " name: " + name
+            		+ " uri: " + getHashFromMagnetURI(torrentMagnetURI.toString()));
+            		
         } catch (MalformedURLException e) {
             Logger.error("MalformedURL Exception while sharing file " + file.getName());
         } catch (TorrentException e) {
@@ -548,9 +561,6 @@ public class Blogracy extends WebPlugin {
         } catch (DownloadException e) {
             Logger.error("Download Exception while sharing file " + file.getName());
             e.printStackTrace();
-        } catch (IOException e) {
-            Logger.error("IO Exception while sharing file " + file.getName());
-            e.printStackTrace();
         }
         return torrentMagnetURI;
     }
@@ -558,9 +568,9 @@ public class Blogracy extends WebPlugin {
     public URL shareMessage(String message) {
         URL torrentMagnetURI = null;
         try {
-            String folder = defaults.get(WebPlugin.PR_ROOT_DIR).toString();
+            String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
             String hash = Hashes.newHash(message).getPrintableValue();
-            String fullFileName = folder + "/cache/" + hash + ".txt";
+            String fullFileName = folder + File.separator + hash + ".txt";
 
             java.io.FileWriter w = new java.io.FileWriter(fullFileName);
             w.write(message);
