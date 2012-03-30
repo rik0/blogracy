@@ -41,6 +41,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.Map;
 
 public class MessagesResolver extends AbstractRequestResolver {
@@ -60,6 +61,10 @@ public class MessagesResolver extends AbstractRequestResolver {
 
         try {
         	String message = null;
+        	File attachment = null; 
+        	
+        	URL messageURI = null;
+        	URL attachmentURI = null;
 
         	String contentType = headers.get("content-type");
         	System.out.println("ct!" + contentType);
@@ -102,10 +107,9 @@ public class MessagesResolver extends AbstractRequestResolver {
 				        	System.out.println("f!" + filename);
 				        	// File tmp = File.createTempFile(filename.substring(0, index - 1), filename.substring(index));
 				            String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
-				            File tmp = new File(folder + File.separator + filename);
-				        	System.out.println("f!" + tmp.getAbsolutePath());
-				        	multipartStream.readBodyData(new FileOutputStream(tmp));
-				        	Blogracy.getSingleton().shareFile(tmp);
+				            attachment = new File(folder + File.separator + filename);
+				        	System.out.println("f!" + attachment.getAbsolutePath());
+				        	multipartStream.readBodyData(new FileOutputStream(attachment));
 			        	}
 			        }
 				    nextPart = multipartStream.readBoundary();
@@ -116,14 +120,23 @@ public class MessagesResolver extends AbstractRequestResolver {
 	            message = query.getStringValue("message");
         	}
 	
+        	if (attachment != null) {
+        		attachmentURI = Blogracy.getSingleton().shareFile(attachment);
+        	}
+        	
             if (message != null) {
                 Logger.info(message);
-                Blogracy.getSingleton().shareMessage(message);
+                messageURI = Blogracy.getSingleton().shareMessage(message);
             } else {
                 throw new URLMappingError(
                         HttpResponseCode.HTTP_BAD_REQUEST,
                         "No message field found!");
             }
+            
+            if (messageURI != null || attachmentURI != null) {
+            	Blogracy.getSingleton().updateFeed("mic", messageURI, message, attachmentURI);
+            }
+            
         } catch (MultipartStream.MalformedStreamException e) {
             throw new URLMappingError(HttpResponseCode.HTTP_INTERNAL_ERROR, e);
         } catch (IOException e) {
