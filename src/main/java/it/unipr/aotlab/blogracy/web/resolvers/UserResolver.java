@@ -51,6 +51,10 @@ public class UserResolver extends VelocityRequestResolver {
         } else {
         	user = Users.newUser(Hashes.newHash(userName)); // TODO: remove
         }
+        Blogracy.getSingleton().addIndirectDownload(
+        		user.getHash().getPrintableValue(),
+        		Configurations.getPathConfig().getCachedFilesDirectoryPath(),
+        		user.getHash().getPrintableValue() + ".rss");
         feed = Blogracy.getSingleton().getFeed(user);
     	friends = Configurations.getUserConfig().getFriends();
     }
