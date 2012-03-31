@@ -27,6 +27,7 @@ import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
 import it.unipr.aotlab.blogracy.model.users.User;
+import it.unipr.aotlab.blogracy.util.FileUtils;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
@@ -86,6 +87,7 @@ import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.feed.synd.SyndFeedImpl;
 import com.sun.syndication.feed.synd.SyndLink;
 import com.sun.syndication.feed.synd.SyndLinkImpl;
+import com.sun.syndication.io.FeedException;
 import com.sun.syndication.io.SyndFeedInput;
 import com.sun.syndication.io.SyndFeedOutput;
 import com.sun.syndication.io.XmlReader;
@@ -498,41 +500,35 @@ public class Blogracy extends WebPlugin {
         return hash;
     }
     
-    static void copyFile(File srcFile, File dstFile) {
-		if (!dstFile.exists()) {
-	        try {
-				dstFile.createNewFile();
+    public static boolean compareFeeds(File first, File second) {
+    	boolean result = true;
+    	if (second.exists() && second.getName().endsWith(".rss")) {
+            SyndFeed secondFeed = null;
+            SyndFeed firstFeed = null;
+			try {
+				secondFeed = new SyndFeedInput().build(new XmlReader(second));
+				firstFeed = new SyndFeedInput().build(new XmlReader(first));
+			} catch (IllegalArgumentException e) {
+				e.printStackTrace();
+			} catch (FeedException e) {
+				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-	    }
-
-	    FileChannel source = null;
-	    FileChannel destination = null;
-	    try {
-	        source = new FileInputStream(srcFile).getChannel();
-	        destination = new FileOutputStream(dstFile).getChannel();
-	        destination.transferFrom(source, 0, source.size());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	    finally {
-	        if (source != null) {
-	            try {
-					source.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-	        }
-	        if (destination != null) {
-	            try {
-					destination.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-	        }
-	    }
+			
+            if (secondFeed != null && secondFeed.getEntries().size() > 0) {
+            	if (firstFeed == null || firstFeed.getEntries().size() == 0) {
+            		result = false;
+            	} else {
+            		SyndEntry firstEntry = (SyndEntry) firstFeed.getEntries().get(0);
+            		SyndEntry secondEntry = (SyndEntry) secondFeed.getEntries().get(0);
+            		if (secondEntry.getPublishedDate().getTime() > firstEntry.getPublishedDate().getTime()) {
+            			result = false;
+            		}
+            	}
+            }
+    	}
+    	return result;
     }
     
     // TODO: probably to move to Network and implementing classes
@@ -560,8 +556,9 @@ public class Blogracy extends WebPlugin {
 									public void onCompletion(Download download) {
 										File srcFile = new File(download.getSavePath() + File.separator + download.getName());
 										File dstFile = new File(downloadDirectory + File.separator + fileName);
-										// TODO: check if newer
-										copyFile(srcFile, dstFile);
+										if (compareFeeds(srcFile, dstFile)) {
+											FileUtils.copyFile(srcFile, dstFile);
+										}
 									}
 								});
        						} catch (MalformedURLException e1) {
