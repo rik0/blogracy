@@ -22,7 +22,10 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import java.util.List;
+
 import it.unipr.aotlab.blogracy.Blogracy;
+import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
 import it.unipr.aotlab.blogracy.model.users.User;
@@ -39,12 +42,17 @@ public class UserResolver extends VelocityRequestResolver {
     private String userName;
     private User user;
     private SyndFeed feed;
+	List<User> friends;
 
     public UserResolver(String userName) {
         this.userName = userName;
-        user = Users.newUser(Hashes.newHash(userName));
-        //user = Users.newUser(Hashes.fromString(userName));
+        if (userName.length() == 32) {
+            user = Users.newUser(Hashes.fromString(userName));
+        } else {
+        	user = Users.newUser(Hashes.newHash(userName)); // TODO: remove
+        }
         feed = Blogracy.getSingleton().getFeed(user);
+    	friends = Configurations.getUserConfig().getFriends();
     }
 
     @Override
@@ -59,6 +67,7 @@ public class UserResolver extends VelocityRequestResolver {
         velocityContext.internalPut("application", "Blogracy");
         velocityContext.internalPut("user", user);
         velocityContext.internalPut("feed", feed);
+        velocityContext.internalPut("friends", friends);
     }
 
     @Override

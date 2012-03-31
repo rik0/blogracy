@@ -27,6 +27,7 @@ import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
+import it.unipr.aotlab.blogracy.model.users.User;
 import it.unipr.aotlab.blogracy.model.users.Users;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.post.PostQuery;
@@ -64,6 +65,7 @@ public class MessagesResolver extends AbstractRequestResolver {
         try {
         	String message = null;
         	File attachment = null; 
+        	User user = Configurations.getUserConfig().getUser();
         	
         	URL messageURI = null;
         	URL attachmentURI = null;
@@ -93,7 +95,12 @@ public class MessagesResolver extends AbstractRequestResolver {
 		            	System.out.println(key + " " + value);
 		            }
 
-			        if ("message".equals(partInfo.get("name"))) {
+			        if ("user".equals(partInfo.get("name"))) {
+			        	ByteArrayOutputStream userOut = new ByteArrayOutputStream();
+			        	multipartStream.readBodyData(userOut);
+			        	user = Users.newUser(Hashes.fromString(userOut.toString()));
+			        	System.out.println("m!" + message);
+			        } else if ("message".equals(partInfo.get("name"))) {
 			        	ByteArrayOutputStream msgOut = new ByteArrayOutputStream();
 			        	multipartStream.readBodyData(msgOut);
 			        	message = msgOut.toString();
@@ -136,7 +143,7 @@ public class MessagesResolver extends AbstractRequestResolver {
             }
             
             if (messageURI != null || attachmentURI != null) {
-            	Blogracy.getSingleton().updateFeed(Users.newUser(Hashes.newHash("mic")), messageURI, message, attachmentURI);
+            	Blogracy.getSingleton().updateFeed(user, messageURI, message, attachmentURI);
             }
             
         } catch (MultipartStream.MalformedStreamException e) {
