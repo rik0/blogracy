@@ -559,9 +559,12 @@ public class Blogracy extends WebPlugin {
         URL torrentMagnetURI = null;
         try {
             String folder = defaults.get(WebPlugin.PR_ROOT_DIR).toString();
+            String cacheFolder =  folder + "/cache/";
             String hash = Hashes.newHash(message).getPrintableValue();
-            String fullFileName = folder + "/cache/" + hash + ".txt";
+            String fullFileName = cacheFolder + hash + ".txt";
 
+            createDirIfMissing(new File(cacheFolder));
+            
             java.io.FileWriter w = new java.io.FileWriter(fullFileName);
             w.write(message);
             w.close();

@@ -73,7 +73,7 @@ public class StaticFileResolver implements RequestResolver {
         File staticRootFile = new File(staticRoot);
         if (staticRootFile.exists()) {
             if (staticRootFile.isDirectory()) {
-                staticFilesDirectory = staticRoot;
+                staticFilesDirectory = staticRootFile.getPath();
             } else {
                 throw new ServerConfigurationError(
                         errorMessageNotDirectory(staticRoot));
