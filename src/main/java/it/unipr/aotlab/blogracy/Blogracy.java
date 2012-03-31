@@ -40,7 +40,9 @@ import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabase;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseException;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseKey;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
+import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.torrent.Torrent;
@@ -58,24 +60,29 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.Properties;
 
 import org.gudy.azureus2.core3.util.SHA1Hasher;
 import org.gudy.azureus2.core3.util.Base32;
 
-/*
 import com.sun.syndication.feed.synd.SyndContent;
 import com.sun.syndication.feed.synd.SyndContentImpl;
+import com.sun.syndication.feed.synd.SyndEnclosure;
+import com.sun.syndication.feed.synd.SyndEnclosureImpl;
 import com.sun.syndication.feed.synd.SyndEntry;
 import com.sun.syndication.feed.synd.SyndEntryImpl;
 import com.sun.syndication.feed.synd.SyndFeed;
 import com.sun.syndication.feed.synd.SyndFeedImpl;
+import com.sun.syndication.feed.synd.SyndLink;
+import com.sun.syndication.feed.synd.SyndLinkImpl;
 import com.sun.syndication.io.SyndFeedInput;
 import com.sun.syndication.io.SyndFeedOutput;
 import com.sun.syndication.io.XmlReader;
-*/
 
 
 public class Blogracy extends WebPlugin {
@@ -524,22 +531,35 @@ public class Blogracy extends WebPlugin {
     public URL shareFile(File file) {
         URL torrentMagnetURI = null;
         try {
+        	File folder = new File(Configurations.getPathConfig().getCachedFilesDirectoryPath());
+        	// the announce-url should not be needed...
             Torrent torrent = plugin.getTorrentManager().createFromDataFile(
                     file,
                     new URL("udp://tracker.openbittorrent.com:80")
             );
-            torrent.setComplete(file.getParentFile());
+            torrent.setComplete(folder);
             //File torrentFile = new File(file.getAbsolutePath() + ".torrent");
             //if (torrentFile.exists()) torrentFile.delete();
             //torrent.writeToFile(torrentFile);
 
             torrentMagnetURI = torrent.getMagnetURI();
-
-            plugin.getDownloadManager().addDownload(
+            Download download = plugin.getDownloadManager().addDownload(
                     torrent,
                     null, //torrentFile,
-                    file.getParentFile()
+                    folder
             );
+
+            String name = getHashFromMagnetURI(torrentMagnetURI.toString());
+            int index = file.getName().lastIndexOf('.');
+            if (0 < index && index <= file.getName().length() - 2 ) {
+            	name = name + file.getName().substring(index);
+            }
+
+            download.renameDownload(name);
+            
+            System.out.println("file: " + file.getName() + " name: " + name
+            		+ " uri: " + getHashFromMagnetURI(torrentMagnetURI.toString()));
+            		
         } catch (MalformedURLException e) {
             Logger.error("MalformedURL Exception while sharing file " + file.getName());
         } catch (TorrentException e) {
@@ -548,9 +568,6 @@ public class Blogracy extends WebPlugin {
         } catch (DownloadException e) {
             Logger.error("Download Exception while sharing file " + file.getName());
             e.printStackTrace();
-        } catch (IOException e) {
-            Logger.error("IO Exception while sharing file " + file.getName());
-            e.printStackTrace();
         }
         return torrentMagnetURI;
     }
@@ -558,13 +575,10 @@ public class Blogracy extends WebPlugin {
     public URL shareMessage(String message) {
         URL torrentMagnetURI = null;
         try {
-            String folder = defaults.get(WebPlugin.PR_ROOT_DIR).toString();
-            String cacheFolder =  folder + "/cache/";
+            String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
             String hash = Hashes.newHash(message).getPrintableValue();
-            String fullFileName = cacheFolder + hash + ".txt";
+            String fullFileName = folder + File.separator + hash + ".txt";
 
-            createDirIfMissing(new File(cacheFolder));
-            
             java.io.FileWriter w = new java.io.FileWriter(fullFileName);
             w.write(message);
             w.close();
@@ -578,47 +592,72 @@ public class Blogracy extends WebPlugin {
         return torrentMagnetURI;
     }
 
-    /*
-     SyndFeed getFeed(String user) {
-         SyndFeed feed = null;
-         try {
-             File feedFile = new File("./" + user + ".rss");
-             feed = new SyndFeedInput().build(new XmlReader(feedFile));
-             System.out.println("Feed loaded");
-         } catch (Exception e) {
-             feed = new SyndFeedImpl();
-             feed.setFeedType("rss_2.0");
-             feed.setTitle(user);
-             feed.setLink("http://www.blogracy.net");
-             feed.setDescription("This feed has been created using ROME (Java syndication utilities");
-             feed.setEntries(new ArrayList());
-             System.out.println("Feed created");
-         }
-         return feed;
-     }
+    public SyndFeed getFeed(String user) {
+        SyndFeed feed = null;
+        try {
+            String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
+            File feedFile = new File(folder + File.separator + user + ".rss");
+            feed = new SyndFeedInput().build(new XmlReader(feedFile));
+            System.out.println("Feed loaded");
+        } catch (Exception e) {
+            feed = new SyndFeedImpl();
+            feed.setFeedType("rss_2.0");
+            feed.setTitle(user);
+            feed.setLink("http://www.blogracy.net");
+            feed.setDescription("This feed has been created using ROME (Java syndication utilities");
+            feed.setEntries(new ArrayList());
+            System.out.println("Feed created");
+        }
+        return feed;
+    }
 
-     void updateFeed(String user, URL uri, String text) {
-         try {
-             SyndFeed feed = getFeed(user);
+    public void updateFeed(String user, URL uri, String text, URL attachment) {
+        try {
+            SyndFeed feed = getFeed(user);
 
-             SyndEntry entry = new SyndEntryImpl();
-             entry.setTitle("No Title");
-             entry.setLink(uri.toString());
-             entry.setPublishedDate(new Date());
-             SyndContent description = new SyndContentImpl();
-             description.setType("text/plain");
-             description.setValue(text);
-             entry.setDescription(description);
-             feed.getEntries().add(entry);
+            SyndEntry entry = new SyndEntryImpl();
+            entry.setTitle("No Title");
+            entry.setLink(uri.toString());
+            entry.setPublishedDate(new Date());
+            SyndContent description = new SyndContentImpl();
+            description.setType("text/plain");
+            description.setValue(text);
+            entry.setDescription(description);
+            entry.setLink(uri.toString());
+            /*
+        	SyndLink link = new SyndLinkImpl();
+        	link.setHref(uri.toString());
+        	link.setTitle(uri.toString());
+        	ArrayList links = new ArrayList();
+        	links.add(link);
+        	entry.setLinks(links);
+            */
+            if (attachment != null) {
+            	SyndEnclosure enclosure = new SyndEnclosureImpl();
+            	enclosure.setUrl(attachment.toString());
+            	ArrayList enclosures = new ArrayList();
+            	enclosures.add(enclosure);
+            	entry.setEnclosures(enclosures);
+            }
+            
+            feed.getEntries().add(entry);
+            String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
+            File feedFile = new File(folder + File.separator + user + ".rss");
+            new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
 
-             File feedFile = new File("./" + user + ".rss");
-             new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
-
-             URL feedUri = share(feedFile);
-             ddb.put(user, feedUri.toString());
-         } catch (Exception e) { e.printStackTrace(); }
-     }
-     */
+            URL feedUri = shareFile(feedFile);
+            new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
+            
+            DistributedDatabase ddb = plugin.getDistributedDatabase();
+            DistributedDatabaseKey key = ddb.createKey(user);
+            DistributedDatabaseValue value = ddb.createValue(feedUri); 
+            ddb.write(new DistributedDatabaseListener() {
+				@Override
+				public void event(DistributedDatabaseEvent arg0) { }
+			}, key, new DistributedDatabaseValue[] {value});
+            // ddb.put(user, feedUri.toString());
+        } catch (Exception e) { e.printStackTrace(); }
+    }
 
 }
 
