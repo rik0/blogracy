@@ -22,8 +22,14 @@
 
 package it.unipr.aotlab.blogracy.config;
 
+import it.unipr.aotlab.blogracy.model.hashes.Hashes;
+import it.unipr.aotlab.blogracy.model.users.User;
+import it.unipr.aotlab.blogracy.model.users.Users;
+
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 /**
@@ -40,6 +46,9 @@ public class Configurations {
     private static final String BLOGRACY_PATHS_CACHED = "blogracy.paths.cached";
     private static final String BLOGRACY_PATHS_TEMPLATES = "blogracy.paths.templates";
     private static final String BLOGRACY_PATHS_ROOT = "blogracy.paths.root";
+    private static final String USER_FILE = "blogracyUser.properties";
+    private static final String BLOGRACY_USER_USER = "blogracy.user.user";
+    private static final String BLOGRACY_USER_FRIENDS = "blogracy.user.friends";
 
     static private Properties loadPathProperties() throws IOException {
         ClassLoader loader = ClassLoader.getSystemClassLoader();
@@ -54,9 +63,23 @@ public class Configurations {
         }
     }
 
+    static private Properties loadUserProperties() throws IOException {
+        ClassLoader loader = ClassLoader.getSystemClassLoader();
+        InputStream is = loader.getResourceAsStream(USER_FILE);
+
+        if (is != null) {
+            Properties properties = new Properties();
+            properties.load(is);
+            return properties;
+        } else {
+            return new Properties();
+        }
+    }
+
     static public PathConfig getPathConfig() {
         try {
-            return new PathConfig() {
+
+       return new PathConfig() {
                 // TODO: this should absolutely come from the outside!
                 Properties pathProperties = loadPathProperties();
 
@@ -78,6 +101,44 @@ public class Configurations {
                 @Override
                 public String getRootDirectoryPath() {
                     return pathProperties.getProperty(BLOGRACY_PATHS_ROOT);
+                }
+            };
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    static public UserConfig getUserConfig() {
+        try {
+            return new UserConfig() {
+                // TODO: this should absolutely come from the outside!
+                Properties userProperties = loadUserProperties();
+
+                @Override
+                public User getUser() {
+                	String userRow = userProperties.getProperty(BLOGRACY_USER_USER);
+                    return loadUser(userRow);
+                }
+
+                @Override
+                public List<User> getFriends() {
+                    ArrayList<User> friends = new ArrayList<User>();
+                	int i = 1;
+                    String friendRow = userProperties.getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
+                	while (friendRow != null) {
+                        friends.add(loadUser(friendRow));
+                        ++i;
+                        friendRow = userProperties.getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
+                    }
+                    return friends;
+                }
+                
+                private User loadUser(String text) {
+                    String[] hashAndNick = text.split(" ", 2);
+                    User user = Users.newUser(Hashes.fromString(hashAndNick[0]));
+                    if (hashAndNick.length == 2) user.setLocalNick(hashAndNick[1]);
+                    else user.setLocalNick(hashAndNick[0]);
+                    return user;
                 }
             };
         } catch (IOException e) {
