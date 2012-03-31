@@ -45,6 +45,7 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseKey;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
 import org.gudy.azureus2.plugins.download.Download;
+import org.gudy.azureus2.plugins.download.DownloadCompletionListener;
 import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
@@ -58,12 +59,16 @@ import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderExce
 import org.gudy.azureus2.ui.webplugin.WebPlugin;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
@@ -437,22 +442,25 @@ public class Blogracy extends WebPlugin {
     }
 
     // TODO: probably to move to Network and implementing classes
-    public void addDownload(final String fileHash,
+    public Download addDownload(final String fileHash,
                             final String downloadDirectory,
                             final String fileName) {
+    	Download download = null;
         try {
             URL magnetURI = new URL("magnet:?xt=urn:btih:" + fileHash);
-            addDownload(magnetURI, downloadDirectory, fileName);
+            download = addDownload(magnetURI, downloadDirectory, fileName);
         } catch (MalformedURLException e1) {
-            Logger.error("Error generating MagnetURI for: " + fileName);
+            Logger.error("Error generating MagnetURI for: " + fileHash);
         }
+        return download;
     }
 
     // TODO: probably to move to Network and implementing classes
-    public void addDownload(final URL magnetURI,
+    public Download addDownload(final URL magnetURI,
                             final String downloadDirectory,
                             final String fileName) {
         // add magnet-uri to download manager
+    	Download download = null;
         try {
             ResourceDownloader rdl =
                     plugin.getUtilities()
@@ -461,20 +469,21 @@ public class Blogracy extends WebPlugin {
             Torrent torrent =
                     plugin.getTorrentManager()
                             .createFromBEncodedInputStream(is);
-            Download download = plugin.getDownloadManager().addDownload(
+            download = plugin.getDownloadManager().addDownload(
                     torrent,
                     null,
                     new File(downloadDirectory)
             );
-            download.renameDownload(fileName);
-            Logger.info(fileName + " added to download list!");
+            if (fileName != null) download.renameDownload(fileName);
+            Logger.info(magnetURI + " added to download list");
         } catch (ResourceDownloaderException e1) {
-            Logger.error("Resource download exception for: " + fileName);
+            Logger.error("Resource download exception for: " + magnetURI);
         } catch (TorrentException e1) {
-            Logger.error("Torrent exception for: " + fileName);
+            Logger.error("Torrent exception for: " + magnetURI);
         } catch (DownloadException e1) {
-            Logger.error("Download exception for: " + fileName);
+            Logger.error("Download exception for: " + magnetURI);
         }
+        return download;
     }
 
     // TODO: unused, remove?
@@ -487,6 +496,43 @@ public class Blogracy extends WebPlugin {
             if (amp >= 0) hash = hash.substring(0, amp);
         }
         return hash;
+    }
+    
+    static void copyFile(File srcFile, File dstFile) {
+		if (!dstFile.exists()) {
+	        try {
+				dstFile.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	    }
+
+	    FileChannel source = null;
+	    FileChannel destination = null;
+	    try {
+	        source = new FileInputStream(srcFile).getChannel();
+	        destination = new FileOutputStream(dstFile).getChannel();
+	        destination.transferFrom(source, 0, source.size());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	    finally {
+	        if (source != null) {
+	            try {
+					source.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+	        }
+	        if (destination != null) {
+	            try {
+					destination.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+	        }
+	    }
     }
     
     // TODO: probably to move to Network and implementing classes
@@ -508,7 +554,16 @@ public class Blogracy extends WebPlugin {
        						try {
        							String value = (String) event.getValue().getValue(String.class);
        							URL magnetURI = new URL(value);
-       							addDownload(magnetURI, downloadDirectory, fileName);
+       							Download download = addDownload(magnetURI, downloadDirectory, null);
+       							download.addCompletionListener(new DownloadCompletionListener() {
+									@Override
+									public void onCompletion(Download download) {
+										File srcFile = new File(download.getSavePath() + File.separator + download.getName());
+										File dstFile = new File(downloadDirectory + File.separator + fileName);
+										// TODO: check if newer
+										copyFile(srcFile, dstFile);
+									}
+								});
        						} catch (MalformedURLException e1) {
        							Logger.error("Error retrieving a value " +
        									"from the DDB: " + key);
@@ -519,11 +574,10 @@ public class Blogracy extends WebPlugin {
        					}
        				}
        			},
-       			ddb.createKey(
-       				key.getBytes()),
-           			TIMEOUT,
-           			DistributedDatabase.OP_EXHAUSTIVE_READ
-       			);
+       			ddb.createKey(key),
+       			TIMEOUT,
+       			DistributedDatabase.OP_EXHAUSTIVE_READ
+       		);
         } catch (DistributedDatabaseException e) {
         	Logger.error("Problem reading from the DDB");
         }
