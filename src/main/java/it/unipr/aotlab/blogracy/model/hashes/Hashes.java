@@ -99,6 +99,17 @@ public class Hashes {
     }
 
     /**
+     * Decodes an hash from a Base32 {@code String}
+     *
+     * @param value is the {@code String} to be decoded
+     * @return the Hash of {@param value}
+     */
+    static public Hash fromString(String value) {
+        final byte[] hash = Base32.decode(value);
+        return new HashImpl(hash);
+    }
+
+    /**
      * Creates an hash from a generic {@code Object}
      *
      * @param o is the {@code Object} to be hashed

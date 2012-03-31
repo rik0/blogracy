@@ -25,7 +25,7 @@
         // wait for the DOM to be loaded
         $(function() {
             $('#message-send').ajaxForm({
-                url: 'messages',
+                url: '/messages',
                 clearForm: true,
                 type: 'POST',
                 success: function() {
@@ -147,11 +147,20 @@
                 <h2>Messages</h2>
 
                 <form class="span10" id="message-send">
+                    <input type="hidden" name="user" value="$user.hash.printableValue" />
                     <fieldset class="form-stacked">
                         <div class="clearfix">
                             <label for="messageArea">Send a new message</label>
                             <div class="input">
                                 <textarea class="xxlarge" name="message" id="messageArea" rows="3"></textarea>
+                            </div>
+                        </div>
+                    </fieldset>
+                    <fieldset class="form-stacked">
+                        <div class="clearfix">
+                            <label for="fileArea">Share a new file</label>
+                            <div class="input">
+                                <input class="xylarge" name="file" id="fileArea" type="file" />
                             </div>
                         </div>
                     </fieldset>
@@ -162,12 +171,25 @@
                         </div>
                     </fieldset>
                 </form>
+                <div class="span10" id="user-feed">
+                    <ul>
+					#foreach( $entry in $feed.entries )
+						<li>$entry.description.value</li>
+					#end
+					</ul>
+                </div>
             </div>
             <div class="span4">
                 <h3>Followers</h3>
 
                 <h3>Followees</h3>
-
+                <div class="span4" id="user-friends">
+                    <ul>
+					#foreach( $friend in $friends )
+						<li><a href="http://127.0.0.1:32674/user/$friend.hash.printableValue">$friend.localNick</a></li>
+					#end
+					</ul>
+                </div>
                 <h3>Tags</h3>
             </div>
         </div>
