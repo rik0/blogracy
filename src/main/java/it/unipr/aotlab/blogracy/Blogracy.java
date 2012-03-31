@@ -500,14 +500,14 @@ public class Blogracy extends WebPlugin {
         return hash;
     }
     
-    public static boolean compareFeeds(File first, File second) {
-    	boolean result = true;
-    	if (second.exists() && second.getName().endsWith(".rss")) {
-            SyndFeed secondFeed = null;
-            SyndFeed firstFeed = null;
+    public static boolean compareFeeds(File newFile, File oldFile) {
+    	boolean newer = true;
+    	if (oldFile.exists() && oldFile.getName().endsWith(".rss")) {
+            SyndFeed oldFeed = null;
+            SyndFeed newFeed = null;
 			try {
-				secondFeed = new SyndFeedInput().build(new XmlReader(second));
-				firstFeed = new SyndFeedInput().build(new XmlReader(first));
+				oldFeed = new SyndFeedInput().build(new XmlReader(oldFile));
+				newFeed = new SyndFeedInput().build(new XmlReader(newFile));
 			} catch (IllegalArgumentException e) {
 				e.printStackTrace();
 			} catch (FeedException e) {
@@ -516,19 +516,19 @@ public class Blogracy extends WebPlugin {
 				e.printStackTrace();
 			}
 			
-            if (secondFeed != null && secondFeed.getEntries().size() > 0) {
-            	if (firstFeed == null || firstFeed.getEntries().size() == 0) {
-            		result = false;
+            if (oldFeed != null && oldFeed.getEntries().size() > 0) {
+            	if (newFeed == null || newFeed.getEntries().size() == 0) {
+            		newer = false;
             	} else {
-            		SyndEntry firstEntry = (SyndEntry) firstFeed.getEntries().get(0);
-            		SyndEntry secondEntry = (SyndEntry) secondFeed.getEntries().get(0);
-            		if (secondEntry.getPublishedDate().getTime() > firstEntry.getPublishedDate().getTime()) {
-            			result = false;
+            		SyndEntry newEntry = (SyndEntry) newFeed.getEntries().get(0);
+            		SyndEntry oldEntry = (SyndEntry) oldFeed.getEntries().get(0);
+            		if (oldEntry.getPublishedDate().getTime() > newEntry.getPublishedDate().getTime()) {
+            			newer = false;
             		}
             	}
             }
     	}
-    	return result;
+    	return newer;
     }
     
     // TODO: probably to move to Network and implementing classes
