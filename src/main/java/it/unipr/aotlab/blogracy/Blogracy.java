@@ -642,7 +642,7 @@ public class Blogracy extends WebPlugin {
             	entry.setEnclosures(enclosures);
             }
             
-            feed.getEntries().add(entry);
+            feed.getEntries().add(0, entry);
             String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
             File feedFile = new File(folder + File.separator + user.getHash().getPrintableValue() + ".rss");
             new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
