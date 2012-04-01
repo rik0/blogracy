@@ -500,7 +500,7 @@ public class Blogracy extends WebPlugin {
         return hash;
     }
     
-    public static boolean compareFeeds(File newFile, File oldFile) {
+    public static boolean checkNewFeed(File newFile, File oldFile) {
     	boolean newer = true;
     	if (oldFile.exists() && oldFile.getName().endsWith(".rss")) {
             SyndFeed oldFeed = null;
@@ -516,16 +516,19 @@ public class Blogracy extends WebPlugin {
 				e.printStackTrace();
 			}
 			
-            if (oldFeed != null && oldFeed.getEntries().size() > 0) {
-            	if (newFeed == null || newFeed.getEntries().size() == 0) {
-            		newer = false;
-            	} else {
+        	if (newFeed != null || newFeed.getEntries().size() > 0) {
+        		if (oldFeed != null && oldFeed.getEntries().size() > 0) {
             		SyndEntry newEntry = (SyndEntry) newFeed.getEntries().get(0);
             		SyndEntry oldEntry = (SyndEntry) oldFeed.getEntries().get(0);
             		if (oldEntry.getPublishedDate().getTime() > newEntry.getPublishedDate().getTime()) {
             			newer = false;
             		}
             	}
+        		if (newer) {
+        			// verifySignature(newFeed);
+        		}
+            } else {
+            	newer = false;
             }
     	}
     	return newer;
@@ -554,10 +557,10 @@ public class Blogracy extends WebPlugin {
        							download.addCompletionListener(new DownloadCompletionListener() {
 									@Override
 									public void onCompletion(Download download) {
-										File srcFile = new File(download.getSavePath() + File.separator + download.getName());
-										File dstFile = new File(downloadDirectory + File.separator + fileName);
-										if (compareFeeds(srcFile, dstFile)) {
-											FileUtils.copyFile(srcFile, dstFile);
+										File newFile = new File(download.getSavePath() + File.separator + download.getName());
+										File oldFile = new File(downloadDirectory + File.separator + fileName);
+										if (checkNewFeed(newFile, oldFile)) {
+											FileUtils.copyFile(newFile, oldFile);
 										}
 									}
 								});
@@ -664,7 +667,7 @@ public class Blogracy extends WebPlugin {
         return feed;
     }
 
-    public void updateFeed(User user, URL uri, String text, URL attachment) {
+    public void addFeedEntry(User user, URL uri, String text, URL attachment) {
         try {
             SyndFeed feed = getFeed(user);
 
@@ -697,8 +700,11 @@ public class Blogracy extends WebPlugin {
             String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
             File feedFile = new File(folder + File.separator + user.getHash().getPrintableValue() + ".rss");
             new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
+            // TODO: sign feedFile
 
             URL feedUri = shareFile(feedFile);
+            
+            // create a copy of latest feed, named after its author
             new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
             
             DistributedDatabase ddb = plugin.getDistributedDatabase();
@@ -708,7 +714,6 @@ public class Blogracy extends WebPlugin {
 				@Override
 				public void event(DistributedDatabaseEvent arg0) { }
 			}, key, new DistributedDatabaseValue[] {value});
-            // ddb.put(user, feedUri.toString());
         } catch (Exception e) { e.printStackTrace(); }
     }
 
