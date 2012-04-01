@@ -180,16 +180,19 @@
                 </div>
             </div>
             <div class="span4">
+                <h3>Local user</h3>
+                <ul>
+					<li><a href="http://127.0.0.1:32674/user/$localUser.hash.printableValue">$localUser.localNick</a></li>
+				</ul>
+                
                 <h3>Followers</h3>
 
                 <h3>Followees</h3>
-                <div class="span4" id="user-friends">
-                    <ul>
-					#foreach( $friend in $friends )
-						<li><a href="http://127.0.0.1:32674/user/$friend.hash.printableValue">$friend.localNick</a></li>
-					#end
-					</ul>
-                </div>
+                <ul id="user-friends">
+				#foreach( $friend in $friends )
+					<li><a href="http://127.0.0.1:32674/user/$friend.hash.printableValue">$friend.localNick</a></li>
+				#end
+				</ul>
                 <h3>Tags</h3>
             </div>
         </div>
