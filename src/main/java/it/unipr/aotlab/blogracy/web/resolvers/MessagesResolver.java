@@ -143,7 +143,7 @@ public class MessagesResolver extends AbstractRequestResolver {
             }
             
             if (messageURI != null || attachmentURI != null) {
-            	Blogracy.getSingleton().updateFeed(user, messageURI, message, attachmentURI);
+            	Blogracy.getSingleton().addFeedEntry(user, messageURI, message, attachmentURI);
             }
             
         } catch (MultipartStream.MalformedStreamException e) {

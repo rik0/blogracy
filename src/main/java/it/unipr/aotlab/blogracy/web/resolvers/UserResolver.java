@@ -41,8 +41,9 @@ public class UserResolver extends VelocityRequestResolver {
 
     private String userName;
     private User user;
+    private User localUser;
     private SyndFeed feed;
-	List<User> friends;
+	List<User> friends;	
 
     public UserResolver(String userName) {
         this.userName = userName;
@@ -51,8 +52,13 @@ public class UserResolver extends VelocityRequestResolver {
         } else {
         	user = Users.newUser(Hashes.newHash(userName)); // TODO: remove
         }
+        Blogracy.getSingleton().addIndirectDownload(
+        		user.getHash().getPrintableValue(),
+        		Configurations.getPathConfig().getCachedFilesDirectoryPath(),
+        		user.getHash().getPrintableValue() + ".rss");
         feed = Blogracy.getSingleton().getFeed(user);
     	friends = Configurations.getUserConfig().getFriends();
+    	localUser = Configurations.getUserConfig().getUser();
     }
 
     @Override
@@ -68,6 +74,7 @@ public class UserResolver extends VelocityRequestResolver {
         velocityContext.internalPut("user", user);
         velocityContext.internalPut("feed", feed);
         velocityContext.internalPut("friends", friends);
+        velocityContext.internalPut("localUser", localUser);
     }
 
     @Override
