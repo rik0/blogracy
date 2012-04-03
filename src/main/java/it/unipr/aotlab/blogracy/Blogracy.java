@@ -313,7 +313,7 @@ public class Blogracy extends WebPlugin {
                     urlMappingError
             );
             Logger.error(urlMappingError.getMessage());
-            urlMappingError.printStackTrace();
+            // urlMappingError.printStackTrace();
             errorPageResolver.resolve(request, response);
         } catch (ServerConfigurationError serverConfigurationError) {
             final ErrorPageResolver errorPageResolver = new ErrorPageResolver(
@@ -476,7 +476,7 @@ public class Blogracy extends WebPlugin {
                     null,
                     new File(downloadDirectory)
             );
-            if (fileName != null) download.renameDownload(fileName);
+            if (download != null && fileName != null) download.renameDownload(fileName);
             Logger.info(magnetURI + " added to download list");
         } catch (ResourceDownloaderException e1) {
             Logger.error("Resource download exception for: " + magnetURI);
@@ -556,17 +556,19 @@ public class Blogracy extends WebPlugin {
        							System.out.println("db!" + value + ' ' + fileName);
        							URL magnetURI = new URL(value);
        							Download download = addDownload(magnetURI, downloadDirectory, null);
-       							download.addCompletionListener(new DownloadCompletionListener() {
-									@Override
-									public void onCompletion(Download download) {
-										File newFile = new File(download.getSavePath() /*+ File.separator + download.getName()*/);
-										File oldFile = new File(downloadDirectory + File.separator + fileName);
-		       							System.out.println("dl!" + newFile.getAbsolutePath() + ' ' + oldFile.getAbsolutePath());
-										if (checkNewFeed(newFile, oldFile)) {
-											FileUtils.copyFile(newFile, oldFile);
+       							if (download != null) {
+       								download.addCompletionListener(new DownloadCompletionListener() {
+										@Override
+										public void onCompletion(Download download) {
+											File newFile = new File(download.getSavePath() /*+ File.separator + download.getName()*/);
+											File oldFile = new File(downloadDirectory + File.separator + fileName);
+			       							System.out.println("dl!" + newFile.getAbsolutePath() + ' ' + oldFile.getAbsolutePath());
+											if (checkNewFeed(newFile, oldFile)) {
+												FileUtils.copyFile(newFile, oldFile);
+											}
 										}
-									}
-								});
+									});
+       							}
        						} catch (MalformedURLException e1) {
        							Logger.error("Error retrieving a value " +
        									"from the DDB: " + key);
@@ -601,18 +603,19 @@ public class Blogracy extends WebPlugin {
             //torrent.writeToFile(torrentFile);
 
             torrentMagnetURI = torrent.getMagnetURI();
-            Download download = plugin.getDownloadManager().addDownload(
-                    torrent,
-                    null, //torrentFile,
-                    folder
-            );
-
+            
             String name = getHashFromMagnetURI(torrentMagnetURI.toString());
             int index = file.getName().lastIndexOf('.');
             if (0 < index && index <= file.getName().length() - 2 ) {
             	name = name + file.getName().substring(index);
             }
-            download.renameDownload(name);
+            
+            Download download = plugin.getDownloadManager().addDownload(
+                    torrent,
+                    null, //torrentFile,
+                    folder
+            );
+            if (download != null) download.renameDownload(name);
             
             System.out.println("file: " + file.getName() + " name: " + name
             		+ " uri: " + getHashFromMagnetURI(torrentMagnetURI.toString()));
