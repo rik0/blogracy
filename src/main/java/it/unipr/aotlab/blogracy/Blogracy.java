@@ -447,7 +447,7 @@ public class Blogracy extends WebPlugin {
     public Download addDownload(final String fileHash,
                             final String downloadDirectory,
                             final String fileName) {
-    	Download download = null;
+        Download download = null;
         try {
             URL magnetURI = new URL("magnet:?xt=urn:btih:" + fileHash);
             download = addDownload(magnetURI, downloadDirectory, fileName);
@@ -462,7 +462,7 @@ public class Blogracy extends WebPlugin {
                             final String downloadDirectory,
                             final String fileName) {
         // add magnet-uri to download manager
-    	Download download = null;
+        Download download = null;
         try {
             ResourceDownloader rdl =
                     plugin.getUtilities()
@@ -490,7 +490,7 @@ public class Blogracy extends WebPlugin {
 
     // TODO: unused, remove?
     static String getHashFromMagnetURI(String uri) {
-    	String hash = null;
+        String hash = null;
         int btih = uri.indexOf("xt=urn:btih:");
         if (btih >= 0) {
             hash = uri.substring(btih + "xt=urn:btih:".length());
@@ -499,41 +499,41 @@ public class Blogracy extends WebPlugin {
         }
         return hash;
     }
-    
+
     public static boolean checkNewFeed(File newFile, File oldFile) {
-    	boolean newer = true;
-    	if (oldFile.exists() && oldFile.getName().endsWith(".rss")) {
+        boolean newer = true;
+        if (oldFile.exists() && oldFile.getName().endsWith(".rss")) {
             SyndFeed oldFeed = null;
             SyndFeed newFeed = null;
-			try {
-				oldFeed = new SyndFeedInput().build(new XmlReader(oldFile));
-				newFeed = new SyndFeedInput().build(new XmlReader(newFile));
-			} catch (IllegalArgumentException e) {
-				e.printStackTrace();
-			} catch (FeedException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-			
-        	if (newFeed != null || newFeed.getEntries().size() > 0) {
-        		if (oldFeed != null && oldFeed.getEntries().size() > 0) {
-            		SyndEntry newEntry = (SyndEntry) newFeed.getEntries().get(0);
-            		SyndEntry oldEntry = (SyndEntry) oldFeed.getEntries().get(0);
-            		if (oldEntry.getPublishedDate().getTime() > newEntry.getPublishedDate().getTime()) {
-            			newer = false;
-            		}
-            	}
-        		if (newer) {
-        			// verifySignature(newFeed);
-        		}
-            } else {
-            	newer = false;
+            try {
+                oldFeed = new SyndFeedInput().build(new XmlReader(oldFile));
+                newFeed = new SyndFeedInput().build(new XmlReader(newFile));
+            } catch (IllegalArgumentException e) {
+                e.printStackTrace();
+            } catch (FeedException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-    	}
-    	return newer;
+
+            if (newFeed != null || newFeed.getEntries().size() > 0) {
+                if (oldFeed != null && oldFeed.getEntries().size() > 0) {
+                    SyndEntry newEntry = (SyndEntry) newFeed.getEntries().get(0);
+                    SyndEntry oldEntry = (SyndEntry) oldFeed.getEntries().get(0);
+                    if (oldEntry.getPublishedDate().getTime() > newEntry.getPublishedDate().getTime()) {
+                        newer = false;
+                    }
+                }
+                if (newer) {
+                    // verifySignature(newFeed);
+                }
+            } else {
+                newer = false;
+            }
+        }
+        return newer;
     }
-    
+
     // TODO: probably to move to Network and implementing classes
     public void addIndirectDownload(final String key,
                                     final String downloadDirectory,
@@ -541,53 +541,53 @@ public class Blogracy extends WebPlugin {
         final long TIMEOUT = 5 * 60 * 1000; // 5 mins
         DistributedDatabase ddb = plugin.getDistributedDatabase();
         try {
-        	ddb.read(
+            ddb.read(
                 new DistributedDatabaseListener() {
-       				public void event(DistributedDatabaseEvent event) {
-       					final int type = event.getType();
-       					if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
-       						// ...
-       					} else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
-       						// ...
-       					} else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
-       						try {
-       							String value = (String) event.getValue().getValue(String.class);
-       							URL magnetURI = new URL(value);
-       							Download download = addDownload(magnetURI, downloadDirectory, null);
-       							download.addCompletionListener(new DownloadCompletionListener() {
-									@Override
-									public void onCompletion(Download download) {
-										File newFile = new File(download.getSavePath() + File.separator + download.getName());
-										File oldFile = new File(downloadDirectory + File.separator + fileName);
-										if (checkNewFeed(newFile, oldFile)) {
-											FileUtils.copyFile(newFile, oldFile);
-										}
-									}
-								});
-       						} catch (MalformedURLException e1) {
-       							Logger.error("Error retrieving a value " +
-       									"from the DDB: " + key);
-       						} catch (DistributedDatabaseException e) {
-       							Logger.error("Error retrieving a value " +
-       									"from the DDB: " + key);
-       						}
-       					}
-       				}
-       			},
-       			ddb.createKey(key),
-       			TIMEOUT,
-       			DistributedDatabase.OP_EXHAUSTIVE_READ
-       		);
+                    public void event(DistributedDatabaseEvent event) {
+                        final int type = event.getType();
+                        if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
+                            // ...
+                        } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
+                            // ...
+                        } else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
+                            try {
+                                String value = (String) event.getValue().getValue(String.class);
+                                URL magnetURI = new URL(value);
+                                Download download = addDownload(magnetURI, downloadDirectory, null);
+                                download.addCompletionListener(new DownloadCompletionListener() {
+                                    @Override
+                                    public void onCompletion(Download download) {
+                                        File newFile = new File(download.getSavePath() + File.separator + download.getName());
+                                        File oldFile = new File(downloadDirectory + File.separator + fileName);
+                                        if (checkNewFeed(newFile, oldFile)) {
+                                            FileUtils.copyFile(newFile, oldFile);
+                                        }
+                                    }
+                                });
+                            } catch (MalformedURLException e1) {
+                                Logger.error("Error retrieving a value " +
+                                        "from the DDB: " + key);
+                            } catch (DistributedDatabaseException e) {
+                                Logger.error("Error retrieving a value " +
+                                        "from the DDB: " + key);
+                            }
+                        }
+                    }
+                },
+                ddb.createKey(key),
+                TIMEOUT,
+                DistributedDatabase.OP_EXHAUSTIVE_READ
+            );
         } catch (DistributedDatabaseException e) {
-        	Logger.error("Problem reading from the DDB");
+            Logger.error("Problem reading from the DDB");
         }
     }
 
     public URL shareFile(File file) {
         URL torrentMagnetURI = null;
         try {
-        	File folder = new File(Configurations.getPathConfig().getCachedFilesDirectoryPath());
-        	// the announce-url should not be needed...
+            File folder = new File(Configurations.getPathConfig().getCachedFilesDirectoryPath());
+            // the announce-url should not be needed...
             Torrent torrent = plugin.getTorrentManager().createFromDataFile(
                     file,
                     new URL("udp://tracker.openbittorrent.com:80")
@@ -607,14 +607,14 @@ public class Blogracy extends WebPlugin {
             String name = getHashFromMagnetURI(torrentMagnetURI.toString());
             int index = file.getName().lastIndexOf('.');
             if (0 < index && index <= file.getName().length() - 2 ) {
-            	name = name + file.getName().substring(index);
+                name = name + file.getName().substring(index);
             }
 
             download.renameDownload(name);
-            
+
             System.out.println("file: " + file.getName() + " name: " + name
-            		+ " uri: " + getHashFromMagnetURI(torrentMagnetURI.toString()));
-            		
+                    + " uri: " + getHashFromMagnetURI(torrentMagnetURI.toString()));
+
         } catch (MalformedURLException e) {
             Logger.error("MalformedURL Exception while sharing file " + file.getName());
         } catch (TorrentException e) {
@@ -648,7 +648,7 @@ public class Blogracy extends WebPlugin {
     }
 
     public SyndFeed getFeed(User user) {
-    	System.out.println("Getting feed: " + user.getHash().getPrintableValue());
+        System.out.println("Getting feed: " + user.getHash().getPrintableValue());
         SyndFeed feed = null;
         try {
             String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
@@ -681,21 +681,21 @@ public class Blogracy extends WebPlugin {
             entry.setDescription(description);
             entry.setLink(uri.toString());
             /*
-        	SyndLink link = new SyndLinkImpl();
-        	link.setHref(uri.toString());
-        	link.setTitle(uri.toString());
-        	ArrayList links = new ArrayList();
-        	links.add(link);
-        	entry.setLinks(links);
+            SyndLink link = new SyndLinkImpl();
+            link.setHref(uri.toString());
+            link.setTitle(uri.toString());
+            ArrayList links = new ArrayList();
+            links.add(link);
+            entry.setLinks(links);
             */
             if (attachment != null) {
-            	SyndEnclosure enclosure = new SyndEnclosureImpl();
-            	enclosure.setUrl(attachment.toString());
-            	ArrayList enclosures = new ArrayList();
-            	enclosures.add(enclosure);
-            	entry.setEnclosures(enclosures);
+                SyndEnclosure enclosure = new SyndEnclosureImpl();
+                enclosure.setUrl(attachment.toString());
+                ArrayList enclosures = new ArrayList();
+                enclosures.add(enclosure);
+                entry.setEnclosures(enclosures);
             }
-            
+
             feed.getEntries().add(0, entry);
             String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
             File feedFile = new File(folder + File.separator + user.getHash().getPrintableValue() + ".rss");
@@ -703,17 +703,17 @@ public class Blogracy extends WebPlugin {
             // TODO: sign feedFile
 
             URL feedUri = shareFile(feedFile);
-            
+
             // create a copy of latest feed, named after its author
             new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
-            
+
             DistributedDatabase ddb = plugin.getDistributedDatabase();
             DistributedDatabaseKey key = ddb.createKey(user.getHash().getStringValue());
             DistributedDatabaseValue value = ddb.createValue(feedUri.toString()); 
             ddb.write(new DistributedDatabaseListener() {
-				@Override
-				public void event(DistributedDatabaseEvent arg0) { }
-			}, key, new DistributedDatabaseValue[] {value});
+                @Override
+                public void event(DistributedDatabaseEvent arg0) { }
+            }, key, new DistributedDatabaseValue[] {value});
         } catch (Exception e) { e.printStackTrace(); }
     }
 
