@@ -60,13 +60,14 @@ public class Hashes {
 
         @Override
         public String toString() {
-            final StringBuilder sb = new StringBuilder();
+            return Base32.encode(hash);
+            /*final StringBuilder sb = new StringBuilder();
             sb.append("HashImpl");
             sb.append("{hash=").append(hash == null ? "null" : "");
             for (int i = 0; hash != null && i < hash.length; ++i)
                 sb.append(i == 0 ? "" : ", ").append(hash[i]);
             sb.append('}');
-            return sb.toString();
+            return sb.toString();*/
         }
 
         @Override
@@ -95,6 +96,17 @@ public class Hashes {
      */
     static public Hash newHash(String value) {
         final byte[] hash = hasher.calculateHash(value.getBytes());
+        return new HashImpl(hash);
+    }
+
+    /**
+     * Decodes an hash from a Base32 {@code String}
+     *
+     * @param value is the {@code String} to be decoded
+     * @return the Hash of {@param value}
+     */
+    static public Hash fromString(String value) {
+        final byte[] hash = Base32.decode(value);
         return new HashImpl(hash);
     }
 

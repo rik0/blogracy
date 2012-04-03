@@ -22,6 +22,10 @@
 
 package it.unipr.aotlab.blogracy.web.resolvers;
 
+import java.util.List;
+
+import it.unipr.aotlab.blogracy.Blogracy;
+import it.unipr.aotlab.blogracy.config.Configurations;
 import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
 import it.unipr.aotlab.blogracy.model.users.User;
@@ -29,16 +33,32 @@ import it.unipr.aotlab.blogracy.model.users.Users;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageRequest;
 import org.gudy.azureus2.plugins.tracker.web.TrackerWebPageResponse;
 
+import com.sun.syndication.feed.synd.SyndFeed;
+
 public class UserResolver extends VelocityRequestResolver {
     final static private String VIEW_NAME = "user.vm";
     final static private String VIEW_TYPE = "text/html";
 
     private String userName;
     private User user;
+    private User localUser;
+    private SyndFeed feed;
+	List<User> friends;	
 
     public UserResolver(String userName) {
         this.userName = userName;
-        user = Users.newUser(Hashes.newHash(userName));
+        if (userName.length() == 32) {
+            user = Users.newUser(Hashes.fromString(userName));
+        } else {
+        	user = Users.newUser(Hashes.newHash(userName)); // TODO: remove
+        }
+        Blogracy.getSingleton().addIndirectDownload(
+        		user.getHash().getPrintableValue(),
+        		Configurations.getPathConfig().getCachedFilesDirectoryPath(),
+        		user.getHash().getPrintableValue() + ".rss");
+        feed = Blogracy.getSingleton().getFeed(user);
+    	friends = Configurations.getUserConfig().getFriends();
+    	localUser = Configurations.getUserConfig().getUser();
     }
 
     @Override
@@ -52,6 +72,9 @@ public class UserResolver extends VelocityRequestResolver {
     protected void setupContext() {
         velocityContext.internalPut("application", "Blogracy");
         velocityContext.internalPut("user", user);
+        velocityContext.internalPut("feed", feed);
+        velocityContext.internalPut("friends", friends);
+        velocityContext.internalPut("localUser", localUser);
     }
 
     @Override
