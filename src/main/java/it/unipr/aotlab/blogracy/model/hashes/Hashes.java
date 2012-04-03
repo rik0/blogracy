@@ -60,13 +60,14 @@ public class Hashes {
 
         @Override
         public String toString() {
-            final StringBuilder sb = new StringBuilder();
+            return Base32.encode(hash);
+            /*final StringBuilder sb = new StringBuilder();
             sb.append("HashImpl");
             sb.append("{hash=").append(hash == null ? "null" : "");
             for (int i = 0; hash != null && i < hash.length; ++i)
                 sb.append(i == 0 ? "" : ", ").append(hash[i]);
             sb.append('}');
-            return sb.toString();
+            return sb.toString();*/
         }
 
         @Override
