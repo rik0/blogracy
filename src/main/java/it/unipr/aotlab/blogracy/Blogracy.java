@@ -131,7 +131,7 @@ public class Blogracy extends WebPlugin {
 
     public static final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
 
-    final static int DEFAULT_PORT = 32674;
+    //final static int DEFAULT_PORT = 32674;
     final static String DEFAULT_ACCESS = Accesses.ALL;
 
     private static boolean loaded;
@@ -181,6 +181,7 @@ public class Blogracy extends WebPlugin {
     }
 
     private static void configureIfNotMigrateKey(final File rootDir) {
+    	final int DEFAULT_PORT = Configurations.getVuzeConfig().getPort(); 
         final Integer blogracyPort = COConfigurationManager.getIntParameter(
                 PLUGIN_DEFAULT_DEVICE_BLOGRACY_PORT,
                 DEFAULT_PORT
@@ -220,6 +221,7 @@ public class Blogracy extends WebPlugin {
     }
 
     private static void configureIfMigratedKey(final File root_dir) {
+    	final int DEFAULT_PORT = Configurations.getVuzeConfig().getPort(); 
         final Integer blogracy_port = COConfigurationManager.getIntParameter(
                 INTERNAL_CONFIG_PORT_KEY,
                 DEFAULT_PORT

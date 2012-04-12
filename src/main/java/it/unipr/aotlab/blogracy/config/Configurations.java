@@ -46,26 +46,15 @@ public class Configurations {
     private static final String BLOGRACY_PATHS_CACHED = "blogracy.paths.cached";
     private static final String BLOGRACY_PATHS_TEMPLATES = "blogracy.paths.templates";
     private static final String BLOGRACY_PATHS_ROOT = "blogracy.paths.root";
+    private static final String VUZE_FILE = "blogracyVuze.properties";
+    private static final String BLOGRACY_VUZE_PORT = "blogracy.vuze.port";
     private static final String USER_FILE = "blogracyUser.properties";
     private static final String BLOGRACY_USER_USER = "blogracy.user.user";
     private static final String BLOGRACY_USER_FRIENDS = "blogracy.user.friends";
 
-    static private Properties loadPathProperties() throws IOException {
+    static private Properties loadProperties(String file) throws IOException {
         ClassLoader loader = ClassLoader.getSystemClassLoader();
-        InputStream is = loader.getResourceAsStream(PATHS_FILE);
-
-        if (is != null) {
-            Properties properties = new Properties();
-            properties.load(is);
-            return properties;
-        } else {
-            return new Properties();
-        }
-    }
-
-    static private Properties loadUserProperties() throws IOException {
-        ClassLoader loader = ClassLoader.getSystemClassLoader();
-        InputStream is = loader.getResourceAsStream(USER_FILE);
+        InputStream is = loader.getResourceAsStream(file);
 
         if (is != null) {
             Properties properties = new Properties();
@@ -79,9 +68,9 @@ public class Configurations {
     static public PathConfig getPathConfig() {
         try {
 
-       return new PathConfig() {
+            return new PathConfig() {
                 // TODO: this should absolutely come from the outside!
-                Properties pathProperties = loadPathProperties();
+                Properties pathProperties = loadProperties(PATHS_FILE);
 
                 @Override
                 public String getStaticFilesDirectoryPath() {
@@ -108,11 +97,30 @@ public class Configurations {
             return null;
         }
     }
+    
+    static public VuzeConfig getVuzeConfig() {
+        try {
+            return new VuzeConfig() {
+                // TODO: this should absolutely come from the outside!
+                Properties userProperties = loadProperties(VUZE_FILE);
+
+                @Override
+                public int getPort() {
+                	String port = userProperties.getProperty(BLOGRACY_VUZE_PORT);
+                    return Integer.parseInt(port);
+                }
+            };
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+    }
+    
     static public UserConfig getUserConfig() {
         try {
             return new UserConfig() {
                 // TODO: this should absolutely come from the outside!
-                Properties userProperties = loadUserProperties();
+                Properties userProperties = loadProperties(USER_FILE);
 
                 @Override
                 public User getUser() {
