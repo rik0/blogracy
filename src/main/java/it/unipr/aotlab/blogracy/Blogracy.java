@@ -27,11 +27,21 @@ import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
 import it.unipr.aotlab.blogracy.model.users.User;
+import it.unipr.aotlab.blogracy.services.DownloadService;
+import it.unipr.aotlab.blogracy.services.LookupService;
+import it.unipr.aotlab.blogracy.services.SeedService;
+import it.unipr.aotlab.blogracy.services.StoreService;
 import it.unipr.aotlab.blogracy.util.FileUtils;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.log.LogChute;
@@ -74,6 +84,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.gudy.azureus2.core3.util.SHA1Hasher;
 import org.gudy.azureus2.core3.util.Base32;
 
@@ -94,6 +116,20 @@ import com.sun.syndication.io.XmlReader;
 
 
 public class Blogracy extends WebPlugin {
+
+    private BrokerService broker;
+    private ConnectionFactory connectionFactory;
+    private Connection connection;
+    
+    private Session lookupSession;
+    private Destination lookupQueue;
+    private MessageProducer lookupProducer;
+    private MessageConsumer lookupConsumer;
+    
+    private Session downloadSession;
+    private Destination downloadQueue;
+    private MessageProducer downloadProducer;
+    private MessageConsumer downloadConsumer;    
 
     private URLMapper mapper = new URLMapper();
 
@@ -178,6 +214,7 @@ public class Blogracy extends WebPlugin {
             configureIfNotMigrateKey(rootDir);
         }
 
+        
     }
 
     private static void configureIfNotMigrateKey(final File rootDir) {
@@ -368,6 +405,7 @@ public class Blogracy extends WebPlugin {
         initializeURLMapper();
         initVelocity();
         initializeSingleton();
+        createQueues();
         super.initialize(pluginInterface);
     }
 
@@ -728,5 +766,32 @@ public class Blogracy extends WebPlugin {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
+    void createQueues() {
+    	BasicConfigurator.configure();
+    	org.apache.log4j.Logger.getLogger("org.apache").setLevel(Level.INFO);
+    	
+    	final PluginInterface plugin = this.plugin;
+    	final boolean TRANSACTED = false;
+    	String brokerUrl = Configurations.getVuzeConfig().getBroker();
+    	if (brokerUrl == null) brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
+        try {
+	        connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+	        connection = connectionFactory.createConnection();
+	        connection.start();
+	        
+	        new StoreService(connection, plugin);
+	        new LookupService(connection, plugin);
+	        
+	        new SeedService(connection, plugin);
+	        new DownloadService(connection, plugin);
+	        
+	        //Destination download = session.createQueue("download");
+	        //Destination seed = session.createQueue("seed");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
 }
 

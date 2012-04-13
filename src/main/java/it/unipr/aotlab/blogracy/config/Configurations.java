@@ -48,6 +48,7 @@ public class Configurations {
     private static final String BLOGRACY_PATHS_ROOT = "blogracy.paths.root";
     private static final String VUZE_FILE = "blogracyVuze.properties";
     private static final String BLOGRACY_VUZE_PORT = "blogracy.vuze.port";
+    private static final String BLOGRACY_VUZE_BROKER = "blogracy.vuze.broker";
     private static final String USER_FILE = "blogracyUser.properties";
     private static final String BLOGRACY_USER_USER = "blogracy.user.user";
     private static final String BLOGRACY_USER_FRIENDS = "blogracy.user.friends";
@@ -108,6 +109,12 @@ public class Configurations {
                 public int getPort() {
                 	String port = userProperties.getProperty(BLOGRACY_VUZE_PORT);
                     return Integer.parseInt(port);
+                }
+
+                @Override
+                public String getBroker() {
+                	String broker = userProperties.getProperty(BLOGRACY_VUZE_BROKER);
+                    return broker;
                 }
             };
         } catch (IOException e) {

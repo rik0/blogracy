@@ -30,4 +30,5 @@ package it.unipr.aotlab.blogracy.config;
  */
 public interface VuzeConfig {
     public int getPort();
+    public String getBroker();
 }
