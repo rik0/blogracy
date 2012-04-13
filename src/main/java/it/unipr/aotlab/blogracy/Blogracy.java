@@ -27,11 +27,21 @@ import it.unipr.aotlab.blogracy.errors.URLMappingError;
 import it.unipr.aotlab.blogracy.logging.Logger;
 import it.unipr.aotlab.blogracy.model.hashes.Hashes;
 import it.unipr.aotlab.blogracy.model.users.User;
+import it.unipr.aotlab.blogracy.services.DownloadService;
+import it.unipr.aotlab.blogracy.services.LookupService;
+import it.unipr.aotlab.blogracy.services.SeedService;
+import it.unipr.aotlab.blogracy.services.StoreService;
 import it.unipr.aotlab.blogracy.util.FileUtils;
 import it.unipr.aotlab.blogracy.web.misc.HttpResponseCode;
 import it.unipr.aotlab.blogracy.web.resolvers.ErrorPageResolver;
 import it.unipr.aotlab.blogracy.web.resolvers.RequestResolver;
 import it.unipr.aotlab.blogracy.web.url.URLMapper;
+
+import org.apache.activemq.ActiveMQConnection;
+import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
+import org.apache.log4j.BasicConfigurator;
+import org.apache.log4j.Level;
 import org.apache.velocity.app.Velocity;
 import org.apache.velocity.runtime.RuntimeServices;
 import org.apache.velocity.runtime.log.LogChute;
@@ -74,6 +84,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Properties;
 
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
+import javax.jms.DeliveryMode;
+import javax.jms.Destination;
+import javax.jms.JMSException;
+import javax.jms.Message;
+import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
+import javax.jms.MessageProducer;
+import javax.jms.Session;
+import javax.jms.TextMessage;
+
 import org.gudy.azureus2.core3.util.SHA1Hasher;
 import org.gudy.azureus2.core3.util.Base32;
 
@@ -94,6 +116,20 @@ import com.sun.syndication.io.XmlReader;
 
 
 public class Blogracy extends WebPlugin {
+
+    private BrokerService broker;
+    private ConnectionFactory connectionFactory;
+    private Connection connection;
+    
+    private Session lookupSession;
+    private Destination lookupQueue;
+    private MessageProducer lookupProducer;
+    private MessageConsumer lookupConsumer;
+    
+    private Session downloadSession;
+    private Destination downloadQueue;
+    private MessageProducer downloadProducer;
+    private MessageConsumer downloadConsumer;    
 
     private URLMapper mapper = new URLMapper();
 
@@ -131,7 +167,7 @@ public class Blogracy extends WebPlugin {
 
     public static final String DSNS_PLUGIN_CHANNEL_NAME = "DSNS";
 
-    final static int DEFAULT_PORT = 32674;
+    //final static int DEFAULT_PORT = 32674;
     final static String DEFAULT_ACCESS = Accesses.ALL;
 
     private static boolean loaded;
@@ -178,9 +214,11 @@ public class Blogracy extends WebPlugin {
             configureIfNotMigrateKey(rootDir);
         }
 
+        
     }
 
     private static void configureIfNotMigrateKey(final File rootDir) {
+    	final int DEFAULT_PORT = Configurations.getVuzeConfig().getPort(); 
         final Integer blogracyPort = COConfigurationManager.getIntParameter(
                 PLUGIN_DEFAULT_DEVICE_BLOGRACY_PORT,
                 DEFAULT_PORT
@@ -220,6 +258,7 @@ public class Blogracy extends WebPlugin {
     }
 
     private static void configureIfMigratedKey(final File root_dir) {
+    	final int DEFAULT_PORT = Configurations.getVuzeConfig().getPort(); 
         final Integer blogracy_port = COConfigurationManager.getIntParameter(
                 INTERNAL_CONFIG_PORT_KEY,
                 DEFAULT_PORT
@@ -313,7 +352,7 @@ public class Blogracy extends WebPlugin {
                     urlMappingError
             );
             Logger.error(urlMappingError.getMessage());
-            urlMappingError.printStackTrace();
+            // urlMappingError.printStackTrace();
             errorPageResolver.resolve(request, response);
         } catch (ServerConfigurationError serverConfigurationError) {
             final ErrorPageResolver errorPageResolver = new ErrorPageResolver(
@@ -366,6 +405,7 @@ public class Blogracy extends WebPlugin {
         initializeURLMapper();
         initVelocity();
         initializeSingleton();
+        createQueues();
         super.initialize(pluginInterface);
     }
 
@@ -476,7 +516,7 @@ public class Blogracy extends WebPlugin {
                     null,
                     new File(downloadDirectory)
             );
-            if (fileName != null) download.renameDownload(fileName);
+            if (download != null && fileName != null) download.renameDownload(fileName);
             Logger.info(magnetURI + " added to download list");
         } catch (ResourceDownloaderException e1) {
             Logger.error("Resource download exception for: " + magnetURI);
@@ -556,17 +596,19 @@ public class Blogracy extends WebPlugin {
        							System.out.println("db!" + value + ' ' + fileName);
        							URL magnetURI = new URL(value);
        							Download download = addDownload(magnetURI, downloadDirectory, null);
-       							download.addCompletionListener(new DownloadCompletionListener() {
-									@Override
-									public void onCompletion(Download download) {
-										File newFile = new File(download.getSavePath() /*+ File.separator + download.getName()*/);
-										File oldFile = new File(downloadDirectory + File.separator + fileName);
-		       							System.out.println("dl!" + newFile.getAbsolutePath() + ' ' + oldFile.getAbsolutePath());
-										if (checkNewFeed(newFile, oldFile)) {
-											FileUtils.copyFile(newFile, oldFile);
+       							if (download != null) {
+       								download.addCompletionListener(new DownloadCompletionListener() {
+										@Override
+										public void onCompletion(Download download) {
+											File newFile = new File(download.getSavePath() /*+ File.separator + download.getName()*/);
+											File oldFile = new File(downloadDirectory + File.separator + fileName);
+			       							System.out.println("dl!" + newFile.getAbsolutePath() + ' ' + oldFile.getAbsolutePath());
+											if (checkNewFeed(newFile, oldFile)) {
+												FileUtils.copyFile(newFile, oldFile);
+											}
 										}
-									}
-								});
+									});
+       							}
        						} catch (MalformedURLException e1) {
        							Logger.error("Error retrieving a value " +
        									"from the DDB: " + key);
@@ -601,18 +643,19 @@ public class Blogracy extends WebPlugin {
             //torrent.writeToFile(torrentFile);
 
             torrentMagnetURI = torrent.getMagnetURI();
-            Download download = plugin.getDownloadManager().addDownload(
-                    torrent,
-                    null, //torrentFile,
-                    folder
-            );
-
+            
             String name = getHashFromMagnetURI(torrentMagnetURI.toString());
             int index = file.getName().lastIndexOf('.');
             if (0 < index && index <= file.getName().length() - 2 ) {
             	name = name + file.getName().substring(index);
             }
-            download.renameDownload(name);
+            
+            Download download = plugin.getDownloadManager().addDownload(
+                    torrent,
+                    null, //torrentFile,
+                    folder
+            );
+            if (download != null) download.renameDownload(name);
             
             System.out.println("file: " + file.getName() + " name: " + name
             		+ " uri: " + getHashFromMagnetURI(torrentMagnetURI.toString()));
@@ -723,5 +766,32 @@ public class Blogracy extends WebPlugin {
         } catch (Exception e) { e.printStackTrace(); }
     }
 
+    void createQueues() {
+    	BasicConfigurator.configure();
+    	org.apache.log4j.Logger.getLogger("org.apache").setLevel(Level.INFO);
+    	
+    	final PluginInterface plugin = this.plugin;
+    	final boolean TRANSACTED = false;
+    	String brokerUrl = Configurations.getVuzeConfig().getBroker();
+    	if (brokerUrl == null) brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
+        try {
+	        connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+	        connection = connectionFactory.createConnection();
+	        connection.start();
+	        
+	        new StoreService(connection, plugin);
+	        new LookupService(connection, plugin);
+	        
+	        new SeedService(connection, plugin);
+	        new DownloadService(connection, plugin);
+	        
+	        //Destination download = session.createQueue("download");
+	        //Destination seed = session.createQueue("seed");
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+    }
+    
 }
 
