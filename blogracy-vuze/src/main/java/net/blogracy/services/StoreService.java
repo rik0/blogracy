@@ -33,6 +33,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.logging.Logger;
+
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabase;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
@@ -40,8 +42,6 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseException;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseKey;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
-
-import net.blogracy.logging.Logger;
 
 /**
  * User: mic
@@ -54,55 +54,55 @@ import net.blogracy.logging.Logger;
  * ...
  */
 public class StoreService implements MessageListener {
-	
-	private PluginInterface plugin;
-	
+
+    private PluginInterface plugin;
+
     private Session session;
     private Destination queue;
     private MessageProducer producer;
     private MessageConsumer consumer;
 
     public StoreService(Connection connection, PluginInterface plugin) {
-    	this.plugin = plugin;
-    	try {
-	        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	        producer = session.createProducer(null);
-	        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);	        
-			queue = session.createQueue("store");
-	        consumer = session.createConsumer(queue);
-	        consumer.setMessageListener(this);
-    	} catch (JMSException e) {
-    		Logger.error("JMS error: creating store service");
-    	}
+        this.plugin = plugin;
+        try {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            producer = session.createProducer(null);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            queue = session.createQueue("store");
+            consumer = session.createConsumer(queue);
+            consumer.setMessageListener(this);
+        } catch (JMSException e) {
+            Logger.error("JMS error: creating store service");
+        }
     }
 
+    @Override
+    public void onMessage(Message request) {
+        try {
+            String text = ((TextMessage) request).getText();
+            try {
+                final String[] kv = text.split("=", 2);
+                if (kv.length == 2) {
+                    DistributedDatabase ddb = plugin.getDistributedDatabase();
+                    DistributedDatabaseKey key = ddb.createKey(kv[0].trim());
+                    DistributedDatabaseValue value = ddb.createValue(kv[1]
+                            .trim());
 
-	@Override
-	public void onMessage(Message request) {
-		try {
-			String text = ((TextMessage)request).getText();
-			try {
-				final String[] kv = text.split("=", 2);
-				if (kv.length == 2) {
-		            DistributedDatabase ddb = plugin.getDistributedDatabase();
-		            DistributedDatabaseKey key = ddb.createKey(kv[0].trim());
-		            DistributedDatabaseValue value = ddb.createValue(kv[1].trim());
-		
-		            ddb.write(new DistributedDatabaseListener() {
-						@Override
-						public void event(DistributedDatabaseEvent event) {
-						}
-					}, key, new DistributedDatabaseValue[] {value});
-					Logger.info("stored:" + kv[0] + "=" + kv[1] + ";");
-				}
-	        } catch (DistributedDatabaseException e) {
-	        	Logger.error("DDB error: store service: " + text);
-	        } catch (Exception e) {
-	        	e.printStackTrace();
-	        }
-		} catch (JMSException e) {
+                    ddb.write(new DistributedDatabaseListener() {
+                        @Override
+                        public void event(DistributedDatabaseEvent event) {
+                        }
+                    }, key, new DistributedDatabaseValue[] { value });
+                    Logger.info("stored:" + kv[0] + "=" + kv[1] + ";");
+                }
+            } catch (DistributedDatabaseException e) {
+                Logger.error("DDB error: store service: " + text);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } catch (JMSException e) {
             Logger.error("JMS error: store service");
-		}
-	}
+        }
+    }
 
 }

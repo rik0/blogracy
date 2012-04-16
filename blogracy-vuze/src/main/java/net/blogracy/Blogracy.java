@@ -22,7 +22,7 @@ import org.gudy.azureus2.plugins.PluginInterface;
 
 /**
  * @author mic
- *
+ * 
  */
 public class Blogracy implements Plugin {
 
@@ -33,33 +33,37 @@ public class Blogracy implements Plugin {
     private SeedService seedService;
     private DownloadService downloadService;
 
-	/* (non-Javadoc)
-	 * @see org.gudy.azureus2.plugins.Plugin#initialize(org.gudy.azureus2.plugins.PluginInterface)
-	 */
-	@Override
-	public void initialize(PluginInterface plugin) throws PluginException {
-		// TODO Auto-generated method stub
-		createQueues(plugin);
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * org.gudy.azureus2.plugins.Plugin#initialize(org.gudy.azureus2.plugins
+     * .PluginInterface)
+     */
+    @Override
+    public void initialize(PluginInterface plugin) throws PluginException {
+        // TODO Auto-generated method stub
+        createQueues(plugin);
+    }
 
     void createQueues(final PluginInterface plugin) {
-    	BasicConfigurator.configure();
-    	org.apache.log4j.Logger.getLogger("org.apache").setLevel(Level.INFO);
-    	
-    	String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
+        BasicConfigurator.configure();
+        org.apache.log4j.Logger.getLogger("org.apache").setLevel(Level.INFO);
+
+        String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
         try {
-	        connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
-	        connection = connectionFactory.createConnection();
-	        connection.start();
-	        
-	        storeService = new StoreService(connection, plugin);
-	        lookupService = new LookupService(connection, plugin);
-	        seedService = new SeedService(connection, plugin);
-	        downloadService = new DownloadService(connection, plugin);
-	        Logger.info("Blogracy Vuze plugin has started correctly");
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+            connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
+            connection = connectionFactory.createConnection();
+            connection.start();
+
+            storeService = new StoreService(connection, plugin);
+            lookupService = new LookupService(connection, plugin);
+            seedService = new SeedService(connection, plugin);
+            downloadService = new DownloadService(connection, plugin);
+            Logger.info("Blogracy Vuze plugin has started correctly");
+        } catch (Exception e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }

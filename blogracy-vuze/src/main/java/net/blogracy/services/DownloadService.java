@@ -38,6 +38,8 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.logging.Logger;
+
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadException;
@@ -45,8 +47,6 @@ import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
-
-import net.blogracy.logging.Logger;
 
 /**
  * User: mic
@@ -59,63 +59,61 @@ import net.blogracy.logging.Logger;
  * ...
  */
 public class DownloadService implements MessageListener {
-	private PluginInterface plugin;
-	
+    private PluginInterface plugin;
+
     private Session session;
     private Destination queue;
     private MessageProducer producer;
     private MessageConsumer consumer;
 
     public DownloadService(Connection connection, PluginInterface plugin) {
-    	this.plugin = plugin;
-    	try {
-	        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	        producer = session.createProducer(null);
-	        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);	        
-			queue = session.createQueue("download");
-	        consumer = session.createConsumer(queue);
-	        consumer.setMessageListener(this);
-    	} catch (JMSException e) {
-    		Logger.error("JMS error: creating download service");
-    	}
+        this.plugin = plugin;
+        try {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            producer = session.createProducer(null);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            queue = session.createQueue("download");
+            consumer = session.createConsumer(queue);
+            consumer.setMessageListener(this);
+        } catch (JMSException e) {
+            Logger.error("JMS error: creating download service");
+        }
     }
 
+    @Override
+    public void onMessage(Message request) {
+        try {
+            String text = ((TextMessage) request).getText();
+            try {
+                final String[] kv = text.split(" ", 2);
+                URL magnetUri = new URL(kv[0]);
+                File file = new File(kv[1]);
+                File folder = file.getParentFile();
 
-	@Override
-	public void onMessage(Message request) {
-		try {
-			String text = ((TextMessage)request).getText();
-			try {
-				final String[] kv = text.split(" ", 2);
-				URL magnetUri = new URL(kv[0]);
-				File file = new File(kv[1]);
-				File folder = file.getParentFile();
-	
-		    	Download download = null;
-	            ResourceDownloader rdl = plugin.getUtilities()
-	            		.getResourceDownloaderFactory().create(magnetUri);
-	            InputStream is = rdl.download();
-	            Torrent torrent = plugin.getTorrentManager()
-	            		.createFromBEncodedInputStream(is);
-	            download = plugin.getDownloadManager().addDownload(
-	                    torrent,
-	                    null,
-	                    folder
-	            );
-	            if (download != null && file != null) download.renameDownload(file.getName());
-	            Logger.info(magnetUri + " added to download list");
-	        } catch (ResourceDownloaderException e) {
-	            Logger.error("Torrent download error: download service: " + text);
-	        } catch (TorrentException e) {
-	            Logger.error("Torrent error: download service: " + text);
-	        } catch (DownloadException e) {
-	            Logger.error("File download error: download service: " + text);
-	        } catch (MalformedURLException e) {
-	        	Logger.error("Malformed URL error: download service: " + text);
-			}
-		} catch (JMSException e) {
+                Download download = null;
+                ResourceDownloader rdl = plugin.getUtilities()
+                        .getResourceDownloaderFactory().create(magnetUri);
+                InputStream is = rdl.download();
+                Torrent torrent = plugin.getTorrentManager()
+                        .createFromBEncodedInputStream(is);
+                download = plugin.getDownloadManager().addDownload(torrent,
+                        null, folder);
+                if (download != null && file != null)
+                    download.renameDownload(file.getName());
+                Logger.info(magnetUri + " added to download list");
+            } catch (ResourceDownloaderException e) {
+                Logger.error("Torrent download error: download service: "
+                        + text);
+            } catch (TorrentException e) {
+                Logger.error("Torrent error: download service: " + text);
+            } catch (DownloadException e) {
+                Logger.error("File download error: download service: " + text);
+            } catch (MalformedURLException e) {
+                Logger.error("Malformed URL error: download service: " + text);
+            }
+        } catch (JMSException e) {
             Logger.error("JMS error: download service");
-		}
-	}
+        }
+    }
 
 }

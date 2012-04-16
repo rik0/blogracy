@@ -37,14 +37,14 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.logging.Logger;
+
 import org.gudy.azureus2.core3.util.Base32;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
-
-import net.blogracy.logging.Logger;
 
 /**
  * User: mic
@@ -57,88 +57,93 @@ import net.blogracy.logging.Logger;
  * ...
  */
 public class SeedService implements MessageListener {
-	
-	private PluginInterface plugin;
-	
+
+    private PluginInterface plugin;
+
     private Session session;
     private Destination queue;
     private MessageProducer producer;
     private MessageConsumer consumer;
 
     public SeedService(Connection connection, PluginInterface plugin) {
-    	this.plugin = plugin;
-    	try {
-	        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	        producer = session.createProducer(null);
-	        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);	        
-			queue = session.createQueue("seed");
-	        consumer = session.createConsumer(queue);
-	        consumer.setMessageListener(this);
-    	} catch (JMSException e) {
-    		Logger.error("JMS error: creating seed service");
-    	}
+        this.plugin = plugin;
+        try {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            producer = session.createProducer(null);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            queue = session.createQueue("seed");
+            consumer = session.createConsumer(queue);
+            consumer.setMessageListener(this);
+        } catch (JMSException e) {
+            Logger.error("JMS error: creating seed service");
+        }
     }
 
-	@Override
-	public void onMessage(Message request) {
-		try {
-			String text = ((TextMessage)request).getText();
-			try {
-				String[] lines = text.split("\\r?\\n");
-				StringBuffer result = new StringBuffer();
-				for (int i = 0; i < lines.length; ++i) {
-					/*File origin = new File(text.trim());
-					String folder = Configurations.getPathConfig().getCachedFilesDirectoryPath();
-					File file = new File(folder + File.separator + origin.getName());
-					origin.renameTo(file);*/
-					if (lines[i].trim().length() == 0) {
-						result.append('\n');
-					} else {
-						File file = new File(lines[i].trim());
-						
-			            Torrent torrent = plugin.getTorrentManager().createFromDataFile(
-			                    file,
-			                    new URL("udp://tracker.openbittorrent.com:80")
-			            );
-			            torrent.setComplete(file.getParentFile());
-			            //File torrentFile = new File(file.getAbsolutePath() + ".torrent");
-			            //if (torrentFile.exists()) torrentFile.delete();
-			            //torrent.writeToFile(torrentFile);
-			            
-			            String name = Base32.encode(torrent.getHash());
-			            int index = file.getName().lastIndexOf('.');
-			            if (0 < index && index <= file.getName().length() - 2 ) {
-			            	name = name + file.getName().substring(index);
-			            }
-			            
-			            Download download = plugin.getDownloadManager().addDownload(
-			                    torrent,
-			                    null, //torrentFile,
-			                    file.getParentFile()
-			            );
-			            if (download != null) download.renameDownload(name);
-			            result.append(torrent.getMagnetURI().toExternalForm());
-			            result.append('\n');
-					}
-				}
-	            
-				if (request.getJMSReplyTo() != null) {
-					TextMessage response = session.createTextMessage();
-					response.setText(result.toString());
-					response.setJMSCorrelationID(request.getJMSCorrelationID());
-					producer.send(request.getJMSReplyTo(), response);
-				}
-	        } catch (MalformedURLException e) {
-	            Logger.error("Malformed URL error: seed service " + text);
-	        } catch (TorrentException e) {
-	            Logger.error("Torrent error: seed service: " + text);
-	            e.printStackTrace();
-	        } catch (DownloadException e) {
-	            Logger.error("Download error: seed service: " + text);
-	            e.printStackTrace();
-	        }		        
-		} catch (JMSException e) {
+    @Override
+    public void onMessage(Message request) {
+        try {
+            String text = ((TextMessage) request).getText();
+            try {
+                String[] lines = text.split("\\r?\\n");
+                StringBuffer result = new StringBuffer();
+                for (int i = 0; i < lines.length; ++i) {
+                    /*
+                     * File origin = new File(text.trim()); String folder =
+                     * Configurations
+                     * .getPathConfig().getCachedFilesDirectoryPath(); File file
+                     * = new File(folder + File.separator + origin.getName());
+                     * origin.renameTo(file);
+                     */
+                    if (lines[i].trim().length() == 0) {
+                        result.append('\n');
+                    } else {
+                        File file = new File(lines[i].trim());
+
+                        Torrent torrent = plugin
+                                .getTorrentManager()
+                                .createFromDataFile(
+                                        file,
+                                        new URL(
+                                                "udp://tracker.openbittorrent.com:80"));
+                        torrent.setComplete(file.getParentFile());
+                        // File torrentFile = new File(file.getAbsolutePath() +
+                        // ".torrent");
+                        // if (torrentFile.exists()) torrentFile.delete();
+                        // torrent.writeToFile(torrentFile);
+
+                        String name = Base32.encode(torrent.getHash());
+                        int index = file.getName().lastIndexOf('.');
+                        if (0 < index && index <= file.getName().length() - 2) {
+                            name = name + file.getName().substring(index);
+                        }
+
+                        Download download = plugin.getDownloadManager()
+                                .addDownload(torrent, null, // torrentFile,
+                                        file.getParentFile());
+                        if (download != null)
+                            download.renameDownload(name);
+                        result.append(torrent.getMagnetURI().toExternalForm());
+                        result.append('\n');
+                    }
+                }
+
+                if (request.getJMSReplyTo() != null) {
+                    TextMessage response = session.createTextMessage();
+                    response.setText(result.toString());
+                    response.setJMSCorrelationID(request.getJMSCorrelationID());
+                    producer.send(request.getJMSReplyTo(), response);
+                }
+            } catch (MalformedURLException e) {
+                Logger.error("Malformed URL error: seed service " + text);
+            } catch (TorrentException e) {
+                Logger.error("Torrent error: seed service: " + text);
+                e.printStackTrace();
+            } catch (DownloadException e) {
+                Logger.error("Download error: seed service: " + text);
+                e.printStackTrace();
+            }
+        } catch (JMSException e) {
             Logger.error("JMS error: seed service");
-		}
-	}
+        }
+    }
 }
