@@ -33,13 +33,13 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.logging.Logger;
+
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabase;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseException;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
-
-import net.blogracy.logging.Logger;
 
 /**
  * User: mic
@@ -52,70 +52,71 @@ import net.blogracy.logging.Logger;
  * ...
  */
 public class LookupService implements MessageListener {
-	
-	private PluginInterface plugin;
-	
+
+    private PluginInterface plugin;
+
     private Session session;
     private Destination queue;
     private MessageProducer producer;
     private MessageConsumer consumer;
 
     public LookupService(Connection connection, PluginInterface plugin) {
-    	this.plugin = plugin;
-    	try {
-	        session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-	        producer = session.createProducer(null);
-	        producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);	        
-			queue = session.createQueue("lookup");
-	        consumer = session.createConsumer(queue);
-	        consumer.setMessageListener(this);
-    	} catch (JMSException e) {
-    		Logger.error("JMS error: creating lookup service");
-    	}
+        this.plugin = plugin;
+        try {
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            producer = session.createProducer(null);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            queue = session.createQueue("lookup");
+            consumer = session.createConsumer(queue);
+            consumer.setMessageListener(this);
+        } catch (JMSException e) {
+            Logger.error("JMS error: creating lookup service");
+        }
     }
 
-
-	@Override
-	public void onMessage(final Message request) {
-		try {
-			String text = ((TextMessage)request).getText();
-			try {
-				final String key = text;
-		        final long TIMEOUT = 5 * 60 * 1000; // 5 mins
-		        DistributedDatabase ddb = plugin.getDistributedDatabase();
-	        	ddb.read(
-	                new DistributedDatabaseListener() {
-	       				public void event(DistributedDatabaseEvent event) {
-	       					final int type = event.getType();
-	       					if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
-	       						// ...
-	       					} else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
-	       						// ...
-	       					} else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
-	       						try {
-	       							String value = (String) event.getValue().getValue(String.class);
-	       							TextMessage response = session.createTextMessage();
-	       							response.setText(value);
-	       							response.setJMSCorrelationID(request.getJMSCorrelationID());
-	       							producer.send(request.getJMSReplyTo(), response);
-	       						} catch (JMSException e) {
-	       							Logger.error("JMS error: lookup " + key);
-	       						} catch (DistributedDatabaseException e) {
-	       							Logger.error("DDB error: lookup " + key);
-	       						}
-	       					}
-	       				}
-	       			},
-	       			ddb.createKey(key),
-	       			TIMEOUT,
-	       			DistributedDatabase.OP_EXHAUSTIVE_READ
-	       		);
-	        } catch (DistributedDatabaseException e) {
-	        	Logger.error("DDB error: lookup service: " + text);
-	        }
-		} catch (JMSException e) {
+    @Override
+    public void onMessage(final Message request) {
+        try {
+            String text = ((TextMessage) request).getText();
+            try {
+                final String key = text;
+                final long TIMEOUT = 5 * 60 * 1000; // 5 mins
+                DistributedDatabase ddb = plugin.getDistributedDatabase();
+                ddb.read(
+                        new DistributedDatabaseListener() {
+                            public void event(DistributedDatabaseEvent event) {
+                                final int type = event.getType();
+                                if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
+                                    // ...
+                                } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
+                                    // ...
+                                } else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
+                                    try {
+                                        String value = (String) event
+                                                .getValue().getValue(
+                                                        String.class);
+                                        TextMessage response = session
+                                                .createTextMessage();
+                                        response.setText(value);
+                                        response.setJMSCorrelationID(request
+                                                .getJMSCorrelationID());
+                                        producer.send(request.getJMSReplyTo(),
+                                                response);
+                                    } catch (JMSException e) {
+                                        Logger.error("JMS error: lookup " + key);
+                                    } catch (DistributedDatabaseException e) {
+                                        Logger.error("DDB error: lookup " + key);
+                                    }
+                                }
+                            }
+                        }, ddb.createKey(key), TIMEOUT,
+                        DistributedDatabase.OP_EXHAUSTIVE_READ);
+            } catch (DistributedDatabaseException e) {
+                Logger.error("DDB error: lookup service: " + text);
+            }
+        } catch (JMSException e) {
             Logger.error("JMS error: lookup service");
-		}
-	}
+        }
+    }
 
 }
