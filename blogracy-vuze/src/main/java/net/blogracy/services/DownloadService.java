@@ -23,6 +23,7 @@
 package net.blogracy.services;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -48,6 +49,11 @@ import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * User: mic
  * Package: it.unipr.aotlab.blogracy.services
@@ -60,6 +66,7 @@ import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderExce
  */
 public class DownloadService implements MessageListener {
     private PluginInterface plugin;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -85,23 +92,29 @@ public class DownloadService implements MessageListener {
         try {
             String text = ((TextMessage) request).getText();
             Logger.info("download service:" + text + ";");
+            ArrayNode entries = (ArrayNode) mapper.readTree(text);
             try {
-                final String[] kv = text.split(" ", 2);
-                URL magnetUri = new URL(kv[0]);
-                File file = new File(kv[1]);
-                File folder = file.getParentFile();
+                for (int i = 0; i < entries.size(); ++i) {
+                    if (!entries.get(i).isNull()) {
+                        ObjectNode entry = (ObjectNode) entries.get(i);
+                        URL magnetUri = new URL(entry.get("uri").textValue());
+                        File file = new File(entry.get("file").textValue());
+                        File folder = file.getParentFile();
 
-                Download download = null;
-                ResourceDownloader rdl = plugin.getUtilities()
-                        .getResourceDownloaderFactory().create(magnetUri);
-                InputStream is = rdl.download();
-                Torrent torrent = plugin.getTorrentManager()
-                        .createFromBEncodedInputStream(is);
-                download = plugin.getDownloadManager().addDownload(torrent,
-                        null, folder);
-                if (download != null && file != null)
-                    download.renameDownload(file.getName());
-                Logger.info(magnetUri + " added to download list");
+                        Download download = null;
+                        ResourceDownloader rdl = plugin.getUtilities()
+                                .getResourceDownloaderFactory()
+                                .create(magnetUri);
+                        InputStream is = rdl.download();
+                        Torrent torrent = plugin.getTorrentManager()
+                                .createFromBEncodedInputStream(is);
+                        download = plugin.getDownloadManager().addDownload(
+                                torrent, null, folder);
+                        if (download != null && file != null)
+                            download.renameDownload(file.getName());
+                        Logger.info(magnetUri + " added to download list");
+                    }
+                }
             } catch (ResourceDownloaderException e) {
                 Logger.error("Torrent download error: download service: "
                         + text);
@@ -114,6 +127,10 @@ public class DownloadService implements MessageListener {
             }
         } catch (JMSException e) {
             Logger.error("JMS error: download service");
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
