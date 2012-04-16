@@ -6,6 +6,7 @@ package net.blogracy;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
+import net.blogracy.logging.Logger;
 import net.blogracy.services.DownloadService;
 import net.blogracy.services.LookupService;
 import net.blogracy.services.SeedService;
@@ -45,7 +46,6 @@ public class Blogracy implements Plugin {
     	BasicConfigurator.configure();
     	org.apache.log4j.Logger.getLogger("org.apache").setLevel(Level.INFO);
     	
-    	final boolean TRANSACTED = false;
     	String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
         try {
 	        connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
@@ -56,6 +56,7 @@ public class Blogracy implements Plugin {
 	        lookupService = new LookupService(connection, plugin);
 	        seedService = new SeedService(connection, plugin);
 	        downloadService = new DownloadService(connection, plugin);
+			Logger.info("Blogracy Vuze plugin has started correctly");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
