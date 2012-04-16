@@ -56,7 +56,7 @@ public class Blogracy implements Plugin {
 	        lookupService = new LookupService(connection, plugin);
 	        seedService = new SeedService(connection, plugin);
 	        downloadService = new DownloadService(connection, plugin);
-			Logger.info("Blogracy Vuze plugin has started correctly");
+	        Logger.info("Blogracy Vuze plugin has started correctly");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
