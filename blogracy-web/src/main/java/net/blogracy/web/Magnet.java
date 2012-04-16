@@ -1,5 +1,5 @@
 package net.blogracy.web;
- 
+
 import java.io.File;
 import java.io.IOException;
 
@@ -22,60 +22,70 @@ import net.blogracy.config.Configurations;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
- 
-public class Magnet extends HttpServlet
-{
 
-	private String cacheFolder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 
-	private ConnectionFactory connectionFactory;
-	private Connection connection;
-	private Session session;
-	private Destination downloadQueue;
-	private MessageProducer producer;
-	private MessageConsumer consumer;
+public class Magnet extends HttpServlet {
 
+    private String cacheFolder;
 
-	public void init(ServletConfig config) throws ServletException {
-		super.init(config);
-		try {
-			cacheFolder = Configurations.getPathConfig().getCachedFilesDirectoryPath(); 
+    private ConnectionFactory connectionFactory;
+    private Connection connection;
+    private Session session;
+    private Destination downloadQueue;
+    private MessageProducer producer;
+    private MessageConsumer consumer;
 
-			connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
-			connection = connectionFactory.createConnection();
-			connection.start();
-			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			producer = session.createProducer(null);
-			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-			downloadQueue = session.createQueue("download");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    public void init(ServletConfig config) throws ServletException {
+        super.init(config);
+        try {
+            cacheFolder = Configurations.getPathConfig()
+                    .getCachedFilesDirectoryPath();
 
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
-        throws ServletException, IOException
-    {
-    	String hash = request.getParameter("hash");
-    	File file = new File(cacheFolder + File.separator + hash);
-    	if (file.exists()) {
-    		//response.sendRedirect("/cache/" + hash);
-    		response.setContentType("video/mp4"); // TODO! ...
-    		request.getRequestDispatcher("/cache/" + hash).forward(request, response);
-    	} else {
-			try {
+            connectionFactory = new ActiveMQConnectionFactory(
+                    ActiveMQConnection.DEFAULT_BROKER_URL);
+            connection = connectionFactory.createConnection();
+            connection.start();
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            producer = session.createProducer(null);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            downloadQueue = session.createQueue("download");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    protected void doGet(HttpServletRequest request,
+            HttpServletResponse response) throws ServletException, IOException {
+        String hash = request.getParameter("hash");
+        File file = new File(cacheFolder + File.separator + hash);
+        if (file.exists()) {
+            // response.sendRedirect("/cache/" + hash);
+            response.setContentType("video/mp4"); // TODO! ...
+            request.getRequestDispatcher("/cache/" + hash).forward(request,
+                    response);
+        } else {
+            try {
                 int dot = hash.lastIndexOf(".");
                 if (dot >= 0) {
                     hash = hash.substring(0, dot);
                 }
+                ObjectMapper mapper = new ObjectMapper();
+                ObjectNode sharedFile = mapper.createObjectNode();
+                sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
+                sharedFile.put("file", file.getAbsolutePath());
+                ArrayNode entries = mapper.createArrayNode();
+                entries.add(sharedFile);
 
-	    		TextMessage message = session.createTextMessage();
-	    		message.setText("magnet:?xt=urn:btih:" + hash + " " + file.getAbsolutePath());
-	    		producer.send(downloadQueue, message);
-			} catch (JMSException e) {
-				e.printStackTrace();
-			}
-    		response.sendError(503);
-    	}
+                TextMessage message = session.createTextMessage();
+                message.setText(mapper.writeValueAsString(entries));
+                producer.send(downloadQueue, message);
+            } catch (JMSException e) {
+                e.printStackTrace();
+            }
+            response.sendError(503);
+        }
     }
 }
