@@ -22,6 +22,8 @@
 
 package net.blogracy.services;
 
+import java.io.IOException;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -43,6 +45,10 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseKey;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * User: mic
  * Package: it.unipr.aotlab.blogracy.services
@@ -56,6 +62,7 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
 public class StoreService implements MessageListener {
 
     private PluginInterface plugin;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -80,21 +87,19 @@ public class StoreService implements MessageListener {
     public void onMessage(Message request) {
         try {
             String text = ((TextMessage) request).getText();
+            Logger.info("store service:" + text + ";");
+            ObjectNode record = (ObjectNode) mapper.readTree(text);
             try {
-                final String[] kv = text.split("=", 2);
-                if (kv.length == 2) {
-                    DistributedDatabase ddb = plugin.getDistributedDatabase();
-                    DistributedDatabaseKey key = ddb.createKey(kv[0].trim());
-                    DistributedDatabaseValue value = ddb.createValue(kv[1]
-                            .trim());
+                DistributedDatabase ddb = plugin.getDistributedDatabase();
+                DistributedDatabaseKey key = ddb.createKey(record.get("id")
+                        .textValue());
+                DistributedDatabaseValue value = ddb.createValue(text);
 
-                    ddb.write(new DistributedDatabaseListener() {
-                        @Override
-                        public void event(DistributedDatabaseEvent event) {
-                        }
-                    }, key, new DistributedDatabaseValue[] { value });
-                    Logger.info("stored:" + kv[0] + "=" + kv[1] + ";");
-                }
+                ddb.write(new DistributedDatabaseListener() {
+                    @Override
+                    public void event(DistributedDatabaseEvent event) {
+                    }
+                }, key, new DistributedDatabaseValue[] { value });
             } catch (DistributedDatabaseException e) {
                 Logger.error("DDB error: store service: " + text);
             } catch (Exception e) {
@@ -102,6 +107,10 @@ public class StoreService implements MessageListener {
             }
         } catch (JMSException e) {
             Logger.error("JMS error: store service");
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

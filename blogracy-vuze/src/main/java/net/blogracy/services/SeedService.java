@@ -23,6 +23,7 @@
 package net.blogracy.services;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -46,6 +47,13 @@ import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 
+import com.fasterxml.jackson.core.JsonGenerationException;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * User: mic
  * Package: it.unipr.aotlab.blogracy.services
@@ -59,6 +67,7 @@ import org.gudy.azureus2.plugins.torrent.TorrentException;
 public class SeedService implements MessageListener {
 
     private PluginInterface plugin;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -83,10 +92,12 @@ public class SeedService implements MessageListener {
     public void onMessage(Message request) {
         try {
             String text = ((TextMessage) request).getText();
+            Logger.info("seed service:" + text + ";");
+            ArrayNode entries = (ArrayNode) mapper.readTree(text);
             try {
-                String[] lines = text.split("\\r?\\n");
-                StringBuffer result = new StringBuffer();
-                for (int i = 0; i < lines.length; ++i) {
+                // String[] lines = text.split("\\r?\\n");
+                // StringBuffer result = new StringBuffer();
+                for (int i = 0; i < entries.size(); ++i) {
                     /*
                      * File origin = new File(text.trim()); String folder =
                      * Configurations
@@ -94,10 +105,9 @@ public class SeedService implements MessageListener {
                      * = new File(folder + File.separator + origin.getName());
                      * origin.renameTo(file);
                      */
-                    if (lines[i].trim().length() == 0) {
-                        result.append('\n');
-                    } else {
-                        File file = new File(lines[i].trim());
+                    if (!entries.get(i).isNull()) {
+                        ObjectNode entry = (ObjectNode) entries.get(i);
+                        File file = new File(entry.get("file").textValue());
 
                         Torrent torrent = plugin
                                 .getTorrentManager()
@@ -122,14 +132,14 @@ public class SeedService implements MessageListener {
                                         file.getParentFile());
                         if (download != null)
                             download.renameDownload(name);
-                        result.append(torrent.getMagnetURI().toExternalForm());
-                        result.append('\n');
+                        entry.put("uri", torrent.getMagnetURI()
+                                .toExternalForm());
                     }
                 }
 
                 if (request.getJMSReplyTo() != null) {
                     TextMessage response = session.createTextMessage();
-                    response.setText(result.toString());
+                    response.setText(mapper.writeValueAsString(entries));
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
                     producer.send(request.getJMSReplyTo(), response);
                 }
@@ -141,9 +151,19 @@ public class SeedService implements MessageListener {
             } catch (DownloadException e) {
                 Logger.error("Download error: seed service: " + text);
                 e.printStackTrace();
+            } catch (JsonGenerationException e) {
+                e.printStackTrace();
+            } catch (JsonMappingException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         } catch (JMSException e) {
             Logger.error("JMS error: seed service");
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

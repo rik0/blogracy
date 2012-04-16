@@ -22,6 +22,8 @@
 
 package net.blogracy.services;
 
+import java.io.IOException;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -41,6 +43,10 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseException;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+
 /**
  * User: mic
  * Package: net.blogracy.services
@@ -54,6 +60,7 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 public class LookupService implements MessageListener {
 
     private PluginInterface plugin;
+    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -77,9 +84,10 @@ public class LookupService implements MessageListener {
     @Override
     public void onMessage(final Message request) {
         try {
-            String text = ((TextMessage) request).getText();
+            final String text = ((TextMessage) request).getText();
+            Logger.info("lookup service:" + text + ";");
+            ObjectNode record = (ObjectNode) mapper.readTree(text);
             try {
-                final String key = text;
                 final long TIMEOUT = 5 * 60 * 1000; // 5 mins
                 DistributedDatabase ddb = plugin.getDistributedDatabase();
                 ddb.read(
@@ -103,19 +111,26 @@ public class LookupService implements MessageListener {
                                         producer.send(request.getJMSReplyTo(),
                                                 response);
                                     } catch (JMSException e) {
-                                        Logger.error("JMS error: lookup " + key);
+                                        Logger.error("JMS error: lookup "
+                                                + text);
                                     } catch (DistributedDatabaseException e) {
-                                        Logger.error("DDB error: lookup " + key);
+                                        Logger.error("DDB error: lookup "
+                                                + text);
                                     }
                                 }
                             }
-                        }, ddb.createKey(key), TIMEOUT,
+                        }, ddb.createKey(record.get("id").textValue()),
+                        TIMEOUT,
                         DistributedDatabase.OP_EXHAUSTIVE_READ);
             } catch (DistributedDatabaseException e) {
                 Logger.error("DDB error: lookup service: " + text);
             }
         } catch (JMSException e) {
             Logger.error("JMS error: lookup service");
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 

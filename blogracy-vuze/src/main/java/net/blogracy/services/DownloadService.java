@@ -84,6 +84,7 @@ public class DownloadService implements MessageListener {
     public void onMessage(Message request) {
         try {
             String text = ((TextMessage) request).getText();
+            Logger.info("download service:" + text + ";");
             try {
                 final String[] kv = text.split(" ", 2);
                 URL magnetUri = new URL(kv[0]);
