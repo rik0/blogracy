@@ -22,21 +22,18 @@
 
 package net.blogracy.config;
 
-import net.blogracy.model.hashes.Hashes;
-import net.blogracy.model.users.User;
-import net.blogracy.model.users.Users;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
+import net.blogracy.model.hashes.Hashes;
+import net.blogracy.model.users.User;
+import net.blogracy.model.users.Users;
+
 /**
- * User: enrico
- * Package: net.blogracy.config
- * Date: 1/24/12
- * Time: 11:37 AM
+ * User: enrico Package: net.blogracy.config Date: 1/24/12 Time: 11:37 AM
  */
 public class Configurations {
 
@@ -54,9 +51,10 @@ public class Configurations {
     private static final String BLOGRACY_USER_FRIENDS = "blogracy.user.friends";
 
     static private Properties loadProperties(String file) throws IOException {
-        //ClassLoader loader = ClassLoader.getSystemClassLoader();
-        //InputStream is = loader.getResourceAsStream(file);
-        InputStream is = Configurations.class.getClassLoader().getResourceAsStream(file);
+        // ClassLoader loader = ClassLoader.getSystemClassLoader();
+        // InputStream is = loader.getResourceAsStream(file);
+        InputStream is = Configurations.class.getClassLoader()
+                .getResourceAsStream(file);
 
         if (is != null) {
             Properties properties = new Properties();
@@ -99,7 +97,7 @@ public class Configurations {
             return null;
         }
     }
-    
+
     static public VuzeConfig getVuzeConfig() {
         try {
             return new VuzeConfig() {
@@ -108,13 +106,15 @@ public class Configurations {
 
                 @Override
                 public int getPort() {
-                	String port = userProperties.getProperty(BLOGRACY_VUZE_PORT);
+                    String port = userProperties
+                            .getProperty(BLOGRACY_VUZE_PORT);
                     return Integer.parseInt(port);
                 }
 
                 @Override
                 public String getBroker() {
-                	String broker = userProperties.getProperty(BLOGRACY_VUZE_BROKER);
+                    String broker = userProperties
+                            .getProperty(BLOGRACY_VUZE_BROKER);
                     return broker;
                 }
             };
@@ -123,7 +123,7 @@ public class Configurations {
             return null;
         }
     }
-    
+
     static public UserConfig getUserConfig() {
         try {
             return new UserConfig() {
@@ -132,28 +132,34 @@ public class Configurations {
 
                 @Override
                 public User getUser() {
-                	String userRow = userProperties.getProperty(BLOGRACY_USER_USER);
+                    String userRow = userProperties
+                            .getProperty(BLOGRACY_USER_USER);
                     return (userRow == null) ? null : loadUser(userRow);
                 }
 
                 @Override
                 public List<User> getFriends() {
                     ArrayList<User> friends = new ArrayList<User>();
-                	int i = 1;
-                    String friendRow = userProperties.getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
-                	while (friendRow != null) {
+                    int i = 1;
+                    String friendRow = userProperties
+                            .getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
+                    while (friendRow != null) {
                         friends.add(loadUser(friendRow));
                         ++i;
-                        friendRow = userProperties.getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
+                        friendRow = userProperties
+                                .getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
                     }
                     return friends;
                 }
-                
+
                 private User loadUser(String text) {
                     String[] hashAndNick = text.split(" ", 2);
-                    User user = Users.newUser(Hashes.fromString(hashAndNick[0]));
-                    if (hashAndNick.length == 2) user.setLocalNick(hashAndNick[1]);
-                    else user.setLocalNick(hashAndNick[0]);
+                    User user = Users
+                            .newUser(Hashes.fromString(hashAndNick[0]));
+                    if (hashAndNick.length == 2)
+                        user.setLocalNick(hashAndNick[1]);
+                    else
+                        user.setLocalNick(hashAndNick[0]);
                     return user;
                 }
             };
