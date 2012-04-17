@@ -51,7 +51,6 @@ import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderExce
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -92,29 +91,23 @@ public class DownloadService implements MessageListener {
         try {
             String text = ((TextMessage) request).getText();
             Logger.info("download service:" + text + ";");
-            ArrayNode entries = (ArrayNode) mapper.readTree(text);
+            ObjectNode entry = (ObjectNode) mapper.readTree(text);
             try {
-                for (int i = 0; i < entries.size(); ++i) {
-                    if (!entries.get(i).isNull()) {
-                        ObjectNode entry = (ObjectNode) entries.get(i);
-                        URL magnetUri = new URL(entry.get("uri").textValue());
-                        File file = new File(entry.get("file").textValue());
-                        File folder = file.getParentFile();
+                URL magnetUri = new URL(entry.get("uri").textValue());
+                File file = new File(entry.get("file").textValue());
+                File folder = file.getParentFile();
 
-                        Download download = null;
-                        ResourceDownloader rdl = plugin.getUtilities()
-                                .getResourceDownloaderFactory()
-                                .create(magnetUri);
-                        InputStream is = rdl.download();
-                        Torrent torrent = plugin.getTorrentManager()
-                                .createFromBEncodedInputStream(is);
-                        download = plugin.getDownloadManager().addDownload(
-                                torrent, null, folder);
-                        if (download != null && file != null)
-                            download.renameDownload(file.getName());
-                        Logger.info(magnetUri + " added to download list");
-                    }
-                }
+                Download download = null;
+                ResourceDownloader rdl = plugin.getUtilities()
+                        .getResourceDownloaderFactory().create(magnetUri);
+                InputStream is = rdl.download();
+                Torrent torrent = plugin.getTorrentManager()
+                        .createFromBEncodedInputStream(is);
+                download = plugin.getDownloadManager().addDownload(torrent,
+                        null, folder);
+                if (download != null && file != null)
+                    download.renameDownload(file.getName());
+                Logger.info(magnetUri + " added to download list");
             } catch (ResourceDownloaderException e) {
                 Logger.error("Torrent download error: download service: "
                         + text);

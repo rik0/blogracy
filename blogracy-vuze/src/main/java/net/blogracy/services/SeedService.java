@@ -51,7 +51,6 @@ import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 /**
@@ -93,53 +92,31 @@ public class SeedService implements MessageListener {
         try {
             String text = ((TextMessage) request).getText();
             Logger.info("seed service:" + text + ";");
-            ArrayNode entries = (ArrayNode) mapper.readTree(text);
+            ObjectNode entry = (ObjectNode) mapper.readTree(text);
             try {
-                // String[] lines = text.split("\\r?\\n");
-                // StringBuffer result = new StringBuffer();
-                for (int i = 0; i < entries.size(); ++i) {
-                    /*
-                     * File origin = new File(text.trim()); String folder =
-                     * Configurations
-                     * .getPathConfig().getCachedFilesDirectoryPath(); File file
-                     * = new File(folder + File.separator + origin.getName());
-                     * origin.renameTo(file);
-                     */
-                    if (!entries.get(i).isNull()) {
-                        ObjectNode entry = (ObjectNode) entries.get(i);
-                        File file = new File(entry.get("file").textValue());
+                File file = new File(entry.get("file").textValue());
 
-                        Torrent torrent = plugin
-                                .getTorrentManager()
-                                .createFromDataFile(
-                                        file,
-                                        new URL(
-                                                "udp://tracker.openbittorrent.com:80"));
-                        torrent.setComplete(file.getParentFile());
-                        // File torrentFile = new File(file.getAbsolutePath() +
-                        // ".torrent");
-                        // if (torrentFile.exists()) torrentFile.delete();
-                        // torrent.writeToFile(torrentFile);
+                Torrent torrent = plugin.getTorrentManager()
+                        .createFromDataFile(file,
+                                new URL("udp://tracker.openbittorrent.com:80"));
+                torrent.setComplete(file.getParentFile());
 
-                        String name = Base32.encode(torrent.getHash());
-                        int index = file.getName().lastIndexOf('.');
-                        if (0 < index && index <= file.getName().length() - 2) {
-                            name = name + file.getName().substring(index);
-                        }
-
-                        Download download = plugin.getDownloadManager()
-                                .addDownload(torrent, null, // torrentFile,
-                                        file.getParentFile());
-                        if (download != null)
-                            download.renameDownload(name);
-                        entry.put("uri", torrent.getMagnetURI()
-                                .toExternalForm());
-                    }
+                String name = Base32.encode(torrent.getHash());
+                int index = file.getName().lastIndexOf('.');
+                if (0 < index && index <= file.getName().length() - 2) {
+                    name = name + file.getName().substring(index);
                 }
+
+                Download download = plugin.getDownloadManager().addDownload(
+                        torrent, null, // torrentFile,
+                        file.getParentFile());
+                if (download != null)
+                    download.renameDownload(name);
+                entry.put("uri", torrent.getMagnetURI().toExternalForm());
 
                 if (request.getJMSReplyTo() != null) {
                     TextMessage response = session.createTextMessage();
-                    response.setText(mapper.writeValueAsString(entries));
+                    response.setText(mapper.writeValueAsString(entry));
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
                     producer.send(request.getJMSReplyTo(), response);
                 }
