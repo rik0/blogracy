@@ -175,7 +175,7 @@
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
-            <version>1.2.8</version>
+            <version>1.2.14</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -222,9 +222,19 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-	    <groupId>rome</groupId>
+            <groupId>rome</groupId>
             <artifactId>rome</artifactId>
             <version>1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>1.5.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-core</artifactId>
+            <version>5.5.1</version>
         </dependency>
     </dependencies>
 </project>
