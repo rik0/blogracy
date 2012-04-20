@@ -22,6 +22,7 @@
 
 package net.blogracy.config;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -79,7 +80,10 @@ public class Configurations {
 
                 @Override
                 public String getCachedFilesDirectoryPath() {
-                    return pathProperties.getProperty(BLOGRACY_PATHS_CACHED);
+                	String cachedFilesDirectoryPath = pathProperties.getProperty(BLOGRACY_PATHS_CACHED);
+                	// "Lazy" creation of cached files folder if non-existent
+                	this.createDirIfMissing(new File(cachedFilesDirectoryPath));
+                    return cachedFilesDirectoryPath;
                 }
 
                 @Override
@@ -90,6 +94,14 @@ public class Configurations {
                 @Override
                 public String getRootDirectoryPath() {
                     return pathProperties.getProperty(BLOGRACY_PATHS_ROOT);
+                }
+                
+
+                private void createDirIfMissing(File dir) {
+                    if (!dir.exists()) {
+                        boolean createdDir = dir.mkdir();
+                        assert (createdDir);
+                    }
                 }
             };
         } catch (IOException e) {
