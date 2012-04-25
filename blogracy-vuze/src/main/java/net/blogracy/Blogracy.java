@@ -3,6 +3,10 @@
  */
 package net.blogracy;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
@@ -14,6 +18,7 @@ import net.blogracy.services.StoreService;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.activemq.broker.BrokerService;
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Level;
 import org.gudy.azureus2.plugins.Plugin;
@@ -26,6 +31,7 @@ import org.gudy.azureus2.plugins.PluginInterface;
  */
 public class Blogracy implements Plugin {
 
+    private static BrokerService broker;
     private ConnectionFactory connectionFactory;
     private Connection connection;
     private StoreService storeService;
@@ -65,5 +71,21 @@ public class Blogracy implements Plugin {
             // TODO Auto-generated catch block
             e.printStackTrace();
         }
+    }
+
+    public static void main(String[] args) {
+        try {
+            broker = new BrokerService();
+            broker.setBrokerName("blogracy");
+            broker.addConnector(ActiveMQConnectionFactory.DEFAULT_BROKER_BIND_URL);
+            broker.start();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        List<String> argList = new ArrayList<String>();
+        argList.addAll(Arrays.asList(args));
+        argList.add("--ui=console");
+        org.gudy.azureus2.ui.common.Main.main(argList.toArray(args));
     }
 }
