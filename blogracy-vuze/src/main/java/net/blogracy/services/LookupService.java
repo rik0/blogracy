@@ -22,8 +22,6 @@
 
 package net.blogracy.services;
 
-import java.io.IOException;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -42,10 +40,8 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabase;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseException;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * User: mic
@@ -59,8 +55,41 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class LookupService implements MessageListener {
 
+    class DhtListener implements DistributedDatabaseListener {
+        private TextMessage request;
+
+        DhtListener(TextMessage request) {
+            this.request = request;
+        }
+
+        public void event(DistributedDatabaseEvent event) {
+            int type = event.getType();
+            if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
+                // ...
+            } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
+                // ...
+            } else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
+                String value = null;
+                try {
+                    value = (String) event.getValue().getValue(String.class);
+                    JSONObject record = new JSONObject(request.getText());
+                    record.put("value", value);
+                    TextMessage response = session.createTextMessage();
+                    response.setText(record.toString());
+                    response.setJMSCorrelationID(request.getJMSCorrelationID());
+                    producer.send(request.getJMSReplyTo(), response);
+                } catch (JMSException e) {
+                    Logger.error("JMS error: lookup " + value);
+                } catch (DistributedDatabaseException e) {
+                    Logger.error("DDB error: lookup " + value);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
     private PluginInterface plugin;
-    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -83,55 +112,24 @@ public class LookupService implements MessageListener {
 
     @Override
     public void onMessage(final Message request) {
+        String text = null;
         try {
-            final String text = ((TextMessage) request).getText();
+            TextMessage textRequest = (TextMessage) request;
+            text = textRequest.getText();
             Logger.info("lookup service:" + text + ";");
-            ObjectNode record = (ObjectNode) mapper.readTree(text);
-            try {
-                final long TIMEOUT = 5 * 60 * 1000; // 5 mins
-                DistributedDatabase ddb = plugin.getDistributedDatabase();
-                ddb.read(
-                        new DistributedDatabaseListener() {
-                            public void event(DistributedDatabaseEvent event) {
-                                final int type = event.getType();
-                                if (type == DistributedDatabaseEvent.ET_OPERATION_COMPLETE) {
-                                    // ...
-                                } else if (type == DistributedDatabaseEvent.ET_OPERATION_TIMEOUT) {
-                                    // ...
-                                } else if (type == DistributedDatabaseEvent.ET_VALUE_READ) {
-                                    try {
-                                        String value = (String) event
-                                                .getValue().getValue(
-                                                        String.class);
-                                        TextMessage response = session
-                                                .createTextMessage();
-                                        response.setText(value);
-                                        response.setJMSCorrelationID(request
-                                                .getJMSCorrelationID());
-                                        producer.send(request.getJMSReplyTo(),
-                                                response);
-                                    } catch (JMSException e) {
-                                        Logger.error("JMS error: lookup "
-                                                + text);
-                                    } catch (DistributedDatabaseException e) {
-                                        Logger.error("DDB error: lookup "
-                                                + text);
-                                    }
-                                }
-                            }
-                        }, ddb.createKey(record.get("id").textValue()),
-                        TIMEOUT,
-                        DistributedDatabase.OP_EXHAUSTIVE_READ);
-            } catch (DistributedDatabaseException e) {
-                Logger.error("DDB error: lookup service: " + text);
-            }
+            JSONObject record = new JSONObject(text);
+
+            final long TIMEOUT = 5 * 60 * 1000; // 5 mins
+            DistributedDatabase ddb = plugin.getDistributedDatabase();
+            ddb.read(new DhtListener(textRequest),
+                    ddb.createKey(record.getString("key")), TIMEOUT,
+                    DistributedDatabase.OP_EXHAUSTIVE_READ);
+        } catch (DistributedDatabaseException e) {
+            Logger.error("DDB error: lookup service: " + text);
         } catch (JMSException e) {
-            Logger.error("JMS error: lookup service");
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            Logger.error("JMS error: lookup service: " + text);
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }
-
 }
