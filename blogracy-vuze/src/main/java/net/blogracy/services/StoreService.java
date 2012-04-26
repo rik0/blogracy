@@ -22,8 +22,6 @@
 
 package net.blogracy.services;
 
-import java.io.IOException;
-
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -44,10 +42,8 @@ import org.gudy.azureus2.plugins.ddb.DistributedDatabaseException;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseKey;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseListener;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseValue;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * User: mic
@@ -62,7 +58,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class StoreService implements MessageListener {
 
     private PluginInterface plugin;
-    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -88,12 +83,13 @@ public class StoreService implements MessageListener {
         try {
             String text = ((TextMessage) request).getText();
             Logger.info("store service:" + text + ";");
-            ObjectNode record = (ObjectNode) mapper.readTree(text);
+            JSONObject keyValue = new JSONObject(text);
             try {
                 DistributedDatabase ddb = plugin.getDistributedDatabase();
-                DistributedDatabaseKey key = ddb.createKey(record.get("id")
-                        .textValue());
-                DistributedDatabaseValue value = ddb.createValue(text);
+                DistributedDatabaseKey key = ddb.createKey(keyValue
+                        .getString("key"));
+                DistributedDatabaseValue value = ddb.createValue(keyValue
+                        .getString("value"));
 
                 ddb.write(new DistributedDatabaseListener() {
                     @Override
@@ -107,9 +103,7 @@ public class StoreService implements MessageListener {
             }
         } catch (JMSException e) {
             Logger.error("JMS error: store service");
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }

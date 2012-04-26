@@ -43,9 +43,8 @@ import net.blogracy.config.Configurations;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.codec.binary.Base32;
+import org.json.JSONObject;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.sun.syndication.feed.synd.SyndContent;
 import com.sun.syndication.feed.synd.SyndContentImpl;
 import com.sun.syndication.feed.synd.SyndEnclosure;
@@ -71,7 +70,6 @@ public class FileSharing {
     private MessageProducer producer;
     private MessageConsumer consumer;
 
-    static final ObjectMapper MAPPER = new ObjectMapper();
     static final String CACHE_FOLDER = Configurations.getPathConfig()
             .getCachedFilesDirectoryPath();
 
@@ -116,18 +114,18 @@ public class FileSharing {
             Destination tempDest = session.createTemporaryQueue();
             MessageConsumer responseConsumer = session.createConsumer(tempDest);
 
-            ObjectNode requestNode = MAPPER.createObjectNode();
-            requestNode.put("file", file.getAbsolutePath());
+            JSONObject requestObj = new JSONObject();
+            requestObj.put("file", file.getAbsolutePath());
 
             TextMessage request = session.createTextMessage();
-            request.setText(MAPPER.writeValueAsString(requestNode));
+            request.setText(requestObj.toString());
             request.setJMSReplyTo(tempDest);
             producer.send(seedQueue, request);
 
             TextMessage response = (TextMessage) responseConsumer.receive();
             String msgText = ((TextMessage) response).getText();
-            ObjectNode responseNode = (ObjectNode) MAPPER.readTree(msgText);
-            uri = responseNode.get("uri").textValue();
+            JSONObject responseObj = new JSONObject(msgText);
+            uri = responseObj.getString("uri");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -138,10 +136,10 @@ public class FileSharing {
         System.out.println("Getting feed: " + user);
         SyndFeed feed = null;
         try {
-            ObjectNode record = DistributedHashTable.getSingleton().getRecord(
+            JSONObject record = DistributedHashTable.getSingleton().getRecord(
                     user);
-            String latestHash = FileSharing.getHashFromMagnetURI(record.get(
-                    "uri").textValue());
+            String latestHash = FileSharing.getHashFromMagnetURI(record
+                    .getString("uri"));
             File feedFile = new File(CACHE_FOLDER + File.separator + latestHash
                     + ".rss");
             System.out.println("Getting feed: " + feedFile.getAbsolutePath());
@@ -223,12 +221,12 @@ public class FileSharing {
 
     public void downloadByHash(final String hash) {
         try {
-            ObjectNode sharedFile = MAPPER.createObjectNode();
+            JSONObject sharedFile = new JSONObject();
             sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
             sharedFile.put("file", CACHE_FOLDER + File.separator + hash);
 
             TextMessage message = session.createTextMessage();
-            message.setText(MAPPER.writeValueAsString(sharedFile));
+            message.setText(sharedFile.toString());
             producer.send(downloadQueue, message);
         } catch (Exception e) {
             e.printStackTrace();

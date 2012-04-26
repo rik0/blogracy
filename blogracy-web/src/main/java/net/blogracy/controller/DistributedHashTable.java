@@ -23,6 +23,8 @@
 package net.blogracy.controller;
 
 import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -42,12 +44,11 @@ import net.blogracy.config.Configurations;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ArrayNode;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.sun.syndication.io.impl.Base64;
 
 /**
  * Generic functions to manipulate feeds are defined in this class.
@@ -63,11 +64,10 @@ public class DistributedHashTable {
     private MessageProducer producer;
     private MessageConsumer consumer;
 
-    static final ObjectMapper MAPPER = new ObjectMapper();
     static final String CACHE_FOLDER = Configurations.getPathConfig()
             .getCachedFilesDirectoryPath();
 
-    private HashMap<String, ObjectNode> records = new HashMap<String, ObjectNode>();
+    private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
 
     private static final DistributedHashTable theInstance = new DistributedHashTable();
 
@@ -80,10 +80,11 @@ public class DistributedHashTable {
             File recordsFile = new File(CACHE_FOLDER + File.separator
                     + "records.json");
             if (recordsFile.exists()) {
-                ArrayNode recordList = (ArrayNode) MAPPER.readTree(recordsFile);
-                for (int i = 0; i < recordList.size(); ++i) {
-                    ObjectNode record = (ObjectNode) recordList.get(i);
-                    records.put(record.get("id").textValue(), record);
+                JSONArray recordList = new JSONArray(
+                        new FileReader(recordsFile));
+                for (int i = 0; i < recordList.length(); ++i) {
+                    JSONObject record = recordList.getJSONObject(i);
+                    records.put(record.getString("id"), record);
                 }
             }
 
@@ -110,14 +111,15 @@ public class DistributedHashTable {
                 public void onMessage(Message response) {
                     try {
                         String msgText = ((TextMessage) response).getText();
-                        ObjectNode record = (ObjectNode) MAPPER
-                                .readTree(msgText);
-                        ObjectNode currentRecord = getRecord(id);
+                        JSONObject keyValue = new JSONObject(msgText);
+                        JSONObject record = new JSONObject(Base64
+                                .decode(keyValue.getString("value")));
+                        JSONObject currentRecord = getRecord(id);
                         if (currentRecord == null
-                                || currentRecord.get("version").longValue() < record
-                                        .get("version").longValue()) {
+                                || currentRecord.getLong("version") < record
+                                        .getLong("version")) {
                             putRecord(record);
-                            String uri = record.get("uri").textValue();
+                            String uri = record.getString("uri");
                             FileSharing.getSingleton().download(uri);
                         }
                     } catch (Exception e) {
@@ -126,11 +128,11 @@ public class DistributedHashTable {
                 }
             });
 
-            ObjectNode record = MAPPER.createObjectNode();
+            JSONObject record = new JSONObject();
             record.put("id", id);
 
             TextMessage message = session.createTextMessage();
-            message.setText(MAPPER.writeValueAsString(record));
+            message.setText(record.toString());
             message.setJMSReplyTo(tempDest);
             producer.send(lookupQueue, message);
 
@@ -141,7 +143,7 @@ public class DistributedHashTable {
 
     public void store(final String id, final String uri, final long version) {
         try {
-            ObjectNode record = MAPPER.createObjectNode();
+            JSONObject record = new JSONObject();
             record.put("id", id);
             record.put("uri", uri);
             record.put("version", version);
@@ -149,8 +151,11 @@ public class DistributedHashTable {
             // RSA.modulus(n).exponent(e)
             // record.put("signature", user); // TODO
 
+            JSONObject keyValue = new JSONObject();
+            keyValue.put("key", id);
+            keyValue.put("value", Base64.encode(record.toString()));
             TextMessage message = session.createTextMessage();
-            message.setText(MAPPER.writeValueAsString(record));
+            message.setText(keyValue.toString());
             producer.send(storeQueue, message);
             putRecord(record);
         } catch (Exception e) {
@@ -158,27 +163,29 @@ public class DistributedHashTable {
         }
     }
 
-    public ObjectNode getRecord(String user) {
+    public JSONObject getRecord(String user) {
         return records.get(user);
     }
 
-    public void putRecord(ObjectNode record) {
-        records.put(record.get("id").textValue(), record);
-        ArrayNode recordList = (ArrayNode) MAPPER.createArrayNode();
-        Iterator<ObjectNode> entries = records.values().iterator();
+    public void putRecord(JSONObject record) {
+        try {
+            records.put(record.getString("id"), record);
+        } catch (JSONException e1) {
+            e1.printStackTrace();
+        }
+        JSONArray recordList = new JSONArray();
+        Iterator<JSONObject> entries = records.values().iterator();
         while (entries.hasNext()) {
-            ObjectNode entry = entries.next();
-            recordList.add(entry);
+            JSONObject entry = entries.next();
+            recordList.put(entry);
         }
         File recordsFile = new File(CACHE_FOLDER + File.separator
                 + "records.json");
         try {
-            MAPPER.writeValue(recordsFile, recordList);
-        } catch (JsonGenerationException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
+            recordList.write(new FileWriter(recordsFile));
         } catch (IOException e) {
+            e.printStackTrace();
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }

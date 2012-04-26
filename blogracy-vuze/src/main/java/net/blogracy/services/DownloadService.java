@@ -23,7 +23,6 @@
 package net.blogracy.services;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -48,10 +47,8 @@ import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * User: mic
@@ -65,7 +62,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  */
 public class DownloadService implements MessageListener {
     private PluginInterface plugin;
-    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -91,10 +87,10 @@ public class DownloadService implements MessageListener {
         try {
             String text = ((TextMessage) request).getText();
             Logger.info("download service:" + text + ";");
-            ObjectNode entry = (ObjectNode) mapper.readTree(text);
+            JSONObject entry = new JSONObject(text);
             try {
-                URL magnetUri = new URL(entry.get("uri").textValue());
-                File file = new File(entry.get("file").textValue());
+                URL magnetUri = new URL(entry.getString("uri"));
+                File file = new File(entry.getString("file"));
                 File folder = file.getParentFile();
 
                 Download download = null;
@@ -120,9 +116,7 @@ public class DownloadService implements MessageListener {
             }
         } catch (JMSException e) {
             Logger.error("JMS error: download service");
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (JSONException e) {
             e.printStackTrace();
         }
     }

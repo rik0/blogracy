@@ -19,8 +19,6 @@ import net.blogracy.services.StoreService;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.broker.BrokerService;
-import org.apache.log4j.BasicConfigurator;
-import org.apache.log4j.Level;
 import org.gudy.azureus2.plugins.Plugin;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
@@ -53,9 +51,6 @@ public class Blogracy implements Plugin {
     }
 
     void createQueues(final PluginInterface plugin) {
-        BasicConfigurator.configure();
-        org.apache.log4j.Logger.getLogger("org.apache").setLevel(Level.INFO);
-
         String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
         try {
             connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
