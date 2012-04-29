@@ -21,16 +21,16 @@ public class JwtSignature {
         String result = null;
         try {
             String payload = Base64.encodeBase64URLSafeString(content
-                    .getBytes());
+                    .getBytes("UTF-8"));
 
             byte[] encodedKey = keyPair.getPublic().getEncoded();
             String kid = Base64.encodeBase64URLSafeString(encodedKey);
             JSONObject headerObj = new JSONObject().put("typ", "JWT")
                     .put("alg", "RS256").put("kid", kid);
             String header = Base64.encodeBase64URLSafeString(headerObj
-                    .toString().getBytes());
+                    .toString().getBytes("UTF-8"));
 
-            byte[] bytesToSign = (header + "." + content).getBytes("UTF-8");
+            byte[] bytesToSign = (header + "." + payload).getBytes("UTF-8");
             Signature signer = Signature.getInstance("SHA256withRSA");
             signer.initSign(keyPair.getPrivate());
             signer.update(bytesToSign);
@@ -55,7 +55,9 @@ public class JwtSignature {
         PublicKey signerKey = null;
         try {
             String header = signed.split("\\.")[0];
-            JSONObject headerObj = new JSONObject(header);
+            String plainHeader = new String(Base64.decodeBase64(header),
+                    "UTF-8");
+            JSONObject headerObj = new JSONObject(plainHeader);
             byte[] encodedKey = Base64.decodeBase64(headerObj.getString("kid"));
             signerKey = KeyFactory.getInstance("RSA").generatePublic(
                     new X509EncodedKeySpec(encodedKey));
@@ -65,6 +67,8 @@ public class JwtSignature {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
         }
         return signerKey;
     }
@@ -73,17 +77,21 @@ public class JwtSignature {
             throws SignatureException {
         String[] split = signed.split("\\.");
         String header = split[0];
-        String content = split[1];
+        String payload = split[1];
         String signature = split[2];
+        String content = null;
         try {
             Signature verifier = Signature.getInstance("SHA256withRSA");
             verifier.initVerify(signerKey);
-            verifier.update(Base64.decodeBase64(header + "." + content));
+            verifier.update((header + "." + payload).getBytes("UTF-8"));
             if (!verifier.verify(Base64.decodeBase64(signature)))
                 throw new SignatureException(signed);
+            content = new String(Base64.decodeBase64(payload), "UTF-8");
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         } catch (InvalidKeyException e) {
+            e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
             e.printStackTrace();
         }
         return content;
