@@ -44,11 +44,10 @@ import net.blogracy.config.Configurations;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.sun.syndication.io.impl.Base64;
 
 /**
  * Generic functions to manipulate feeds are defined in this class.
@@ -69,10 +68,10 @@ public class DistributedHashTable {
 
     private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
 
-    private static final DistributedHashTable theInstance = new DistributedHashTable();
+    private static final DistributedHashTable THE_INSTANCE = new DistributedHashTable();
 
     public static DistributedHashTable getSingleton() {
-        return theInstance;
+        return THE_INSTANCE;
     }
 
     public DistributedHashTable() {
@@ -112,12 +111,13 @@ public class DistributedHashTable {
                     try {
                         String msgText = ((TextMessage) response).getText();
                         JSONObject keyValue = new JSONObject(msgText);
-                        JSONObject record = new JSONObject(Base64
-                                .decode(keyValue.getString("value")));
+                        JSONObject record = new JSONObject(new String(Base64
+                                .decodeBase64(keyValue.getString("value")),
+                                "UTF-8"));
                         JSONObject currentRecord = getRecord(id);
                         if (currentRecord == null
-                                || currentRecord.getLong("version") < record
-                                        .getLong("version")) {
+                                || currentRecord.getString("version")
+                                        .compareTo(record.getString("version")) < 0) {
                             putRecord(record);
                             String uri = record.getString("uri");
                             FileSharing.getSingleton().download(uri);
@@ -141,7 +141,7 @@ public class DistributedHashTable {
         }
     }
 
-    public void store(final String id, final String uri, final long version) {
+    public void store(final String id, final String uri, final String version) {
         try {
             JSONObject record = new JSONObject();
             record.put("id", id);
@@ -153,7 +153,8 @@ public class DistributedHashTable {
 
             JSONObject keyValue = new JSONObject();
             keyValue.put("key", id);
-            keyValue.put("value", Base64.encode(record.toString()));
+            keyValue.put("value", Base64.encodeBase64URLSafeString(record
+                    .toString().getBytes("UTF-8")));
             TextMessage message = session.createTextMessage();
             message.setText(keyValue.toString());
             producer.send(storeQueue, message);
@@ -182,7 +183,9 @@ public class DistributedHashTable {
         File recordsFile = new File(CACHE_FOLDER + File.separator
                 + "records.json");
         try {
-            recordList.write(new FileWriter(recordsFile));
+            FileWriter writer = new FileWriter(recordsFile);
+            recordList.write(writer);
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {
