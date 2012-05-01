@@ -25,6 +25,15 @@ package net.blogracy.config;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.Key;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -80,9 +89,10 @@ public class Configurations {
 
                 @Override
                 public String getCachedFilesDirectoryPath() {
-                	String cachedFilesDirectoryPath = pathProperties.getProperty(BLOGRACY_PATHS_CACHED);
-                	// "Lazy" creation of cached files folder if non-existent
-                	this.createDirIfMissing(new File(cachedFilesDirectoryPath));
+                    String cachedFilesDirectoryPath = pathProperties
+                            .getProperty(BLOGRACY_PATHS_CACHED);
+                    // "Lazy" creation of cached files folder if non-existent
+                    this.createDirIfMissing(new File(cachedFilesDirectoryPath));
                     return cachedFilesDirectoryPath;
                 }
 
@@ -95,7 +105,6 @@ public class Configurations {
                 public String getRootDirectoryPath() {
                     return pathProperties.getProperty(BLOGRACY_PATHS_ROOT);
                 }
-                
 
                 private void createDirIfMissing(File dir) {
                     if (!dir.exists()) {
@@ -173,6 +182,46 @@ public class Configurations {
                     else
                         user.setLocalNick(hashAndNick[0]);
                     return user;
+                }
+
+                @Override
+                public KeyPair getUserKeyPair() {
+                    KeyPair result = null;
+                    try {
+                        String alias = getUser().getLocalNick();
+                        char[] password = new char[] { 'b', 'l', 'o', 'g', 'r',
+                                'a', 'c', 'y' };
+                        InputStream is = Configurations.class.getClassLoader()
+                                .getResourceAsStream("blogracy.jks");
+                        KeyStore keyStore = KeyStore.getInstance(KeyStore
+                                .getDefaultType());
+                        keyStore.load(is, password);
+                        is.close();
+                        // Get private key
+                        Key key = keyStore.getKey(alias, password);
+                        if (key instanceof PrivateKey) {
+                            // Get certificate of public key
+                            java.security.cert.Certificate cert = keyStore
+                                    .getCertificate(alias);
+
+                            // Get public key
+                            PublicKey publicKey = cert.getPublicKey();
+
+                            // Return a key pair
+                            result = new KeyPair(publicKey, (PrivateKey) key);
+                        }
+                    } catch (UnrecoverableKeyException e) {
+                        e.printStackTrace();
+                    } catch (NoSuchAlgorithmException e) {
+                        e.printStackTrace();
+                    } catch (KeyStoreException e) {
+                        e.printStackTrace();
+                    } catch (CertificateException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                    return result;
                 }
             };
         } catch (IOException e) {

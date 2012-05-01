@@ -70,12 +70,12 @@ public class SignatureTest {
     @Test
     public void testJwtSignature() {
         try {
-            String signed = JwtSignature.sign(content, keyPair);
+            String signed = JsonWebSignature.sign(content, keyPair);
 
-            PublicKey publicKey = JwtSignature.getSignerKey(signed);
+            PublicKey publicKey = JsonWebSignature.getSignerKey(signed);
             assertEquals(publicKey, keyPair.getPublic());
 
-            String verified = JwtSignature.verify(signed, publicKey);
+            String verified = JsonWebSignature.verify(signed, publicKey);
             assertEquals(verified, content);
         } catch (SignatureException e) {
             e.printStackTrace();

@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -41,10 +43,10 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
+import net.blogracy.util.JsonWebSignature;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.codec.binary.Base64;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -111,9 +113,11 @@ public class DistributedHashTable {
                     try {
                         String msgText = ((TextMessage) response).getText();
                         JSONObject keyValue = new JSONObject(msgText);
-                        JSONObject record = new JSONObject(new String(Base64
-                                .decodeBase64(keyValue.getString("value")),
-                                "UTF-8"));
+                        String value = keyValue.getString("value");
+                        PublicKey signerKey = JsonWebSignature
+                                .getSignerKey(value);
+                        JSONObject record = new JSONObject(JsonWebSignature
+                                .verify(value, signerKey));
                         JSONObject currentRecord = getRecord(id);
                         if (currentRecord == null
                                 || currentRecord.getString("version")
@@ -151,10 +155,12 @@ public class DistributedHashTable {
             // RSA.modulus(n).exponent(e)
             // record.put("signature", user); // TODO
 
+            KeyPair keyPair = Configurations.getUserConfig().getUserKeyPair();
+            String value = JsonWebSignature.sign(record.toString(), keyPair);
+
             JSONObject keyValue = new JSONObject();
             keyValue.put("key", id);
-            keyValue.put("value", Base64.encodeBase64URLSafeString(record
-                    .toString().getBytes("UTF-8")));
+            keyValue.put("value", value);
             TextMessage message = session.createTextMessage();
             message.setText(keyValue.toString());
             producer.send(storeQueue, message);

@@ -22,17 +22,18 @@
 
 package net.blogracy.config;
 
+import java.security.KeyPair;
 import java.util.List;
 
 import net.blogracy.model.users.User;
 
 /**
- * User: enrico
- * Package: net.blogracy.config
- * Date: 1/30/12
- * Time: 11:31 AM
+ * User: enrico Package: net.blogracy.config Date: 1/30/12 Time: 11:31 AM
  */
 public interface UserConfig {
     public User getUser();
+
+    public KeyPair getUserKeyPair();
+
     public List<User> getFriends();
 }
