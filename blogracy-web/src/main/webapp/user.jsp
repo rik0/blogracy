@@ -190,8 +190,8 @@ pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
                 </form>
                 <div class="span10" id="user-feed">
                     <ul>
-					<c:forEach var="entry" items="${feed.entries}">
-						<li>${entry.description.value}</li>
+					<c:forEach var="entry" items="${feed}">
+						<li>${entry.content}</li>
 					</c:forEach>
 					</ul>
                 </div>
