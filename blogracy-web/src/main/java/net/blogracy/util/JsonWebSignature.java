@@ -15,7 +15,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class JwtSignature {
+public class JsonWebSignature {
 
     public static String sign(String content, KeyPair keyPair) {
         String result = null;

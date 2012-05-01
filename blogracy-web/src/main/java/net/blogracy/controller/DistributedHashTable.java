@@ -26,6 +26,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -41,14 +43,13 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
+import net.blogracy.util.JsonWebSignature;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import com.sun.syndication.io.impl.Base64;
 
 /**
  * Generic functions to manipulate feeds are defined in this class.
@@ -69,10 +70,10 @@ public class DistributedHashTable {
 
     private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
 
-    private static final DistributedHashTable theInstance = new DistributedHashTable();
+    private static final DistributedHashTable THE_INSTANCE = new DistributedHashTable();
 
     public static DistributedHashTable getSingleton() {
-        return theInstance;
+        return THE_INSTANCE;
     }
 
     public DistributedHashTable() {
@@ -112,12 +113,15 @@ public class DistributedHashTable {
                     try {
                         String msgText = ((TextMessage) response).getText();
                         JSONObject keyValue = new JSONObject(msgText);
-                        JSONObject record = new JSONObject(Base64
-                                .decode(keyValue.getString("value")));
+                        String value = keyValue.getString("value");
+                        PublicKey signerKey = JsonWebSignature
+                                .getSignerKey(value);
+                        JSONObject record = new JSONObject(JsonWebSignature
+                                .verify(value, signerKey));
                         JSONObject currentRecord = getRecord(id);
                         if (currentRecord == null
-                                || currentRecord.getLong("version") < record
-                                        .getLong("version")) {
+                                || currentRecord.getString("version")
+                                        .compareTo(record.getString("version")) < 0) {
                             putRecord(record);
                             String uri = record.getString("uri");
                             FileSharing.getSingleton().download(uri);
@@ -141,7 +145,7 @@ public class DistributedHashTable {
         }
     }
 
-    public void store(final String id, final String uri, final long version) {
+    public void store(final String id, final String uri, final String version) {
         try {
             JSONObject record = new JSONObject();
             record.put("id", id);
@@ -151,9 +155,12 @@ public class DistributedHashTable {
             // RSA.modulus(n).exponent(e)
             // record.put("signature", user); // TODO
 
+            KeyPair keyPair = Configurations.getUserConfig().getUserKeyPair();
+            String value = JsonWebSignature.sign(record.toString(), keyPair);
+
             JSONObject keyValue = new JSONObject();
             keyValue.put("key", id);
-            keyValue.put("value", Base64.encode(record.toString()));
+            keyValue.put("value", value);
             TextMessage message = session.createTextMessage();
             message.setText(keyValue.toString());
             producer.send(storeQueue, message);
@@ -182,7 +189,9 @@ public class DistributedHashTable {
         File recordsFile = new File(CACHE_FOLDER + File.separator
                 + "records.json");
         try {
-            recordList.write(new FileWriter(recordsFile));
+            FileWriter writer = new FileWriter(recordsFile);
+            recordList.write(writer);
+            writer.close();
         } catch (IOException e) {
             e.printStackTrace();
         } catch (JSONException e) {
