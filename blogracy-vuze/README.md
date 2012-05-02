@@ -86,10 +86,10 @@ mvn eclipse:eclipse
 that updates the eclipse project with stuff coming from maven.
 Repeat this step when something changes in the pom file.
 
-Then, start Eclipse using src as workspace:
+Then, start Eclipse using blogracy as workspace:
 
 ```
-eclipse -data ~/src
+eclipse -data ~/src/blogracy/
 ```
 
 In Eclipse, choose "Import Existing Maven Project" from the "File" menu, 
