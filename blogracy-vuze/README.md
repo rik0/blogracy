@@ -38,7 +38,9 @@ fork and then pull request the modifications.
 1. Create a fork through GitHub repository
 2. The fork repository will be at git@github.com:<USERNAME>/blogracy.git
    where <USERNAME> is your actual username
-3. ```
+3. Clone the newgit fork 
+
+```
 git clone git@github.com:<USERNAME>/blogracy.git
 ```
 
@@ -48,6 +50,7 @@ move the sources afterwards.
 #### Read-Only ####
 
 To get the sources "read only" simply:
+
 ```
 git://github.com/rik0/blogracy.git
 ```
@@ -118,15 +121,15 @@ mvn exec:exec
 We do not use GUI or SWT. Consequently we run the Vuze console version.
 We do not depend from STW, as a consequence.
 
-Alternatively, you can put the blogracy-vuze...jar file into the plugin folder
-of Vuze, and start Vuze normally. This way, you also need to start ActiveMQ
+Alternatively, you can put the blogracy-vuze...jar file into the plugins folder
+of Vuze, and start Vuze normally. This way, you may also need to start ActiveMQ
 by hand, separately.
 
 ### Executing Blogracy inside the IDE ###
 
 Use the information above to create the appropriate configuration in the IDE.
-The Blogracy class implements the main method for starting ActiveMQ, Vuze and
-the Blogracy plugin.
+The Blogracy class implements a static "main" method for starting ActiveMQ,
+Vuze and Blogracy-Vuze plugin.
 
 ## Authors ##
 
@@ -135,7 +138,7 @@ The code of the present versions is mostly written by Enrico Franchi and Michele
 The project is currently maintained by Enrico Franchi and Michele Tomaiuolo.
 
 ## Contributors ##
+
 * Enrico Franchi (efranchi@ce.unipr.it) [ core ]
 * Michele Tomaiuolo (tomamic@ce.unipr.it) [ core ]
 * Alan Nonnato () [ old core ]
-...
