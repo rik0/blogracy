@@ -9,8 +9,8 @@
   <build>
     <resources>
       <resource>
-        <directory>src/main/resources</directory>
-	<targetPath>../</targetPath>
+        <directory>src/main/plugins</directory>
+	<targetPath>../plugins/</targetPath>
       </resource>
     </resources>
     <plugins>
