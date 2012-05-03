@@ -36,8 +36,8 @@ fork and then pull request the modifications.
 #### Fork ####
 
 1. Create a fork through GitHub repository
-2. The fork repository will be at git@github.com:<USERNAME>/blogracy.git
-   where <USERNAME> is your actual username
+2. The fork repository will be at git@github.com:\<USERNAME\>/blogracy.git
+   where \<USERNAME\> is your actual username
 3. Clone the new git fork:
 
 ```
