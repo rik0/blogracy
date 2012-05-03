@@ -31,7 +31,7 @@
           <executable>java</executable>
           <workingDirectory>target/</workingDirectory>
           <arguments>
-            <argument>-Dazureus.config.path=./</argument>
+            <argument>-Dazureus.config.path=.</argument>
             <argument>-classpath</argument>
             <classpath/>
             <argument>net.blogracy.Blogracy</argument>
