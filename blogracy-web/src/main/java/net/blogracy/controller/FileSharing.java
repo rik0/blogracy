@@ -23,7 +23,13 @@
 package net.blogracy.controller;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.io.Writer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -39,6 +45,7 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
+import net.blogracy.util.FileUtils;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
@@ -63,177 +70,241 @@ import com.sun.syndication.io.XmlReader;
  */
 public class FileSharing {
 
-    private ConnectionFactory connectionFactory;
-    private Connection connection;
-    private Session session;
-    private Destination seedQueue;
-    private Destination downloadQueue;
-    private MessageProducer producer;
-    private MessageConsumer consumer;
+	private ConnectionFactory connectionFactory;
+	private Connection connection;
+	private Session session;
+	private Destination seedQueue;
+	private Destination downloadQueue;
+	private MessageProducer producer;
+	private MessageConsumer consumer;
 
-    static final ObjectMapper MAPPER = new ObjectMapper();
-    static final String CACHE_FOLDER = Configurations.getPathConfig()
-            .getCachedFilesDirectoryPath();
+	static final ObjectMapper MAPPER = new ObjectMapper();
+	private static final String CACHE_FOLDER = Configurations.getPathConfig()
+			.getCachedFilesDirectoryPath();
 
-    private static final FileSharing theInstance = new FileSharing();
+	private static final FileSharing theInstance = new FileSharing();
 
-    public static FileSharing getSingleton() {
-        return theInstance;
-    }
+	public static FileSharing getSingleton() {
+		return theInstance;
+	}
 
-    public static String hash(String text) {
-        String result = null;
-        try {
-            MessageDigest digester = MessageDigest.getInstance("SHA-1");
-            Base32 encoder = new Base32();
-            byte[] digest = digester.digest(text.getBytes());
-            result = encoder.encodeAsString(digest);
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return result;
-    }
+	public static String getCacheFolder() {
+		return CACHE_FOLDER;
+	}
 
-    public FileSharing() {
-        try {
-            connectionFactory = new ActiveMQConnectionFactory(
-                    ActiveMQConnection.DEFAULT_BROKER_URL);
-            connection = connectionFactory.createConnection();
-            connection.start();
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            producer = session.createProducer(null);
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            seedQueue = session.createQueue("seed");
-            downloadQueue = session.createQueue("download");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	public static String hash(String text) {
+		String result = null;
+		try {
+			MessageDigest digester = MessageDigest.getInstance("SHA-1");
+			Base32 encoder = new Base32();
+			byte[] digest = digester.digest(text.getBytes());
+			result = encoder.encodeAsString(digest);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
 
-    public String seed(File file) {
-        String uri = null;
-        try {
-            Destination tempDest = session.createTemporaryQueue();
-            MessageConsumer responseConsumer = session.createConsumer(tempDest);
+	public FileSharing() {
+		try {
+			connectionFactory = new ActiveMQConnectionFactory(
+					ActiveMQConnection.DEFAULT_BROKER_URL);
+			connection = connectionFactory.createConnection();
+			connection.start();
+			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			producer = session.createProducer(null);
+			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			seedQueue = session.createQueue("seed");
+			downloadQueue = session.createQueue("download");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-            ObjectNode requestNode = MAPPER.createObjectNode();
-            requestNode.put("file", file.getAbsolutePath());
+	public String seed(File file) {
+		String uri = null;
+		try {
+			Destination tempDest = session.createTemporaryQueue();
+			MessageConsumer responseConsumer = session.createConsumer(tempDest);
 
-            TextMessage request = session.createTextMessage();
-            request.setText(MAPPER.writeValueAsString(requestNode));
-            request.setJMSReplyTo(tempDest);
-            producer.send(seedQueue, request);
+			ObjectNode requestNode = MAPPER.createObjectNode();
+			requestNode.put("file", file.getAbsolutePath());
 
-            TextMessage response = (TextMessage) responseConsumer.receive();
-            String msgText = ((TextMessage) response).getText();
-            ObjectNode responseNode = (ObjectNode) MAPPER.readTree(msgText);
-            uri = responseNode.get("uri").textValue();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return uri;
-    }
+			TextMessage request = session.createTextMessage();
+			request.setText(MAPPER.writeValueAsString(requestNode));
+			request.setJMSReplyTo(tempDest);
+			producer.send(seedQueue, request);
 
-    static public SyndFeed getFeed(String user) {
-        System.out.println("Getting feed: " + user);
-        SyndFeed feed = null;
-        try {
-            ObjectNode record = DistributedHashTable.getSingleton().getRecord(
-                    user);
-            String latestHash = FileSharing.getHashFromMagnetURI(record.get(
-                    "uri").textValue());
-            File feedFile = new File(CACHE_FOLDER + File.separator + latestHash
-                    + ".rss");
-            System.out.println("Getting feed: " + feedFile.getAbsolutePath());
-            feed = new SyndFeedInput().build(new XmlReader(feedFile));
-            System.out.println("Feed loaded");
-        } catch (Exception e) {
-            feed = new SyndFeedImpl();
-            feed.setFeedType("rss_2.0");
-            feed.setTitle(user);
-            feed.setLink("http://www.blogracy.net");
-            feed.setDescription("This feed has been created using ROME (Java syndication utilities");
-            feed.setEntries(new ArrayList());
-            System.out.println("Feed created");
-        }
-        return feed;
-    }
+			TextMessage response = (TextMessage) responseConsumer.receive();
+			String msgText = ((TextMessage) response).getText();
+			ObjectNode responseNode = (ObjectNode) MAPPER.readTree(msgText);
+			uri = responseNode.get("uri").textValue();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return uri;
+	}
 
-    public void addFeedEntry(String id, String text, File attachment) {
-        try {
-            String hash = hash(text);
-            File textFile = new File(CACHE_FOLDER + File.separator + hash
-                    + ".txt");
+	static public SyndFeed getFeed(String user) {
+		System.out.println("Getting feed: " + user);
+		SyndFeed feed = null;
+		XmlReader xmlReader = null;
+		try {
+			ObjectNode record = DistributedHashTable.getSingleton().getRecord(
+					user);
+			String latestHash = FileSharing.getHashFromMagnetURI(record.get(
+					"uri").textValue());
+			File feedFile = new File(getCacheFolder() + File.separator + latestHash
+					+ ".rss");
+			System.out.println("Getting feed: " + feedFile.getAbsolutePath());
+			xmlReader = new XmlReader(feedFile);
+			feed = new SyndFeedInput().build(xmlReader);
+			xmlReader.close();
+			System.out.println("Feed loaded");
+		} catch (Exception e) {
+			feed = new SyndFeedImpl();
+			feed.setFeedType("rss_2.0");
+			feed.setTitle(user);
+			feed.setLink("http://www.blogracy.net");
+			feed.setDescription("This feed has been created using ROME (Java syndication utilities");
+			feed.setEntries(new ArrayList());
+			System.out.println("Feed created");
+		}
+		finally
+		{
+			if (xmlReader != null)
+			{
+				try {
+					xmlReader.close();
+				} catch (IOException e) { }
+				xmlReader = null;
+			}
+		}
+		return feed;
+	}
 
-            java.io.FileWriter w = new java.io.FileWriter(textFile);
-            w.write(text);
-            w.close();
+	public File cacheFile(String filename, InputStream srcData) {
+		File dstFile = new File(getCacheFolder() + File.separator + filename);
+		if (!dstFile.exists()) {
+			try {
+				dstFile.createNewFile();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+		else
+			return dstFile;
 
-            String textUri = seed(textFile);
-            String attachmentUri = null;
-            if (attachment != null) {
-                attachmentUri = seed(attachment);
-            }
+		OutputStream out = null;
+		try {
+			out = new FileOutputStream(dstFile);
+			byte buf[] = new byte[1024];
+			int len;
+			while ((len = srcData.read(buf)) > 0)
+				out.write(buf, 0, len);
+			out.close();
+			srcData.close();
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (out != null) {
+				try {
+					out.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if (srcData != null) {
+				try {
+					srcData.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 
-            final SyndFeed feed = getFeed(id);
-            final SyndEntry entry = new SyndEntryImpl();
-            entry.setTitle("No Title");
-            entry.setLink(textUri);
-            entry.setPublishedDate(new Date());
-            SyndContent description = new SyndContentImpl();
-            description.setType("text/plain");
-            description.setValue(text);
-            entry.setDescription(description);
-            if (attachment != null) {
-                SyndEnclosure enclosure = new SyndEnclosureImpl();
-                enclosure.setUrl(attachmentUri);
-                ArrayList enclosures = new ArrayList();
-                enclosures.add(enclosure);
-                entry.setEnclosures(enclosures);
-            }
-            feed.getEntries().add(0, entry);
-            final File feedFile = new File(CACHE_FOLDER + File.separator + id
-                    + ".rss");
-            new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
+		}
 
-            String feedUri = seed(feedFile);
-            DistributedHashTable.getSingleton().store(id, feedUri,
-                    entry.getPublishedDate().getTime());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+		return dstFile;
+	}
 
-    static String getHashFromMagnetURI(String uri) {
-        String hash = null;
-        int btih = uri.indexOf("xt=urn:btih:");
-        if (btih >= 0) {
-            hash = uri.substring(btih + "xt=urn:btih:".length());
-            int amp = hash.indexOf('&');
-            if (amp >= 0)
-                hash = hash.substring(0, amp);
-        }
-        return hash;
-    }
+	public void addFeedEntry(String id, String text, File attachment) {
+		try {
+			String hash = hash(text);
+			File textFile = new File(getCacheFolder() + File.separator + hash
+					+ ".txt");
 
-    public void download(final String uri) {
-        String hash = getHashFromMagnetURI(uri);
-        downloadByHash(hash);
-    }
+			java.io.FileWriter w = new java.io.FileWriter(textFile);
+			w.write(text);
+			w.close();
 
-    public void downloadByHash(final String hash) {
-        try {
-            ObjectNode sharedFile = MAPPER.createObjectNode();
-            sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
-            sharedFile.put("file", CACHE_FOLDER + File.separator + hash);
+			String textUri = seed(textFile);
+			String attachmentUri = null;
+			if (attachment != null) {
+				attachmentUri = seed(attachment);
+			}
 
-            TextMessage message = session.createTextMessage();
-            message.setText(MAPPER.writeValueAsString(sharedFile));
-            producer.send(downloadQueue, message);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+			final SyndFeed feed = getFeed(id);
+			final SyndEntry entry = new SyndEntryImpl();
+			entry.setTitle("No Title");
+			entry.setLink(textUri);
+			entry.setPublishedDate(new Date());
+			SyndContent description = new SyndContentImpl();
+			description.setType("text/plain");
+			description.setValue(text);
+			entry.setDescription(description);
+			if (attachment != null) {
+				SyndEnclosure enclosure = new SyndEnclosureImpl();
+				enclosure.setUrl(attachmentUri);
+				ArrayList enclosures = new ArrayList();
+				enclosures.add(enclosure);
+				entry.setEnclosures(enclosures);
+			}
+			feed.getEntries().add(0, entry);
+			final File feedFile = new File(getCacheFolder() + File.separator + id
+					+ ".rss");
+			new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
 
-    }
+			String feedUri = seed(feedFile);
+			DistributedHashTable.getSingleton().store(id, feedUri,
+					entry.getPublishedDate().getTime());
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	static String getHashFromMagnetURI(String uri) {
+		String hash = null;
+		int btih = uri.indexOf("xt=urn:btih:");
+		if (btih >= 0) {
+			hash = uri.substring(btih + "xt=urn:btih:".length());
+			int amp = hash.indexOf('&');
+			if (amp >= 0)
+				hash = hash.substring(0, amp);
+		}
+		return hash;
+	}
+
+	public void download(final String uri) {
+		String hash = getHashFromMagnetURI(uri);
+		downloadByHash(hash);
+	}
+
+	public void downloadByHash(final String hash) {
+		try {
+			ObjectNode sharedFile = MAPPER.createObjectNode();
+			sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
+			sharedFile.put("file", getCacheFolder() + File.separator + hash);
+
+			TextMessage message = session.createTextMessage();
+			message.setText(MAPPER.writeValueAsString(sharedFile));
+			producer.send(downloadQueue, message);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+	}
 
 }
