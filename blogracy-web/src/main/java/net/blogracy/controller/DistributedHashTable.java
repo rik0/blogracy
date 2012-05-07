@@ -50,6 +50,7 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
 /**
  * Generic functions to manipulate feeds are defined in this class.
@@ -82,7 +83,7 @@ public class DistributedHashTable {
                     + "records.json");
             if (recordsFile.exists()) {
                 JSONArray recordList = new JSONArray(
-                        new FileReader(recordsFile));
+                        new JSONTokener(new FileReader(recordsFile)));
                 for (int i = 0; i < recordList.length(); ++i) {
                     JSONObject record = recordList.getJSONObject(i);
                     records.put(record.getString("id"), record);
