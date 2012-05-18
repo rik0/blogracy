@@ -46,12 +46,8 @@ import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
-
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * User: mic
@@ -66,7 +62,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 public class SeedService implements MessageListener {
 
     private PluginInterface plugin;
-    private final ObjectMapper mapper = new ObjectMapper();
 
     private Session session;
     private Destination queue;
@@ -92,9 +87,9 @@ public class SeedService implements MessageListener {
         try {
             String text = ((TextMessage) request).getText();
             Logger.info("seed service:" + text + ";");
-            ObjectNode entry = (ObjectNode) mapper.readTree(text);
+            JSONObject entry = new JSONObject(text);
             try {
-                File file = new File(entry.get("file").textValue());
+                File file = new File(entry.getString("file"));
 
                 Torrent torrent = plugin.getTorrentManager()
                         .createFromDataFile(file,
@@ -116,7 +111,7 @@ public class SeedService implements MessageListener {
 
                 if (request.getJMSReplyTo() != null) {
                     TextMessage response = session.createTextMessage();
-                    response.setText(mapper.writeValueAsString(entry));
+                    response.setText(entry.toString());
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
                     producer.send(request.getJMSReplyTo(), response);
                 }
@@ -128,18 +123,13 @@ public class SeedService implements MessageListener {
             } catch (DownloadException e) {
                 Logger.error("Download error: seed service: " + text);
                 e.printStackTrace();
-            } catch (JsonGenerationException e) {
-                e.printStackTrace();
-            } catch (JsonMappingException e) {
-                e.printStackTrace();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } catch (JMSException e) {
             Logger.error("JMS error: seed service");
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (JSONException e) {
+            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
