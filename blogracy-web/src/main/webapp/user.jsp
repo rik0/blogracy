@@ -2,6 +2,11 @@
 <%@ page import="net.blogracy.model.users.Users" %>
 <%@ page import="net.blogracy.controller.FileSharing" %>
 <%@ page import="net.blogracy.config.Configurations" %>
+<%@ page import="java.util.List" %>
+<%@ page import="java.util.Map" %>
+<%@ page import="java.util.HashMap" %>
+<%@ page import="org.apache.shindig.social.opensocial.model.Album" %>
+<%@ page import="org.apache.shindig.social.opensocial.model.MediaItem" %>
 <%
 String userHash = request.getParameter("user");
 if (userHash == null || userHash.length() == 0) {
@@ -10,11 +15,20 @@ if (userHash == null || userHash.length() == 0) {
 	userHash = Hashes.hash(userHash); // TODO: remove
 }
 
+List<Album> albums= FileSharing.getSingleton().getAlbums(userHash);
+Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
+for (Album a : albums)
+{
+	mediaItemMap.put(a.getId(), FileSharing.getSingleton().getMediaItemsWithCachedImages(userHash, a.getId()));
+}
+
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", Users.newUser(Hashes.fromString(userHash)));
 pageContext.setAttribute("feed", FileSharing.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
+pageContext.setAttribute("userAlbums", albums);
+pageContext.setAttribute("photoMap", mediaItemMap);
 %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -33,11 +47,14 @@ pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
 
     <!-- Le styles -->
     <link href="/css/bootstrap.css" rel="stylesheet"/>
-
+    <link href="/css/lightbox.css" rel="stylesheet" />
+    <link type="text/css" href="/css/smoothness/jquery-ui-1.8.20.custom.css" rel="stylesheet" />
+    
     <script src="/scripts/jquery-1.7.js"></script>
     <script src="/scripts/jquery.form.js"></script>
+    <script src="/scripts/jquery-ui-1.8.20.custom.min.js"></script>
     <script src="/scripts/bootstrap-alerts.js"></script>
-
+    <script src="/scripts/lightbox.js"></script>
     <script type="text/javascript">
         // wait for the DOM to be loaded
         jQuery(function() {
@@ -61,8 +78,46 @@ pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
             });
         });
 
+        jQuery(function() {
+            jQuery('#create-gallery').ajaxForm({
+                url: '/ImageGalleryUploader',
+                clearForm: true,
+                type: 'POST',
+                success: function() {
+                    console.log(arguments);
+                    location.reload();
+                },
+                error: function(request, status, statusMessage) {
+                    var serverSideException = JSON.parse(request.responseText);
+                    var errorMessage = '<div class="alert-message block-message error"><a class="close" href="#">x</a>' +
+                                       '<p><strong>' + serverSideException.errorMessage + '</strong></p>' +
+                                        '<pre>' + serverSideException.errorTrace.join("\n") + '</pre>' +
+                                       '</div>';
+                    jQuery(errorPlace).html(errorMessage);
+                    jQuery(".alert-message").alert();
+                }
+                
+            });
+        });
+        
+        function openDialogWithLink(url)
+        {
+        	var $dialog = $('#pop').load(url)
+            .dialog({
+                autoOpen: false,
+                title: 'Upload Images to Gallery',
+                height: 650,
+				width: 750,
+				modal: true,  
+				close: function(event,ui){location.reload(true); $(this).dialog('destroy');}
+       		 });
+        	
+        	$dialog.dialog('open');
+        };
+    
     </script>
-
+    
+	
     <style type="text/css">
             /* Override some defaults */
         html, body {
@@ -120,7 +175,39 @@ pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
         .topbar .btn {
             border: 0;
         }
-
+        
+         .blogracy-thumbnail {
+			max-width: 80px;
+			max-height: 80px;
+		}
+		
+		.set {
+			padding-top:10px;
+			clear:both;
+		}
+		
+		.blogracyUserGalleries {
+			padding-left:20px;
+		}
+		
+		.imageRow {
+			margin-bottom: 20px;
+		}
+		
+		.imageRowHeader {
+			width:100%;
+			margin:3px;
+		}
+		
+		.blogracyGalleryTitle
+		{
+			float:left;
+		}
+		
+		.blogracyGalleryTitle p {
+			font-weight: bold; 
+			font-size: 15px;
+		}
     </style>
 
     <!-- Le fav and touch icons -->
@@ -189,11 +276,51 @@ pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
                     </fieldset>
                 </form>
                 <div class="span10" id="user-feed">
+                <h2>User Feed</h2>
                     <ul>
 					<c:forEach var="entry" items="${feed}">
 						<li>${entry.content}</li>
 					</c:forEach>
 					</ul>
+                </div>
+                  <div class="span10" id="user-galleries">
+                   <h2>Photo Galleries</h2>
+					<form id="create-gallery">
+	                    <input type="hidden"name="user" value="${user.hash}" >
+	                    <fieldset class="form-stacked">
+	                        <div class="clearfix">
+	                            <label for="messageArea">Create a new gallery</label>
+	                            <div class="input">
+	                                <input id="galleryNameTxt" name="galleryname" class="text">
+	                                <input type="submit" value="Create Gallery" class="btn primary">&nbsp;
+	                                <button class="btn" type="reset">Cancel</button>
+	                            </div>
+	                        </div>
+	                    </fieldset>
+	                </form>
+                  <div class="blogracyUserGalleries">
+                     <c:forEach var="album" items="${userAlbums}">
+						<div class="imageRow"> 
+						<div class="imageRowHeader">
+						<div class="blogracyGalleryTitle"> 
+						<p>${album.title}</p> 
+						</div>  
+						<c:if test="${localUser == user}"> 
+							<div id="pop"  style="display:none;"></div>
+							<div style='float:right'>
+							<button  class="btn primary"  type="submit" id="imageUploadOpener" onclick="openDialogWithLink('/imageGallery.jsp?albumId=${album.id}&user=${user.hash}');">Add Images to Gallery</button>
+							</div> 
+						</c:if>
+						</div>
+						<div class="set">
+						<c:forEach var="mapEntry" items="${photoMap[album.id]}">
+					  		  <a href="${mapEntry.url}" rel="lightbox[${album.id}]" title="${mapEntry.title}"><img class="blogracy-thumbnail" src="${mapEntry.url}"/></a>
+					  	</c:forEach>
+					  	</div>
+					  </div>
+					</c:forEach>
+                    
+                  </div>
                 </div>
             </div>
             <div class="span4">
@@ -213,6 +340,7 @@ pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
                 <h3>Tags</h3>
             </div>
         </div>
+      
     </div>
 
     <footer>

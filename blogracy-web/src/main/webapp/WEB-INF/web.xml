@@ -92,4 +92,12 @@
         <url-pattern>/fileupload</url-pattern>
     </filter-mapping>
  
+    <servlet>
+        <servlet-name>imageGalleryUploader</servlet-name>
+        <servlet-class>net.blogracy.web.ImageGalleryUploader</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>imageGalleryUploader</servlet-name>
+        <url-pattern>/ImageGalleryUploader</url-pattern>
+    </servlet-mapping>
 </web-app>
