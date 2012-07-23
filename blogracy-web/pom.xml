@@ -13,34 +13,75 @@
  
   <dependencies>
     <dependency>
+      <groupId>junit</groupId>
+      <artifactId>junit</artifactId>
+      <version>4.9</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
       <artifactId>jetty-all-server</artifactId>
       <version>${jettyVersion}</version>
     </dependency>
+	<dependency>
+        <groupId>org.eclipse.jetty</groupId>
+        <artifactId>jetty-servlet</artifactId>
+        <version>${jettyVersion}</version>
+      </dependency>
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
       <artifactId>jetty-util</artifactId>
       <version>6.1.26</version>
+    </dependency>
+	<dependency>
+	  <groupId>org.mortbay.jetty</groupId>
+	  <artifactId>jsp-2.1-glassfish</artifactId>
+	  <version>2.1.v20100127</version>
+    </dependency>
+	<dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jsp-api-2.1-glassfish</artifactId>
+      <version>2.1.v20100127</version>
     </dependency>
     <dependency>
       <groupId>commons-codec</groupId>
       <artifactId>commons-codec</artifactId>
       <version>1.6</version>
     </dependency>
-    <dependency>
+	<dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.6.4</version>
+    </dependency>
+	<dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-log4j12</artifactId>
+      <version>1.6.4</version>
+    </dependency>
+	<dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.14</version>
+    </dependency>
+	<dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-all</artifactId>
+      <version>5.5.1</version>
     </dependency>
     <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-core</artifactId>
       <version>5.5.1</version>
     </dependency>
+	<dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-web</artifactId>
+      <version>5.5.1</version>
+    </dependency>
     <dependency>
-      <groupId>rome</groupId>
-      <artifactId>rome</artifactId>
-      <version>1.0</version>
+      <groupId>org.apache.shindig</groupId>
+      <artifactId>shindig-social-api</artifactId>
+      <version>3.0.0-beta4</version>
     </dependency>
     <dependency>
       <groupId>org.json</groupId>
@@ -53,7 +94,7 @@
     <resources>
       <resource>
         <directory>src/main/config</directory>
-        <filtering>true</filtering>
+        <!--filtering>true</filtering-->
       </resource>
       <resource>
         <directory>src/main/resources</directory>
@@ -83,11 +124,31 @@
           <fork>true</fork>
         </configuration>
         <dependencies>
-          <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-            <version>1.6.4</version>
-          </dependency>
+		  <dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.6.4</version>
+		  </dependency>
+		  <dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.14</version>
+		  </dependency>
+		  <dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-all</artifactId>
+			<version>5.5.1</version>
+		  </dependency>
+		  <dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-core</artifactId>
+			<version>5.5.1</version>
+		  </dependency>
+		  <dependency>
+			<groupId>org.apache.activemq</groupId>
+			<artifactId>activemq-web</artifactId>
+			<version>5.5.1</version>
+		  </dependency>
         </dependencies>
       </plugin>
     </plugins>

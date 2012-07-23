@@ -23,11 +23,15 @@
 package net.blogracy.controller;
 
 import java.io.File;
-import java.io.PrintWriter;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -43,19 +47,20 @@ import net.blogracy.config.Configurations;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.codec.binary.Base32;
+import org.apache.shindig.protocol.conversion.BeanConverter;
+import org.apache.shindig.protocol.conversion.BeanJsonConverter;
+import org.apache.shindig.social.core.model.ActivityEntryImpl;
+import org.apache.shindig.social.core.model.ActivityObjectImpl;
+import org.apache.shindig.social.opensocial.model.ActivityEntry;
+import org.apache.shindig.social.opensocial.model.ActivityObject;
+import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONTokener;
 
-import com.sun.syndication.feed.synd.SyndContent;
-import com.sun.syndication.feed.synd.SyndContentImpl;
-import com.sun.syndication.feed.synd.SyndEnclosure;
-import com.sun.syndication.feed.synd.SyndEnclosureImpl;
-import com.sun.syndication.feed.synd.SyndEntry;
-import com.sun.syndication.feed.synd.SyndEntryImpl;
-import com.sun.syndication.feed.synd.SyndFeed;
-import com.sun.syndication.feed.synd.SyndFeedImpl;
-import com.sun.syndication.io.SyndFeedInput;
-import com.sun.syndication.io.SyndFeedOutput;
-import com.sun.syndication.io.XmlReader;
+import com.google.inject.Binder;
+import com.google.inject.Guice;
+import com.google.inject.Module;
+import com.google.inject.name.Names;
 
 /**
  * Generic functions to manipulate feeds are defined in this class.
@@ -70,13 +75,26 @@ public class FileSharing {
     private MessageProducer producer;
     private MessageConsumer consumer;
 
+    static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss");
     static final String CACHE_FOLDER = Configurations.getPathConfig()
             .getCachedFilesDirectoryPath();
 
-    private static final FileSharing theInstance = new FileSharing();
+    private static final FileSharing THE_INSTANCE = new FileSharing();
+
+    private static BeanJsonConverter CONVERTER = new BeanJsonConverter(
+            Guice.createInjector(new Module() {
+                @Override
+                public void configure(Binder b) {
+                    b.bind(BeanConverter.class)
+                            .annotatedWith(
+                                    Names.named("shindig.bean.converter.json"))
+                            .to(BeanJsonConverter.class);
+                }
+            }));
 
     public static FileSharing getSingleton() {
-        return theInstance;
+        return THE_INSTANCE;
     }
 
     public static String hash(String text) {
@@ -132,30 +150,35 @@ public class FileSharing {
         return uri;
     }
 
-    static public SyndFeed getFeed(String user) {
+    static public List<ActivityEntry> getFeed(String user) {
+        List<ActivityEntry> result = new ArrayList<ActivityEntry>();
         System.out.println("Getting feed: " + user);
-        SyndFeed feed = null;
-        try {
-            JSONObject record = DistributedHashTable.getSingleton().getRecord(
-                    user);
-            String latestHash = FileSharing.getHashFromMagnetURI(record
-                    .getString("uri"));
-            File feedFile = new File(CACHE_FOLDER + File.separator + latestHash
-                    + ".rss");
-            System.out.println("Getting feed: " + feedFile.getAbsolutePath());
-            feed = new SyndFeedInput().build(new XmlReader(feedFile));
-            System.out.println("Feed loaded");
-        } catch (Exception e) {
-            feed = new SyndFeedImpl();
-            feed.setFeedType("rss_2.0");
-            feed.setTitle(user);
-            feed.setLink("http://www.blogracy.net");
-            feed.setDescription("This feed has been created using ROME (Java syndication utilities");
-            feed.setEntries(new ArrayList());
-            System.out.println("Feed created");
+        JSONObject record = DistributedHashTable.getSingleton().getRecord(user);
+        if (record != null) {
+            try {
+                String latestHash = FileSharing.getHashFromMagnetURI(record
+                        .getString("uri"));
+                File dbFile = new File(CACHE_FOLDER + File.separator
+                        + latestHash + ".json");
+                System.out.println("Getting feed: " + dbFile.getAbsolutePath());
+                JSONObject db = new JSONObject(new JSONTokener(new FileReader(
+                        dbFile)));
+
+                JSONArray items = db.getJSONArray("items");
+                for (int i = 0; i < items.length(); ++i) {
+                    JSONObject item = items.getJSONObject(i);
+                    ActivityEntry entry = (ActivityEntry) CONVERTER
+                            .convertToObject(item, ActivityEntry.class);
+                    result.add(entry);
+                }
+                System.out.println("Feed loaded");
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Feed created");
+            }
         }
-        return feed;
-    }
+        return result;
+    }   
 
     public void addFeedEntry(String id, String text, File attachment) {
         try {
@@ -163,7 +186,7 @@ public class FileSharing {
             File textFile = new File(CACHE_FOLDER + File.separator + hash
                     + ".txt");
 
-            java.io.FileWriter w = new java.io.FileWriter(textFile);
+            FileWriter w = new FileWriter(textFile);
             w.write(text);
             w.close();
 
@@ -173,30 +196,36 @@ public class FileSharing {
                 attachmentUri = seed(attachment);
             }
 
-            final SyndFeed feed = getFeed(id);
-            final SyndEntry entry = new SyndEntryImpl();
-            entry.setTitle("No Title");
-            entry.setLink(textUri);
-            entry.setPublishedDate(new Date());
-            SyndContent description = new SyndContentImpl();
-            description.setType("text/plain");
-            description.setValue(text);
-            entry.setDescription(description);
+            final List<ActivityEntry> feed = getFeed(id);
+            final ActivityEntry entry = new ActivityEntryImpl();
+            entry.setVerb("post");
+            entry.setUrl(textUri);
+            entry.setPublished(ISO_DATE_FORMAT.format(new Date()));
+            entry.setContent(text);
             if (attachment != null) {
-                SyndEnclosure enclosure = new SyndEnclosureImpl();
+                ActivityObject enclosure = new ActivityObjectImpl();
                 enclosure.setUrl(attachmentUri);
-                ArrayList enclosures = new ArrayList();
-                enclosures.add(enclosure);
-                entry.setEnclosures(enclosures);
+                entry.setObject(enclosure);
             }
-            feed.getEntries().add(0, entry);
+            feed.add(0, entry);
             final File feedFile = new File(CACHE_FOLDER + File.separator + id
-                    + ".rss");
-            new SyndFeedOutput().output(feed, new PrintWriter(feedFile));
+                    + ".json");
+
+            JSONArray items = new JSONArray();
+            for (int i = 0; i < feed.size(); ++i) {
+                JSONObject item = new JSONObject(feed.get(i));
+                items.put(item);
+            }
+            JSONObject db = new JSONObject();
+            db.put("items", items);
+
+            FileWriter writer = new FileWriter(feedFile);
+            db.write(writer);
+            writer.close();
 
             String feedUri = seed(feedFile);
             DistributedHashTable.getSingleton().store(id, feedUri,
-                    entry.getPublishedDate().getTime());
+                    entry.getPublished());
         } catch (Exception e) {
             e.printStackTrace();
         }
