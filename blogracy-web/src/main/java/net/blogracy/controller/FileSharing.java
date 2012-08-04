@@ -258,7 +258,6 @@ public class FileSharing {
 
 		if (photoAlbumTitle == null || photoAlbumTitle.isEmpty())
 			return null;
-
 		String albumHash = null;
 		try {
 			albumHash = hash(userId + photoAlbumTitle);

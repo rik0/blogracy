@@ -9,6 +9,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import net.blogracy.config.Configurations;
 import net.blogracy.controller.FileSharing;
 
 public class FileUpload extends HttpServlet {
@@ -20,7 +21,11 @@ public class FileUpload extends HttpServlet {
         String text = req.getParameter("usertext").trim();
 
         FileSharing sharing = FileSharing.getSingleton();
-        String id = sharing.hash("mic");
+        //String id = sharing.hash("mic");
+        String id = Configurations.getUserConfig().getUser().getHash().toString();
+       
+        // TODO recipient of message/files?
+        //String dest = req.getParameter("user");
         sharing.addFeedEntry(id, text, attachment);
 
         PrintWriter outp = resp.getWriter();
