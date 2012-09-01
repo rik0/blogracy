@@ -36,4 +36,11 @@ public interface UserConfig {
     public KeyPair getUserKeyPair();
 
     public List<User> getFriends();
+    
+    /**
+     * Get the friend associated with the correspondent hash
+     * @param hash 
+     * @return the user with the correspondent hash, null if not found
+     */
+    public User getFriend(final String hash);
 }
