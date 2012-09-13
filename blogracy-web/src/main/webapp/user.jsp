@@ -1,5 +1,6 @@
 <%@ page import="net.blogracy.model.hashes.Hashes" %>
 <%@ page import="net.blogracy.model.users.Users" %>
+<%@ page import="net.blogracy.model.users.User" %>
 <%@ page import="net.blogracy.controller.FileSharing" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
@@ -14,6 +15,20 @@ if (userHash == null || userHash.length() == 0) {
 } else if (userHash.length() != 32) {
 	userHash = Hashes.hash(userHash); // TODO: remove
 }
+User user = null;
+
+if (userHash.equals(Configurations.getUserConfig().getUser().getHash().toString()))
+	user = Configurations.getUserConfig().getUser();
+else 
+	{
+	// The right user should be searched in the user's friends
+	user =Configurations.getUserConfig().getFriend(userHash);
+	
+	//This shouldn't happen in current implementation, but anyway a new user with the requested userHash is built
+	if (user == null)
+		user = Users.newUser(Hashes.fromString(userHash));
+	}
+	
 
 List<Album> albums= FileSharing.getSingleton().getAlbums(userHash);
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
@@ -23,7 +38,7 @@ for (Album a : albums)
 }
 
 pageContext.setAttribute("application", "Blogracy");
-pageContext.setAttribute("user", Users.newUser(Hashes.fromString(userHash)));
+pageContext.setAttribute("user", user);
 pageContext.setAttribute("feed", FileSharing.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());

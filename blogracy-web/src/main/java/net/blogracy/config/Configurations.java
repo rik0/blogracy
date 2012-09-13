@@ -172,6 +172,13 @@ public class Configurations {
                     }
                     return friends;
                 }
+                
+                public User getFriend(final String hash){             	
+                	for (User friend : this.getFriends())
+                		if(friend.getHash().toString().equals(hash))
+                			return friend;
+                	return null;
+                }
 
                 private User loadUser(String text) {
                     String[] hashAndNick = text.split(" ", 2);
