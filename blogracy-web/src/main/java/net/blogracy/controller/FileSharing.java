@@ -27,14 +27,12 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.InvalidParameterException;
-import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,22 +48,20 @@ import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
 import net.blogracy.errors.PhotoAlbumDuplicated;
+import net.blogracy.model.hashes.Hashes;
+import net.blogracy.model.users.User;
+import net.blogracy.model.users.UserData;
+import net.blogracy.model.users.UserDataImpl;
+import net.blogracy.model.users.Users;
 import net.blogracy.util.FileUtils;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.codec.binary.Base32;
 import org.apache.shindig.protocol.conversion.BeanConverter;
 import org.apache.shindig.protocol.conversion.BeanJsonConverter;
-import org.apache.shindig.social.core.model.ActivityEntryImpl;
-import org.apache.shindig.social.core.model.ActivityObjectImpl;
-import org.apache.shindig.social.core.model.AlbumImpl;
-import org.apache.shindig.social.core.model.MediaItemImpl;
 import org.apache.shindig.social.opensocial.model.ActivityEntry;
-import org.apache.shindig.social.opensocial.model.ActivityObject;
 import org.apache.shindig.social.opensocial.model.Album;
 import org.apache.shindig.social.opensocial.model.MediaItem;
-import org.apache.shindig.social.opensocial.model.MediaItem.Type;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -114,10 +110,7 @@ public class FileSharing {
 	public static String hash(String text) {
 		String result = null;
 		try {
-			MessageDigest digester = MessageDigest.getInstance("SHA-1");
-			Base32 encoder = new Base32();
-			byte[] digest = digester.digest(text.getBytes());
-			result = encoder.encodeAsString(digest);
+			result = Hashes.hash(text);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
@@ -127,10 +120,7 @@ public class FileSharing {
 	public static String hash(File file) {
 		String result = null;
 		try {
-			MessageDigest digester = MessageDigest.getInstance("SHA-1");
-			Base32 encoder = new Base32();
-			byte[] digest = digester.digest(FileUtils.getBytesFromFile(file));
-			result = encoder.encodeAsString(digest);
+			result = Hashes.hash(file);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -155,6 +145,13 @@ public class FileSharing {
 		}
 	}
 
+	/**
+	 * Seeds a file via BitTorrent protocol
+	 * 
+	 * @param file
+	 *            file to be seeded
+	 * @return the magnet link uri of the shared file
+	 */
 	public String seed(File file) {
 		String uri = null;
 		try {
@@ -179,6 +176,93 @@ public class FileSharing {
 		return uri;
 	}
 
+	/**
+	 * Gets the user data (ActivityStream, Albums and MediaItems) from the
+	 * user's db
+	 * 
+	 * @param userId
+	 * @return
+	 */
+	public static UserData getUserData(String userId) {
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		User user = null;
+
+		if (userId.equals(Configurations.getUserConfig().getUser().getHash()
+				.toString()))
+			user = Configurations.getUserConfig().getUser();
+		else
+		{
+			// The right user should be searched in the user's friends
+			user = Configurations.getUserConfig().getFriend(userId);
+
+			// This shouldn't happen in current implementation, but anyway a new
+			// user with the requested userHash is built
+			if (user == null)
+				user = Users.newUser(Hashes.fromString(userId));
+		}
+
+		UserDataImpl userData = new UserDataImpl(user);
+		userData.setActivityStream(getFeed(userId));
+		userData.setAlbums(getAlbums(userId));
+		userData.setMediaItems(getMediaItems(userId));
+		return userData;
+	}
+
+	/**
+	 * Gets the photo albums from the user's 'mediaUri' file given the userId.
+	 * 
+	 * @param userId
+	 */
+	public static List<Album> getAlbums(String userId) {
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		List<Album> albums = new ArrayList<Album>();
+		try {
+			JSONObject recordDb = DistributedHashTable.getSingleton()
+					.getRecord(userId);
+
+			if (recordDb == null)
+				return albums;
+
+			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
+					.getString("uri"));
+
+			if (latestHash == null)
+				return albums;
+
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
+					+ ".json");
+			System.out.println("Getting album data: "
+					+ dbFile.getAbsolutePath());
+			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
+					dbFile)));
+
+			JSONArray albumArray = db.optJSONArray("albums");
+
+			if (albumArray != null) {
+				for (int i = 0; i < albumArray.length(); ++i) {
+					JSONObject singleAlbumObject = albumArray.getJSONObject(i);
+					Album entry = (Album) CONVERTER.convertToObject(
+							singleAlbumObject, Album.class);
+					albums.add(entry);
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return albums;
+	}
+
+	/**
+	 * Fetched the user ActivityStream from the User's DB
+	 * 
+	 * @param user
+	 * @return
+	 */
 	static public List<ActivityEntry> getFeed(String user) {
 		List<ActivityEntry> result = new ArrayList<ActivityEntry>();
 		System.out.println("Getting feed: " + user);
@@ -209,162 +293,15 @@ public class FileSharing {
 		return result;
 	}
 
-	public void addFeedEntry(String id, String text, File attachment) {
-		try {
-			String hash = hash(text);
-			File textFile = new File(CACHE_FOLDER + File.separator + hash
-					+ ".txt");
-
-			FileWriter w = new FileWriter(textFile);
-			w.write(text);
-			w.close();
-
-			String textUri = seed(textFile);
-			String attachmentUri = null;
-			if (attachment != null) {
-				attachmentUri = seed(attachment);
-			}
-
-			final List<ActivityEntry> feed = getFeed(id);
-			final ActivityEntry entry = new ActivityEntryImpl();
-			entry.setVerb("post");
-			entry.setUrl(textUri);
-			entry.setPublished(ISO_DATE_FORMAT.format(new Date()));
-			entry.setContent(text);
-			if (attachment != null) {
-				ActivityObject enclosure = new ActivityObjectImpl();
-				enclosure.setUrl(attachmentUri);
-				entry.setObject(enclosure);
-			}
-			feed.add(0, entry);
-			String feedUri = seedActivityStream(id, feed);
-			DistributedHashTable.getSingleton().store(id, feedUri,
-					entry.getPublished());
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
 	/**
-	 * Create a new Album for the user.
-	 * Adds the album to the user's recordDB entry
-	 * Adds the action  to the ActivityStream (verb: create)
-	 * 
-	 * @param userId
-	 * @param photoAlbumName
-	 * @throws PhotoAlbumDuplicated 
-	 */
-	public synchronized String createPhotoAlbum(String userId, String photoAlbumTitle) throws PhotoAlbumDuplicated {
-		if (userId == null)
-			throw new InvalidParameterException("userId cannot be null");
-
-		if (photoAlbumTitle == null || photoAlbumTitle.isEmpty())
-			return null;
-		
-		List<Album> userAlbums = this.getAlbums(userId);
-		
-		for (Album existingAlbum : userAlbums)
-			if (existingAlbum.getTitle().equals(photoAlbumTitle))
-					throw new PhotoAlbumDuplicated(photoAlbumTitle);
-		
-		String albumHash = null;
-		try {
-			// Album OpenSocial model
-			albumHash = hash(userId + photoAlbumTitle);
-			Album album = new AlbumImpl();
-			album.setTitle(photoAlbumTitle);
-			album.setId(albumHash);
-			album.setOwnerId(userId);
-			List<Type> types = new ArrayList<Type>();
-			types.add(Type.IMAGE);
-			album.setMediaType(types);
-			// Album is empty where created
-			album.setMediaItemCount(0);
-
-			// ActivitEntry preparation
-			final List<ActivityEntry> feed = getFeed(userId);
-			final ActivityEntry entry = new ActivityEntryImpl();
-			entry.setVerb("create");
-			ActivityObject mediaAlbumObject = new ActivityObjectImpl();
-			mediaAlbumObject.setObjectType("collection");
-			mediaAlbumObject.setContent(photoAlbumTitle);
-			entry.setObject(mediaAlbumObject);
-
-			entry.setPublished(ISO_DATE_FORMAT.format(new Date()));
-			entry.setContent(photoAlbumTitle);
-
-			feed.add(0, entry);
-			String feedUri = seedActivityStream(userId, feed);
-
-			// Append another album into the user's 'mediaUri' file
-			userAlbums.add(album);
-			
-			String mediaUri = seedMediaUri(userId, userAlbums, this.getMediaItems(userId));
-
-			DistributedHashTable.getSingleton().store(userId, feedUri,
-					entry.getPublished(), mediaUri);
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return albumHash;
-	}
-
-	/**
-	 * Get the photo albums from the user's 'mediaUri' file given the userId.
-	 * 
-	 * @param userId
-	 */
-	public List<Album> getAlbums(String userId) {
-		if (userId == null)
-			throw new InvalidParameterException("userId cannot be null");
-
-		List<Album> albums = new ArrayList<Album>();
-		try {
-			JSONObject recordDb = DistributedHashTable.getSingleton()
-					.getRecord(userId);
-
-			if (recordDb == null)
-				return albums;
-
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.optString("mediaUri"));
-			
-			if (latestHash == null)
-				return albums;
-			
-			File dbFile = new File(CACHE_FOLDER + File.separator
-					+ latestHash + ".json");
-			System.out.println("Getting album data: " + dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
-			
-			JSONArray albumArray = db.optJSONArray("albums");
-
-			if (albumArray != null) {
-				for (int i = 0; i < albumArray.length(); ++i) {
-					JSONObject singleAlbumObject = albumArray.getJSONObject(i);
-					Album entry = (Album) CONVERTER.convertToObject(
-							singleAlbumObject, Album.class);
-					albums.add(entry);
-				}
-			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return albums;
-	}
-
-	/**
-	 * Get the images from user's 'mediaUri' file given the userId and the associated albumId
+	 * Get the images from user's 'mediaUri' file given the userId and the
+	 * associated albumId
 	 * 
 	 * @param userId
 	 * @param albumId
 	 * @return
 	 */
-	public List<MediaItem> getMediaItems(String userId, String albumId) {
+	public static List<MediaItem> getMediaItems(String userId, String albumId) {
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
 
@@ -380,19 +317,19 @@ public class FileSharing {
 			if (recordDb == null)
 				return mediaItems;
 
-
 			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.optString("mediaUri"));
-			
-			if(latestHash == null)
+					.getString("uri"));
+
+			if (latestHash == null)
 				return mediaItems;
-			
-			File dbFile = new File(CACHE_FOLDER + File.separator
-					+ latestHash + ".json");
-			System.out.println("Getting media data: " + dbFile.getAbsolutePath());
+
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
+					+ ".json");
+			System.out.println("Getting media data: "
+					+ dbFile.getAbsolutePath());
 			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
 					dbFile)));
-						
+
 			JSONArray mediaItemsArray = db.optJSONArray("mediaItems");
 
 			if (mediaItemsArray != null) {
@@ -414,15 +351,15 @@ public class FileSharing {
 	}
 
 	/**
-	 * Gets the images from user's 'mediaUri' file given the userId and the associated albumId.
-	 * Attempts to download the images from DHT. If successful, set's the URL
-	 * with the cached image link
+	 * Gets the images from user's 'mediaUri' file given the userId and the
+	 * associated albumId. Attempts to download the images from DHT. If
+	 * successful, set's the URL with the cached image link
 	 * 
 	 * @param userId
 	 * @param albumId
 	 * @return
 	 */
-	public List<MediaItem> getMediaItemsWithCachedImages(String userId,
+	public static List<MediaItem> getMediaItemsWithCachedImages(String userId,
 			String albumId) {
 
 		if (userId == null)
@@ -431,7 +368,7 @@ public class FileSharing {
 		if (albumId == null)
 			throw new InvalidParameterException("albumId cannot be null");
 
-		List<MediaItem> mediaItems = this.getMediaItems(userId, albumId);
+		List<MediaItem> mediaItems = getMediaItems(userId, albumId);
 
 		for (MediaItem item : mediaItems) {
 			String itemMagneUri = item.getUrl();
@@ -442,16 +379,93 @@ public class FileSharing {
 		return mediaItems;
 	}
 
+	/**
+	 * Adds a new message / attachment to the user's ActivityStream (verb
+	 * "POST")
+	 * 
+	 * @param userId
+	 * @param text
+	 * @param attachment
+	 */
+	public void addFeedEntry(String userId, String text, File attachment) {
+		try {
+			String hash = hash(text);
+			File textFile = new File(CACHE_FOLDER + File.separator + hash
+					+ ".txt");
+
+			FileWriter w = new FileWriter(textFile);
+			w.write(text);
+			w.close();
+
+			String textUri = seed(textFile);
+			String attachmentUri = null;
+			if (attachment != null) {
+				attachmentUri = seed(attachment);
+			}
+
+			final String publishDate = ISO_DATE_FORMAT.format(new Date());
+
+			UserData userData = getUserData(userId);
+			userData.addFeedEntry(text, textUri, attachmentUri, publishDate);
+
+			String dbUri = this.seedUserData(userData);
+
+			DistributedHashTable.getSingleton().store(userId, dbUri,
+					publishDate);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Create a new Album for the user. Adds the album to the user's recordDB
+	 * entry Adds the action to the ActivityStream (verb: create)
+	 * 
+	 * @param userId
+	 * @param photoAlbumName
+	 * @throws PhotoAlbumDuplicated
+	 */
+	public synchronized String createPhotoAlbum(String userId,
+			String photoAlbumTitle) throws PhotoAlbumDuplicated {
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		if (photoAlbumTitle == null || photoAlbumTitle.isEmpty())
+			return null;
+
+		UserData userData = getUserData(userId);
+
+		for (Album existingAlbum : userData.getAlbums())
+			if (existingAlbum.getTitle().equals(photoAlbumTitle))
+				throw new PhotoAlbumDuplicated(photoAlbumTitle);
+
+		String albumHash = null;
+		try {
+			final String publishedDate = ISO_DATE_FORMAT.format(new Date());
+
+			albumHash = userData.createPhotoAlbum(photoAlbumTitle,
+					publishedDate);
+			String dbUri = this.seedUserData(userData);
+
+			DistributedHashTable.getSingleton().store(userId, dbUri,
+					publishedDate);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return albumHash;
+	}
+
 	/***
-	 * Add multiple MediaItems to an album.
-	 * It updates the user's 'mediaUri' file and notifies the action in the user's Activity Stream (verb: add)
+	 * Add multiple MediaItems to an album. It updates the user's 'mediaUri'
+	 * file and notifies the action in the user's Activity Stream (verb: add)
+	 * 
 	 * @param userId
 	 * @param albumId
 	 * @param photos
 	 * @return
 	 */
-	public synchronized List<String> addMediaItemsToAlbum(String userId, String albumId,
-			Map<File, String> photos) {
+	public synchronized List<String> addMediaItemsToAlbum(String userId,
+			String albumId, Map<File, String> photos) {
 		if (photos == null)
 			return null;
 
@@ -461,8 +475,10 @@ public class FileSharing {
 		if (albumId == null)
 			throw new InvalidParameterException("albumId cannot be null");
 
+		UserData userData = getUserData(userId);
+
 		Album album = null;
-		for (Album a : this.getAlbums(userId)) {
+		for (Album a : userData.getAlbums()) {
 			if (a.getId().equals(albumId)) {
 				album = a;
 				break;
@@ -474,9 +490,7 @@ public class FileSharing {
 					+ " does not match to a valid album for the user " + userId);
 
 		List<String> hashList = new ArrayList<String>();
-		List<MediaItem> listOfMediaItems = new ArrayList<MediaItem>();
 
-		final List<ActivityEntry> feed = getFeed(userId);
 		final String publishedDate = ISO_DATE_FORMAT.format(new Date());
 
 		try {
@@ -494,85 +508,37 @@ public class FileSharing {
 
 				final String fileUrl = this.seed(photoCachedFile);
 
-				final ActivityEntry entry = new ActivityEntryImpl();
-				entry.setVerb("add");
-				entry.setPublished(publishedDate);
-				entry.setContent(getHashFromMagnetURI(fileUrl));
+				userData.addMediaItemToAlbum(albumId, fileUrl,
+						getHashFromMagnetURI(fileUrl), mimeType, publishedDate);
 
-				ActivityObject mediaItemObject = new ActivityObjectImpl();
-				mediaItemObject.setObjectType("image");
-				mediaItemObject.setContent(getHashFromMagnetURI(fileUrl));
-				mediaItemObject.setUrl(fileUrl);
-				entry.setObject(mediaItemObject);
-
-				ActivityObject mediaAlbumObject = new ActivityObjectImpl();
-				mediaAlbumObject.setObjectType("collection");
-				mediaAlbumObject.setContent(album.getTitle());
-				mediaAlbumObject.setId(album.getId());
-				entry.setTarget(mediaAlbumObject);
-
-				feed.add(0, entry);
-
-				MediaItem mediaItem = new MediaItemImpl();
-				mediaItem.setAlbumId(albumId);
-				mediaItem.setId(getHashFromMagnetURI(fileUrl));
-				mediaItem.setUrl(fileUrl);
-				mediaItem.setLastUpdated(publishedDate);
-				mediaItem.setMimeType(mimeType);
-				
-				if (album.getMediaMimeType() == null)
-					album.setMediaMimeType(new ArrayList<String>());
-				
-				List<String> albumMimeTypes = album.getMediaMimeType();
-				
-				if(!albumMimeTypes.contains(mimeType))
-					albumMimeTypes.add(mimeType);
-
-				listOfMediaItems.add(mediaItem);
 				hashList.add(getHashFromMagnetURI(fileUrl));
 			}
 
-			album.setMediaItemCount(album.getMediaItemCount() + photos.size());
+			String dbUri = this.seedUserData(userData);
 
-			String feedUri = seedActivityStream(userId, feed);
-
-			// Update the album accordingly
-			List<Album> userAlbums = this.getAlbums(userId);
-			
-			for (int i = 0; i < userAlbums.size(); ++i)
-			{
-				Album currAlbum = userAlbums.get(i);
-				if (currAlbum.getId().equals(albumId))
-					currAlbum = album;
-			}
-			
-			List<MediaItem> userMediaItems = this.getMediaItems(userId, albumId);
-			userMediaItems.addAll(listOfMediaItems);
-			
-			String mediaUri = this.seedMediaUri(userId, userAlbums, userMediaItems);
-			
-			DistributedHashTable.getSingleton().store(userId, feedUri,
-					publishedDate, mediaUri);
-
-			return hashList;
+			DistributedHashTable.getSingleton().store(userId, dbUri,
+					publishedDate);
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			return null;
 		}
+
+		return hashList;
 	}
 
 	/***
-	 * Adds a single MediaItem file to an Album. 
-	 * It updates the user's 'mediaUri' file  and notifies the action in the user's Activity Stream (verb: remove)
+	 * Adds a single MediaItem file to an Album. It updates the user's
+	 * 'mediaUri' file and notifies the action in the user's Activity Stream
+	 * (verb: remove)
+	 * 
 	 * @param userId
 	 * @param albumId
 	 * @param photo
 	 * @param mimeType
 	 * @return
 	 */
-	public synchronized String addMediaItemToAlbum(String userId, String albumId,
-			File photo, String mimeType) {
+	public synchronized String addMediaItemToAlbum(String userId,
+			String albumId, File photo, String mimeType) {
 		Map<File, String> map = new HashMap<File, String>();
 		map.put(photo, mimeType);
 		List<String> hashes = this.addMediaItemsToAlbum(userId, albumId, map);
@@ -582,12 +548,13 @@ public class FileSharing {
 
 	/***
 	 * A Media Item is removed from an album
+	 * 
 	 * @param userId
 	 * @param albumId
 	 * @param mediaId
 	 */
-	public synchronized void deletePhotoFromAlbum(String userId, String albumId,
-			String mediaId) {
+	public synchronized void deletePhotoFromAlbum(String userId,
+			String albumId, String mediaId) {
 		if (mediaId == null)
 			throw new InvalidParameterException("mediaId cannot be null");
 
@@ -597,8 +564,10 @@ public class FileSharing {
 		if (albumId == null)
 			throw new InvalidParameterException("albumId cannot be null");
 
+		UserData userData = getUserData(userId);
+
 		Album album = null;
-		for (Album a : this.getAlbums(userId)) {
+		for (Album a : userData.getAlbums()) {
 			if (a.getId().equals(albumId)) {
 				album = a;
 				break;
@@ -609,55 +578,16 @@ public class FileSharing {
 			throw new InvalidParameterException("AlbumId " + albumId
 					+ " does not correspond to a valid album for the user "
 					+ userId);
+
+		final String publishedDate = ISO_DATE_FORMAT.format(new Date());
+
 		try {
 
-			List<MediaItem> mediaItems = this.getMediaItems(userId, albumId);
+			userData.removeMediaItem(mediaId, albumId, publishedDate);
+			String dbUri = this.seedUserData(userData);
 
-			for (Iterator<MediaItem> iter = mediaItems.iterator(); iter
-					.hasNext();) {
-				MediaItem mediaItem = iter.next();
-				if (mediaId.equals(mediaItem.getId())
-						&& albumId.equals(mediaItem.getAlbumId()))
-					iter.remove();
-			}
-
-			album.setMediaItemCount(mediaItems.size());
-
-			final List<ActivityEntry> feed = getFeed(userId);
-			final ActivityEntry entry = new ActivityEntryImpl();
-			entry.setVerb("remove");
-			entry.setPublished(ISO_DATE_FORMAT.format(new Date()));
-			entry.setContent(mediaId);
-
-			ActivityObject mediaItemObject = new ActivityObjectImpl();
-			mediaItemObject.setObjectType("image");
-			mediaItemObject.setContent(mediaId);
-			entry.setObject(mediaItemObject);
-
-			ActivityObject mediaAlbumObject = new ActivityObjectImpl();
-			mediaAlbumObject.setObjectType("collection");
-			mediaAlbumObject.setContent(album.getTitle());
-			mediaAlbumObject.setId(album.getId());
-			entry.setTarget(mediaAlbumObject);
-
-			feed.add(0, entry);
-			String feedUri = seedActivityStream(userId, feed);
-
-			
-			// Update the album accordingly
-			List<Album> userAlbums = this.getAlbums(userId);
-			
-			for (int i = 0; i < userAlbums.size(); ++i)
-			{
-				Album currAlbum = userAlbums.get(i);
-				if (currAlbum.getId().equals(albumId))
-					currAlbum = album;
-			}
-						
-			String mediaUri = this.seedMediaUri(userId, userAlbums, mediaItems);
-			
-			DistributedHashTable.getSingleton().store(userId, feedUri,
-					entry.getPublished(), mediaUri);
+			DistributedHashTable.getSingleton().store(userId, dbUri,
+					publishedDate);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -665,57 +595,49 @@ public class FileSharing {
 		}
 	}
 
-	private String seedActivityStream(String userId,
-			final List<ActivityEntry> feed) throws JSONException, IOException {
-		final File feedFile = new File(CACHE_FOLDER + File.separator + userId
-				+ ".json");
+	private String seedUserData(final UserData userData) throws JSONException,
+			IOException {
+		final File feedFile = new File(CACHE_FOLDER + File.separator
+				+ userData.getUser().getHash().toString() + ".json");
+
+		List<ActivityEntry> feed = userData.getActivityStream();
 
 		JSONArray items = new JSONArray();
 		for (int i = 0; i < feed.size(); ++i) {
 			JSONObject item = new JSONObject(feed.get(i));
 			items.put(item);
 		}
-		
+
+		List<Album> albums = userData.getAlbums();
+		JSONArray albumsData = new JSONArray();
+		for (int i = 0; i < albums.size(); ++i) {
+			JSONObject item = new JSONObject(CONVERTER.convertToString(albums
+					.get(i)));
+			albumsData.put(item);
+		}
+
+		List<MediaItem> mediaItems = userData.getMediaItems();
+		JSONArray mediaItemsData = new JSONArray();
+		for (int i = 0; i < mediaItems.size(); ++i) {
+			JSONObject item = new JSONObject(
+					CONVERTER.convertToString(mediaItems.get(i)));
+			mediaItemsData.put(item);
+		}
+
 		JSONObject db = new JSONObject();
+
+		db.put("albums", albumsData);
+		db.put("mediaItems", mediaItemsData);
 		db.put("items", items);
 
 		FileWriter writer = new FileWriter(feedFile);
 		db.write(writer);
 		writer.close();
-		
+
 		String feedUri = seed(feedFile);
 		return feedUri;
 	}
 
-	private String seedMediaUri(String userId, final List<Album> albums, final List<MediaItem> mediaItems) throws JSONException, IOException
-	{
-		final File mediaUriFile = new File(CACHE_FOLDER + File.separator + userId + "_media"
-				+ ".json");
-
-		JSONArray albumsData = new JSONArray();
-		for (int i = 0; i < albums.size(); ++i) {
-			JSONObject item = new JSONObject(CONVERTER.convertToString(albums.get(i)));
-			albumsData.put(item);
-		}
-		JSONArray mediaItemsData = new JSONArray();
-		for (int i = 0; i < mediaItems.size(); ++i) {
-			JSONObject item = new JSONObject(CONVERTER.convertToString(mediaItems.get(i)));
-			mediaItemsData.put(item);
-		}
-		
-		JSONObject db = new JSONObject();
-
-		db.put("albums", albumsData);
-		db.put("mediaItems", mediaItemsData);
-		
-		FileWriter writer = new FileWriter(mediaUriFile);
-		db.write(writer);
-		writer.close();
-
-		String feedUri = seed(mediaUriFile);
-		return feedUri;
-	}
-	
 	static String getHashFromMagnetURI(String uri) {
 		String hash = null;
 		int btih = uri.indexOf("xt=urn:btih:");
@@ -728,9 +650,9 @@ public class FileSharing {
 		return hash;
 	}
 
-	public void download(final String uri) {
+	public static void download(final String uri) {
 		String hash = getHashFromMagnetURI(uri);
-		downloadByHash(hash);
+		THE_INSTANCE.downloadByHash(hash);
 	}
 
 	public void downloadByHash(final String hash) {
@@ -747,17 +669,18 @@ public class FileSharing {
 		}
 
 	}
-	
+
 	/***
-	 * Gets all the mediaItems for the user. This shall not be used by UserInterface, use getMediaItems(userId, albumId) instead.
+	 * Gets all the mediaItems for the user. This shall not be used by
+	 * UserInterface, use getMediaItems(userId, albumId) instead.
+	 * 
 	 * @param userId
 	 * @return list of the user's MediaItem
 	 */
-	protected List<MediaItem> getMediaItems(String userId)
-	{
+	protected static List<MediaItem> getMediaItems(String userId) {
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
-		
+
 		List<MediaItem> mediaItems = new ArrayList<MediaItem>();
 
 		try {
@@ -767,19 +690,19 @@ public class FileSharing {
 			if (recordDb == null)
 				return mediaItems;
 
-
 			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.optString("mediaUri"));
-			
-			if(latestHash == null)
+					.getString("uri"));
+
+			if (latestHash == null)
 				return mediaItems;
-			
-			File dbFile = new File(CACHE_FOLDER + File.separator
-					+ latestHash + ".json");
-			System.out.println("Getting media data: " + dbFile.getAbsolutePath());
+
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
+					+ ".json");
+			System.out.println("Getting media data: "
+					+ dbFile.getAbsolutePath());
 			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
 					dbFile)));
-						
+
 			JSONArray mediaItemsArray = db.optJSONArray("mediaItems");
 
 			if (mediaItemsArray != null) {

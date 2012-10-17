@@ -30,12 +30,10 @@ else
 	}
 	
 
-List<Album> albums= FileSharing.getSingleton().getAlbums(userHash);
+List<Album> albums= FileSharing.getAlbums(userHash);
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
 for (Album a : albums)
-{
-	mediaItemMap.put(a.getId(), FileSharing.getSingleton().getMediaItemsWithCachedImages(userHash, a.getId()));
-}
+	mediaItemMap.put(a.getId(), FileSharing.getMediaItemsWithCachedImages(userHash, a.getId()));
 
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", user);
@@ -294,7 +292,11 @@ pageContext.setAttribute("photoMap", mediaItemMap);
                 <h2>User Feed</h2>
                     <ul>
 					<c:forEach var="entry" items="${feed}">
-						<li>${entry.content}</li>
+						<li>
+							<span class="actActor">${entry.actor.displayName}</span>
+							<span class="actVerb">${entry.verb}</span>
+							<span class="actContent">${entry.content}</span>
+						</li>
 					</c:forEach>
 					</ul>
                 </div>
