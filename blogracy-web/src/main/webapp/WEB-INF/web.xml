@@ -4,6 +4,53 @@
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" 
    version="2.5">
+   
+   <!-- context config -->
+    <context-param>
+        <param-name>org.apache.activemq.brokerURL</param-name>
+        <param-value>tcp://localhost:61616</param-value>
+        <description>The URL of the Message Broker to connect to</description>
+    </context-param>
+    <context-param>
+        <param-name>org.apache.activemq.embeddedBroker</param-name>
+        <param-value>true</param-value>
+        <description>Whether we should include an embedded broker or not</description>
+    </context-param>
+   
+   <!-- the subscription REST servlet -->
+    <servlet>
+        <servlet-name>AjaxServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.AjaxServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+
+    <servlet>
+        <servlet-name>MessageServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.MessageServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+        <!--
+        Uncomment this parameter if you plan to use multiple consumers over REST
+        <init-param>
+                <param-name>destinationOptions</param-name>
+                <param-value>consumer.prefetchSize=1</param-value>
+        </init-param> 
+        -->
+
+    </servlet>
+
+    <!-- the queue browse servlet -->
+    <servlet>
+        <servlet-name>QueueBrowseServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.QueueBrowseServlet</servlet-class>
+    </servlet>
+	
+	 <!-- servlets for the portfolio demo -->
+    <servlet>
+        <servlet-name>PortfolioPublishServlet</servlet-name>
+        <servlet-class>org.apache.activemq.web.PortfolioPublishServlet</servlet-class>
+        <load-on-startup>1</load-on-startup>
+    </servlet>
+   
   <servlet>
     <servlet-name>Magnet</servlet-name>
     <servlet-class>net.blogracy.web.Magnet</servlet-class>
@@ -69,6 +116,26 @@
     <url-pattern>*.XSP</url-pattern>
   </servlet-mapping>
   
+  <servlet-mapping>
+        <servlet-name>AjaxServlet</servlet-name>
+        <url-pattern>/amq/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>MessageServlet</servlet-name>
+        <url-pattern>/message/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>QueueBrowseServlet</servlet-name>
+        <url-pattern>/queueBrowse/*</url-pattern>
+    </servlet-mapping>
+    
+    <servlet-mapping>
+        <servlet-name>PortfolioPublishServlet</servlet-name>
+        <url-pattern>/portfolioPublish</url-pattern>
+    </servlet-mapping>
+  
     <servlet>
         <servlet-name>fileupload</servlet-name>
         <servlet-class>net.blogracy.web.FileUpload</servlet-class>
@@ -86,18 +153,24 @@
             <param-value>true</param-value>
         </init-param>
     </filter>
+	
+	<filter>
+      <filter-name>session</filter-name>
+      <filter-class>org.apache.activemq.web.SessionFilter</filter-class>
+    </filter>
  
     <filter-mapping>
         <filter-name>fileuploadfilter</filter-name>
         <url-pattern>/fileupload</url-pattern>
     </filter-mapping>
+	
+	<filter-mapping>
+      <filter-name>session</filter-name>
+      <url-pattern>/*</url-pattern>
+    </filter-mapping>
+	
+	<listener>
+        <listener-class>org.apache.activemq.web.SessionListener</listener-class>
+    </listener>
  
-    <servlet>
-        <servlet-name>imageGalleryUploader</servlet-name>
-        <servlet-class>net.blogracy.web.ImageGalleryUploader</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>imageGalleryUploader</servlet-name>
-        <url-pattern>/ImageGalleryUploader</url-pattern>
-    </servlet-mapping>
 </web-app>

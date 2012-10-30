@@ -49,7 +49,6 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
-import net.blogracy.errors.PhotoAlbumDuplicated;
 import net.blogracy.util.FileUtils;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -252,24 +251,16 @@ public class FileSharing {
 	 * 
 	 * @param userId
 	 * @param photoAlbumName
-	 * @throws PhotoAlbumDuplicated 
 	 */
-	public synchronized String createPhotoAlbum(String userId, String photoAlbumTitle) throws PhotoAlbumDuplicated {
+	public synchronized String createPhotoAlbum(String userId, String photoAlbumTitle) {
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
 
 		if (photoAlbumTitle == null || photoAlbumTitle.isEmpty())
 			return null;
-		
-		List<Album> userAlbums = this.getAlbums(userId);
-		
-		for (Album existingAlbum : userAlbums)
-			if (existingAlbum.getTitle().equals(photoAlbumTitle))
-					throw new PhotoAlbumDuplicated(photoAlbumTitle);
-		
+
 		String albumHash = null;
 		try {
-			// Album OpenSocial model
 			albumHash = hash(userId + photoAlbumTitle);
 			Album album = new AlbumImpl();
 			album.setTitle(photoAlbumTitle);
@@ -281,7 +272,6 @@ public class FileSharing {
 			// Album is empty where created
 			album.setMediaItemCount(0);
 
-			// ActivitEntry preparation
 			final List<ActivityEntry> feed = getFeed(userId);
 			final ActivityEntry entry = new ActivityEntryImpl();
 			entry.setVerb("create");
@@ -296,13 +286,26 @@ public class FileSharing {
 			feed.add(0, entry);
 			String feedUri = seedActivityStream(userId, feed);
 
-			// Append another album into the user's 'mediaUri' file
-			userAlbums.add(album);
-			
-			String mediaUri = seedMediaUri(userId, userAlbums, this.getMediaItems(userId));
+			// Append another album into the user's recordDB
+			JSONObject recordDb = DistributedHashTable.getSingleton()
+					.getRecord(userId);
+
+			if (recordDb == null)
+				recordDb = new JSONObject();
+
+			JSONArray albums = recordDb.optJSONArray("albums");
+
+			if (albums != null) {
+				// Simply append new album
+				albums.put(new JSONObject(CONVERTER.convertToString(album)));
+			} else {
+				albums = new JSONArray();
+				albums.put(new JSONObject(CONVERTER.convertToString(album)));
+			}
 
 			DistributedHashTable.getSingleton().store(userId, feedUri,
-					entry.getPublished(), mediaUri);
+					entry.getPublished(), albums,
+					recordDb.optJSONArray("mediaItems"));
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -312,7 +315,7 @@ public class FileSharing {
 	}
 
 	/**
-	 * Get the photo albums from the user's 'mediaUri' file given the userId.
+	 * Get the photo albums from recordDb given the userId.
 	 * 
 	 * @param userId
 	 */
@@ -328,19 +331,7 @@ public class FileSharing {
 			if (recordDb == null)
 				return albums;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.optString("mediaUri"));
-			
-			if (latestHash == null)
-				return albums;
-			
-			File dbFile = new File(CACHE_FOLDER + File.separator
-					+ latestHash + ".json");
-			System.out.println("Getting album data: " + dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
-			
-			JSONArray albumArray = db.optJSONArray("albums");
+			JSONArray albumArray = recordDb.optJSONArray("albums");
 
 			if (albumArray != null) {
 				for (int i = 0; i < albumArray.length(); ++i) {
@@ -350,7 +341,6 @@ public class FileSharing {
 					albums.add(entry);
 				}
 			}
-			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -358,7 +348,7 @@ public class FileSharing {
 	}
 
 	/**
-	 * Get the images from user's 'mediaUri' file given the userId and the associated albumId
+	 * Get the images from recordDb given the userId and the associated albumId
 	 * 
 	 * @param userId
 	 * @param albumId
@@ -380,20 +370,7 @@ public class FileSharing {
 			if (recordDb == null)
 				return mediaItems;
 
-
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.optString("mediaUri"));
-			
-			if(latestHash == null)
-				return mediaItems;
-			
-			File dbFile = new File(CACHE_FOLDER + File.separator
-					+ latestHash + ".json");
-			System.out.println("Getting media data: " + dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
-						
-			JSONArray mediaItemsArray = db.optJSONArray("mediaItems");
+			JSONArray mediaItemsArray = recordDb.optJSONArray("mediaItems");
 
 			if (mediaItemsArray != null) {
 				for (int i = 0; i < mediaItemsArray.length(); ++i) {
@@ -414,7 +391,7 @@ public class FileSharing {
 	}
 
 	/**
-	 * Gets the images from user's 'mediaUri' file given the userId and the associated albumId.
+	 * Gets the images from recordDb given the userId and the associated albumId.
 	 * Attempts to download the images from DHT. If successful, set's the URL
 	 * with the cached image link
 	 * 
@@ -444,7 +421,7 @@ public class FileSharing {
 
 	/***
 	 * Add multiple MediaItems to an album.
-	 * It updates the user's 'mediaUri' file and notifies the action in the user's Activity Stream (verb: add)
+	 * It updates the user's recordDb and notifies the action in the user's Activity Stream (verb: add)
 	 * @param userId
 	 * @param albumId
 	 * @param photos
@@ -537,22 +514,40 @@ public class FileSharing {
 			String feedUri = seedActivityStream(userId, feed);
 
 			// Update the album accordingly
-			List<Album> userAlbums = this.getAlbums(userId);
-			
-			for (int i = 0; i < userAlbums.size(); ++i)
-			{
-				Album currAlbum = userAlbums.get(i);
-				if (currAlbum.getId().equals(albumId))
-					currAlbum = album;
+			JSONObject recordDb = DistributedHashTable.getSingleton()
+					.getRecord(userId);
+
+			if (recordDb == null)
+				recordDb = new JSONObject();
+
+			JSONArray albums = recordDb.optJSONArray("albums");
+
+			for (int i = 0; i < albums.length(); ++i) {
+				JSONObject singleAlbumObject = albums.getJSONObject(i);
+				Album entry1 = (Album) CONVERTER.convertToObject(
+						singleAlbumObject, Album.class);
+
+				if (entry1.getId().equals(albumId)) {
+					albums.put(i,
+							new JSONObject(CONVERTER.convertToString(album)));
+					break;
+				}
 			}
-			
-			List<MediaItem> userMediaItems = this.getMediaItems(userId, albumId);
-			userMediaItems.addAll(listOfMediaItems);
-			
-			String mediaUri = this.seedMediaUri(userId, userAlbums, userMediaItems);
-			
+
+			// Add all the newly created mediaItems
+			JSONArray mediaItems = recordDb.optJSONArray("mediaItems");
+
+			if (mediaItems == null)
+				mediaItems = new JSONArray();
+
+			for (MediaItem mediaItem : listOfMediaItems) {
+				// Simply append new album
+				mediaItems.put(new JSONObject(CONVERTER
+						.convertToString(mediaItem)));
+			}
+
 			DistributedHashTable.getSingleton().store(userId, feedUri,
-					publishedDate, mediaUri);
+					publishedDate, albums, mediaItems);
 
 			return hashList;
 
@@ -564,7 +559,7 @@ public class FileSharing {
 
 	/***
 	 * Adds a single MediaItem file to an Album. 
-	 * It updates the user's 'mediaUri' file  and notifies the action in the user's Activity Stream (verb: remove)
+	 * It updates the user's recordDb and notifies the action in the user's Activity Stream (verb: remove)
 	 * @param userId
 	 * @param albumId
 	 * @param photo
@@ -643,21 +638,46 @@ public class FileSharing {
 			feed.add(0, entry);
 			String feedUri = seedActivityStream(userId, feed);
 
-			
-			// Update the album accordingly
-			List<Album> userAlbums = this.getAlbums(userId);
-			
-			for (int i = 0; i < userAlbums.size(); ++i)
-			{
-				Album currAlbum = userAlbums.get(i);
-				if (currAlbum.getId().equals(albumId))
-					currAlbum = album;
+			JSONObject recordDb = DistributedHashTable.getSingleton()
+					.getRecord(userId);
+
+			if (recordDb == null)
+				recordDb = new JSONObject();
+
+			JSONArray albums = recordDb.optJSONArray("albums");
+
+			// update albums
+			if (albums != null) {
+				for (int i = 0; i < albums.length(); ++i) {
+					JSONObject singleAlbumObject = albums.getJSONObject(i);
+					Album entry1 = (Album) CONVERTER.convertToObject(
+							singleAlbumObject, Album.class);
+
+					if (entry1.getId().equals(albumId)) {
+						albums.put(
+								i,
+								new JSONObject(CONVERTER.convertToString(album)));
+						break;
+					}
+				}
 			}
-						
-			String mediaUri = this.seedMediaUri(userId, userAlbums, mediaItems);
-			
+
+			JSONArray list = new JSONArray();
+			JSONArray mediaItemsArray = recordDb.optJSONArray("mediaItems");
+			if (mediaItemsArray != null) {
+				for (int i = 0; i < mediaItemsArray.length(); ++i) {
+					JSONObject singleMediaItemObject = mediaItemsArray
+							.getJSONObject(i);
+					MediaItem entry1 = (MediaItem) CONVERTER.convertToObject(
+							singleMediaItemObject, MediaItem.class);
+					if (!mediaId.equals(entry1.getId())
+							|| !albumId.equals(entry1.getAlbumId()))
+						list.put(singleMediaItemObject);
+				}
+			}
+
 			DistributedHashTable.getSingleton().store(userId, feedUri,
-					entry.getPublished(), mediaUri);
+					entry.getPublished(), albums, list);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -675,47 +695,18 @@ public class FileSharing {
 			JSONObject item = new JSONObject(feed.get(i));
 			items.put(item);
 		}
-		
 		JSONObject db = new JSONObject();
+
 		db.put("items", items);
 
 		FileWriter writer = new FileWriter(feedFile);
 		db.write(writer);
 		writer.close();
-		
+
 		String feedUri = seed(feedFile);
 		return feedUri;
 	}
 
-	private String seedMediaUri(String userId, final List<Album> albums, final List<MediaItem> mediaItems) throws JSONException, IOException
-	{
-		final File mediaUriFile = new File(CACHE_FOLDER + File.separator + userId + "_media"
-				+ ".json");
-
-		JSONArray albumsData = new JSONArray();
-		for (int i = 0; i < albums.size(); ++i) {
-			JSONObject item = new JSONObject(CONVERTER.convertToString(albums.get(i)));
-			albumsData.put(item);
-		}
-		JSONArray mediaItemsData = new JSONArray();
-		for (int i = 0; i < mediaItems.size(); ++i) {
-			JSONObject item = new JSONObject(CONVERTER.convertToString(mediaItems.get(i)));
-			mediaItemsData.put(item);
-		}
-		
-		JSONObject db = new JSONObject();
-
-		db.put("albums", albumsData);
-		db.put("mediaItems", mediaItemsData);
-		
-		FileWriter writer = new FileWriter(mediaUriFile);
-		db.write(writer);
-		writer.close();
-
-		String feedUri = seed(mediaUriFile);
-		return feedUri;
-	}
-	
 	static String getHashFromMagnetURI(String uri) {
 		String hash = null;
 		int btih = uri.indexOf("xt=urn:btih:");
@@ -746,56 +737,6 @@ public class FileSharing {
 			e.printStackTrace();
 		}
 
-	}
-	
-	/***
-	 * Gets all the mediaItems for the user. This shall not be used by UserInterface, use getMediaItems(userId, albumId) instead.
-	 * @param userId
-	 * @return list of the user's MediaItem
-	 */
-	protected List<MediaItem> getMediaItems(String userId)
-	{
-		if (userId == null)
-			throw new InvalidParameterException("userId cannot be null");
-		
-		List<MediaItem> mediaItems = new ArrayList<MediaItem>();
-
-		try {
-			JSONObject recordDb = DistributedHashTable.getSingleton()
-					.getRecord(userId);
-
-			if (recordDb == null)
-				return mediaItems;
-
-
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.optString("mediaUri"));
-			
-			if(latestHash == null)
-				return mediaItems;
-			
-			File dbFile = new File(CACHE_FOLDER + File.separator
-					+ latestHash + ".json");
-			System.out.println("Getting media data: " + dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
-						
-			JSONArray mediaItemsArray = db.optJSONArray("mediaItems");
-
-			if (mediaItemsArray != null) {
-				for (int i = 0; i < mediaItemsArray.length(); ++i) {
-					JSONObject singleAlbumObject = mediaItemsArray
-							.getJSONObject(i);
-					MediaItem entry = (MediaItem) CONVERTER.convertToObject(
-							singleAlbumObject, MediaItem.class);
-					mediaItems.add(entry);
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		return mediaItems;
 	}
 
 }
