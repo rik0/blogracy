@@ -6,11 +6,15 @@
   <version>1.0-SNAPSHOT</version>
   <name>blogracy-vuze</name>
   <url>http://maven.apache.org</url>
+  
   <build>
     <resources>
       <resource>
         <directory>src/main/plugins</directory>
 	<targetPath>../plugins/</targetPath>
+      </resource>
+	  <resource>
+        <directory>src/main/java/net/blogracy/chat/resources</directory>
       </resource>
     </resources>
     <plugins>

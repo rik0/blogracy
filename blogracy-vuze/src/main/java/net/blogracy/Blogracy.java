@@ -10,7 +10,9 @@ import java.util.List;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
+import net.blogracy.chat.ChatManager;
 import net.blogracy.logging.Logger;
+import net.blogracy.services.ChatService;
 import net.blogracy.services.DownloadService;
 import net.blogracy.services.LookupService;
 import net.blogracy.services.SeedService;
@@ -36,6 +38,8 @@ public class Blogracy implements Plugin {
     private LookupService lookupService;
     private SeedService seedService;
     private DownloadService downloadService;
+    private ChatService chatService;
+    private ChatManager chatManager;
 
     /*
      * (non-Javadoc)
@@ -61,7 +65,12 @@ public class Blogracy implements Plugin {
             lookupService = new LookupService(connection, plugin);
             seedService = new SeedService(connection, plugin);
             downloadService = new DownloadService(connection, plugin);
+            
+            chatManager = new ChatManager();
+            chatManager.initialize(plugin);
+            chatService = new ChatService(connection,chatManager, plugin);
             Logger.info("Blogracy Vuze plugin has started correctly");
+            
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();
