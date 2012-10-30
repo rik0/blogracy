@@ -157,17 +157,11 @@ public class DistributedHashTable {
 	}
 
 	public void store(final String id, final String uri, final String version) {
-		JSONObject record = getRecord(id);
-		
-		String mediaUri = null;
-		if(record != null && !record.isNull("mediaUri"))
-			mediaUri = record.optString("mediaUri");
-
-		this.store(id, uri, version, mediaUri);
+		this.store(id, uri, version, null, null);
 	}
 
 	public void store(final String id, final String uri, final String version,
-			final String mediaUri) {
+			final JSONArray albums, final JSONArray mediaItems) {
 		try {
 			JSONObject record = new JSONObject();
 			record.put("id", id);
@@ -176,7 +170,14 @@ public class DistributedHashTable {
 			// put "magic" public-key; e.g.
 			// RSA.modulus(n).exponent(e)
 			// record.put("signature", user); // TODO
-			record.put("mediaUri", mediaUri);
+
+			if (albums != null && albums.length() > 0) {
+				record.put("albums", albums);
+			}
+
+			if (mediaItems != null && mediaItems.length() > 0) {
+				record.put("mediaItems", mediaItems);
+			}
 
 			KeyPair keyPair = Configurations.getUserConfig().getUserKeyPair();
 			String value = JsonWebSignature.sign(record.toString(), keyPair);
