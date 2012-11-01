@@ -23,11 +23,17 @@
 package net.blogracy.controller;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -48,6 +54,7 @@ import net.blogracy.util.JsonWebSignature;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.shindig.protocol.conversion.BeanConverter;
 import org.apache.shindig.protocol.conversion.BeanJsonConverter;
 import org.apache.shindig.social.opensocial.model.Album;
@@ -124,18 +131,63 @@ public class DistributedHashTable {
 					try {
 						String msgText = ((TextMessage) response).getText();
 						JSONObject keyValue = new JSONObject(msgText);
-						String value = keyValue.getString("value");
-						PublicKey signerKey = JsonWebSignature
-								.getSignerKey(value);
-						JSONObject record = new JSONObject(JsonWebSignature
-								.verify(value, signerKey));
+						final String value = keyValue.getString("value");
+
+						// The signature verification is postponed at the
+						// moment.
+						// The signature should be verified based on the key on
+						// the user's profile...
+						/*
+						 * PublicKey signerKey = JsonWebSignature
+						 * .getSignerKey(value); JSONObject record = new
+						 * JSONObject(JsonWebSignature .verify(value,
+						 * signerKey));
+						 */
+						String[] split = value.split("\\.");
+						final JSONObject record = new JSONObject(new String(
+								Base64.decodeBase64(split[1]), "UTF-8"));
+
 						JSONObject currentRecord = getRecord(id);
 						if (currentRecord == null
 								|| currentRecord.getString("version")
 										.compareTo(record.getString("version")) < 0) {
-							putRecord(record);
+
 							String uri = record.getString("uri");
-							FileSharing.getSingleton().download(uri);
+							FileSharing.download(uri,
+									new FileSharingDownloadListener() {
+
+										@Override
+										public void onFileDownloaded(
+												String fileFullPath) {
+
+											try {
+												JSONObject db = new JSONObject(
+														new JSONTokener(
+																new FileReader(
+																		fileFullPath)));
+
+												String pKey = null;
+												if (db.has("publicKey"))
+													pKey = db
+															.getString("publicKey");
+
+												if (pKey != null) {
+													JSONObject userRecord = new JSONObject(
+															JsonWebSignature
+																	.verify(value,
+																			pKey));
+													putRecord(userRecord);
+												}
+											} catch (FileNotFoundException e) {
+												e.printStackTrace();
+											} catch (JSONException e) {
+												e.printStackTrace();
+											} catch (SignatureException e) {
+												e.printStackTrace();
+											}
+
+										}
+									});
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -144,7 +196,7 @@ public class DistributedHashTable {
 			});
 
 			JSONObject record = new JSONObject();
-			record.put("id", id);
+			record.put("key", id);
 
 			TextMessage message = session.createTextMessage();
 			message.setText(record.toString());

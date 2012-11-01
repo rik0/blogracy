@@ -4,100 +4,109 @@
    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
    xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" 
    version="2.5">
-  <servlet>
-    <servlet-name>Magnet</servlet-name>
-    <servlet-class>net.blogracy.web.Magnet</servlet-class>
-  </servlet>
-  <servlet-mapping>
-    <servlet-name>Magnet</servlet-name>
-    <url-pattern>/magnet/*</url-pattern>
-  </servlet-mapping>
+	<servlet>
+		<servlet-name>Magnet</servlet-name>
+		<servlet-class>net.blogracy.web.Magnet</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>Magnet</servlet-name>
+		<url-pattern>/magnet/*</url-pattern>
+	</servlet-mapping>
 
-<servlet id="jsp">
-    <servlet-name>jsp</servlet-name>
-    <servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
-    <init-param>
-        <param-name>logVerbosityLevel</param-name>
-        <param-value>DEBUG</param-value>
-    </init-param>
-    <init-param>
-        <param-name>fork</param-name>
-        <param-value>false</param-value>
-    </init-param>
-    <init-param>
-        <param-name>keepgenerated</param-name>
-        <param-value>true</param-value>
-    </init-param>
-     
-    <load-on-startup>0</load-on-startup>
-    
-    <init-param>
-        <param-name>development</param-name>
-        <param-value>true</param-value>
-</init-param>
-<init-param>
-        <param-name>development</param-name>
-        <param-value>true</param-value>
-</init-param>
-<init-param>
-        <param-name>modificationTestInterval</param-name>
-        <param-value>60</param-value>
-</init-param>
-<init-param>
-        <param-name>reload-interval</param-name>
-        <param-value>-1</param-value>
-</init-param>
-<init-param>
-        <param-name>development</param-name>
-        <param-value>false</param-value>
-</init-param>
-<init-param>
-        <param-name>checkInterval</param-name>
-        <param-value>60</param-value>
-</init-param>
-  </servlet>
- 
-  <servlet-mapping>
-    <servlet-name>jsp</servlet-name>
-    <url-pattern>*.jsp</url-pattern>
-    <url-pattern>*.jspf</url-pattern>
-    <url-pattern>*.jspx</url-pattern>
-    <url-pattern>*.xsp</url-pattern>
-    <url-pattern>*.JSP</url-pattern>
-    <url-pattern>*.JSPF</url-pattern>
-    <url-pattern>*.JSPX</url-pattern>
-    <url-pattern>*.XSP</url-pattern>
-  </servlet-mapping>
-  
-    <servlet>
-        <servlet-name>fileupload</servlet-name>
-        <servlet-class>net.blogracy.web.FileUpload</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>fileupload</servlet-name>
-        <url-pattern>/fileupload</url-pattern>
-    </servlet-mapping>
- 
-    <filter>
-        <filter-name>fileuploadfilter</filter-name>
-        <filter-class>org.mortbay.servlet.MultiPartFilter</filter-class>
-        <init-param>
-            <param-name>deleteFiles</param-name>
-            <param-value>true</param-value>
-        </init-param>
-    </filter>
- 
-    <filter-mapping>
-        <filter-name>fileuploadfilter</filter-name>
-        <url-pattern>/fileupload</url-pattern>
-    </filter-mapping>
- 
-    <servlet>
-        <servlet-name>imageGalleryUploader</servlet-name>
-        <servlet-class>net.blogracy.web.ImageGalleryUploader</servlet-class>
-    </servlet>
-    <servlet-mapping>
-        <servlet-name>imageGalleryUploader</servlet-name>
-        <url-pattern>/ImageGalleryUploader</url-pattern>
-    </servlet-mapping>
+	<servlet id="jsp">
+		<servlet-name>jsp</servlet-name>
+		<servlet-class>org.apache.jasper.servlet.JspServlet</servlet-class>
+		<init-param>
+			<param-name>logVerbosityLevel</param-name>
+			<param-value>DEBUG</param-value>
+		</init-param>
+		<init-param>
+			<param-name>fork</param-name>
+			<param-value>false</param-value>
+		</init-param>
+		<init-param>
+			<param-name>keepgenerated</param-name>
+			<param-value>true</param-value>
+		</init-param>
+
+		<load-on-startup>0</load-on-startup>
+
+		<init-param>
+			<param-name>development</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>development</param-name>
+			<param-value>true</param-value>
+		</init-param>
+		<init-param>
+			<param-name>modificationTestInterval</param-name>
+			<param-value>60</param-value>
+		</init-param>
+		<init-param>
+			<param-name>reload-interval</param-name>
+			<param-value>-1</param-value>
+		</init-param>
+		<init-param>
+			<param-name>development</param-name>
+			<param-value>false</param-value>
+		</init-param>
+		<init-param>
+			<param-name>checkInterval</param-name>
+			<param-value>60</param-value>
+		</init-param>
+	</servlet>
+
+	<servlet-mapping>
+		<servlet-name>jsp</servlet-name>
+		<url-pattern>*.jsp</url-pattern>
+		<url-pattern>*.jspf</url-pattern>
+		<url-pattern>*.jspx</url-pattern>
+		<url-pattern>*.xsp</url-pattern>
+		<url-pattern>*.JSP</url-pattern>
+		<url-pattern>*.JSPF</url-pattern>
+		<url-pattern>*.JSPX</url-pattern>
+		<url-pattern>*.XSP</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>fileupload</servlet-name>
+		<servlet-class>net.blogracy.web.FileUpload</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>fileupload</servlet-name>
+		<url-pattern>/fileupload</url-pattern>
+	</servlet-mapping>
+
+	<filter>
+		<filter-name>fileuploadfilter</filter-name>
+		<filter-class>org.mortbay.servlet.MultiPartFilter</filter-class>
+		<init-param>
+			<param-name>deleteFiles</param-name>
+			<param-value>true</param-value>
+		</init-param>
+	</filter>
+
+	<filter-mapping>
+		<filter-name>fileuploadfilter</filter-name>
+		<url-pattern>/fileupload</url-pattern>
+	</filter-mapping>
+
+	<servlet>
+		<servlet-name>imageGalleryUploader</servlet-name>
+		<servlet-class>net.blogracy.web.ImageGalleryUploader</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>imageGalleryUploader</servlet-name>
+		<url-pattern>/ImageGalleryUploader</url-pattern>
+	</servlet-mapping>
+
+	<servlet>
+		<servlet-name>commentSender</servlet-name>
+		<servlet-class>net.blogracy.web.CommentSender</servlet-class>
+	</servlet>
+	<servlet-mapping>
+		<servlet-name>commentSender</servlet-name>
+		<url-pattern>/commentSender</url-pattern>
+	</servlet-mapping>
 </web-app>

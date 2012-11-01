@@ -2,6 +2,7 @@
 <%@ page import="net.blogracy.model.users.Users" %>
 <%@ page import="net.blogracy.model.users.User" %>
 <%@ page import="net.blogracy.controller.FileSharing" %>
+<%@ page import="net.blogracy.controller.DistributedHashTable" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
@@ -29,7 +30,7 @@ else
 		user = Users.newUser(Hashes.fromString(userHash));
 	}
 	
-
+//DistributedHashTable.getSingleton().lookup(userHash);
 List<Album> albums= FileSharing.getAlbums(userHash);
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
 for (Album a : albums)
@@ -59,15 +60,17 @@ pageContext.setAttribute("photoMap", mediaItemMap);
     <![endif]-->
 
     <!-- Le styles -->
-    <link href="/css/bootstrap.css" rel="stylesheet"/>
-    <link href="/css/lightbox.css" rel="stylesheet" />
-    <link type="text/css" href="/css/smoothness/jquery-ui-1.8.20.custom.css" rel="stylesheet" />
+    <link type="text/css" href="/css/bootstrap.css" rel="stylesheet"/>
+   <!--  <link type="text/css" href="/css/lightbox.css" rel="stylesheet" /> -->
+    <link type="text/css" href="/css/smoothness/jquery-ui-1.9.0.custom.min.css" rel="stylesheet" />
     
-    <script src="/scripts/jquery-1.7.js"></script>
-    <script src="/scripts/jquery.form.js"></script>
-    <script src="/scripts/jquery-ui-1.8.20.custom.min.js"></script>
-    <script src="/scripts/bootstrap-alerts.js"></script>
-    <script src="/scripts/lightbox.js"></script>
+    
+    <script type="text/javascript" src="/scripts/jquery-1.8.2.js"></script>
+    <script type="text/javascript" src="/scripts/jquery.form.js"></script>
+    <script type="text/javascript" src="/scripts/jquery-ui-1.9.0.custom.min.js"></script>
+    <script type="text/javascript" src="/scripts/bootstrap-alerts.js"></script>
+    <script type="text/javascript" src="/scripts/fancybox/jquery.fancybox.js?v=2.1.2"></script>
+    <link type="text/css" href="/css/jquery.fancybox.css" rel="stylesheet" />
     <script type="text/javascript">
         // wait for the DOM to be loaded
         jQuery(function() {
@@ -91,45 +94,9 @@ pageContext.setAttribute("photoMap", mediaItemMap);
             });
         });
 
-        jQuery(function() {
-            jQuery('#create-gallery').ajaxForm({
-                url: '/ImageGalleryUploader',
-                clearForm: true,
-                type: 'POST',
-                success: function() {
-                    console.log(arguments);
-                    location.reload();
-                },
-                error: function(request, status, statusMessage) {
-                    var serverSideException = JSON.parse(request.responseText);
-                    var errorMessage = '<div class="alert-message block-message error"><a class="close" href="#">x</a>' +
-                                       '<p><strong>' + serverSideException.errorMessage + '</strong></p>' +
-                                        '<pre>' + serverSideException.errorTrace.join("\n") + '</pre>' +
-                                       '</div>';
-                    jQuery(errorPlace).html(errorMessage);
-                    jQuery(".alert-message").alert();
-                }
-                
-            });
-        });
-        
-        function openDialogWithLink(url)
-        {
-        	var $dialog = $('#pop').load(url)
-            .dialog({
-                autoOpen: false,
-                title: 'Upload Images to Gallery',
-                height: 650,
-				width: 750,
-				modal: true,  
-				close: function(event,ui){location.reload(true); $(this).dialog('destroy');}
-       		 });
-        	
-        	$dialog.dialog('open');
-        };
-    
     </script>
-    
+    <script type="text/javascript" src="/scripts/blogracy-userGalleryHelper.js"></script>
+    <script type="text/javascript" src="/scripts/blogracy-mediaThumbnailViewer.js"></script>
 	
     <style type="text/css">
             /* Override some defaults */
@@ -325,13 +292,13 @@ pageContext.setAttribute("photoMap", mediaItemMap);
 						<c:if test="${localUser == user}"> 
 							<div id="pop"  style="display:none;"></div>
 							<div style='float:right'>
-							<button  class="btn primary"  type="submit" id="imageUploadOpener" onclick="openDialogWithLink('/imageGallery.jsp?albumId=${album.id}&user=${user.hash}');">Add Images to Gallery</button>
+							<button  class="btn primary"  type="submit" id="imageUploadOpener" onclick="blogracyGalleryHelper.openDialogWithLink('/imageGallery.jsp?albumId=${album.id}&user=${user.hash}');">Add Images to Gallery</button>
 							</div> 
 						</c:if>
 						</div>
 						<div class="set">
 						<c:forEach var="mapEntry" items="${photoMap[album.id]}">
-					  		  <a href="${mapEntry.url}" rel="lightbox[${album.id}]" title="${mapEntry.title}"><img class="blogracy-thumbnail" src="${mapEntry.url}"/></a>
+					  		  <a href="mediaViewer.jsp?uid=${user.hash}&aid=${album.id}&mid=${mapEntry.id}" rel="${album.id}" title="${mapEntry.title}" class="blogracyMediaThumbnail"><img class="blogracy-thumbnail" src="${mapEntry.url}"/></a>
 					  	</c:forEach>
 					  	</div>
 					  </div>

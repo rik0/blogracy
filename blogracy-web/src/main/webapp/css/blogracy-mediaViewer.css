@@ -1,0 +1,29 @@
+.commentator
+{
+    font-weight: bold;
+    text-align: center;
+    float: left;
+}
+
+.commentText
+{
+    clear: both;
+    text-align: justify;
+}
+
+.commentsPane
+{
+    width: 500px;
+}
+
+.commentDate
+{
+    float: right;
+    font-style: italic;
+}
+
+.blogracyImage
+{
+    max-height: 500px;
+    max-width: 600px;
+}

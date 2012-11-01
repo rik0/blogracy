@@ -41,7 +41,9 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
+import javax.jms.Message;
 import javax.jms.MessageConsumer;
+import javax.jms.MessageListener;
 import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
@@ -53,10 +55,13 @@ import net.blogracy.model.users.User;
 import net.blogracy.model.users.UserData;
 import net.blogracy.model.users.UserDataImpl;
 import net.blogracy.model.users.Users;
+import net.blogracy.util.FileExtensionConverter;
 import net.blogracy.util.FileUtils;
+import net.blogracy.util.JsonWebSignature;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.shindig.protocol.conversion.BeanConverter;
 import org.apache.shindig.protocol.conversion.BeanJsonConverter;
 import org.apache.shindig.social.opensocial.model.ActivityEntry;
@@ -79,10 +84,12 @@ public class FileSharing {
 
 	private ConnectionFactory connectionFactory;
 	private Connection connection;
-	private Session session;
+	private Session seedSession;
+	private Session downloadSession;
 	private Destination seedQueue;
 	private Destination downloadQueue;
-	private MessageProducer producer;
+	private MessageProducer seedProducer;
+	private MessageProducer downloadProducer;
 	private MessageConsumer consumer;
 
 	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
@@ -135,11 +142,16 @@ public class FileSharing {
 					ActiveMQConnection.DEFAULT_BROKER_URL);
 			connection = connectionFactory.createConnection();
 			connection.start();
-			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			producer = session.createProducer(null);
-			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-			seedQueue = session.createQueue("seed");
-			downloadQueue = session.createQueue("download");
+			seedSession = connection.createSession(false,
+					Session.AUTO_ACKNOWLEDGE);
+			downloadSession = connection.createSession(false,
+					Session.AUTO_ACKNOWLEDGE);
+			seedProducer = seedSession.createProducer(null);
+			seedProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			seedQueue = seedSession.createQueue("seed");
+			downloadProducer = downloadSession.createProducer(null);
+			downloadProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			downloadQueue = downloadSession.createQueue("download");
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -155,16 +167,17 @@ public class FileSharing {
 	public String seed(File file) {
 		String uri = null;
 		try {
-			Destination tempDest = session.createTemporaryQueue();
-			MessageConsumer responseConsumer = session.createConsumer(tempDest);
+			Destination tempDest = seedSession.createTemporaryQueue();
+			MessageConsumer responseConsumer = seedSession
+					.createConsumer(tempDest);
 
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("file", file.getAbsolutePath());
 
-			TextMessage request = session.createTextMessage();
+			TextMessage request = seedSession.createTextMessage();
 			request.setText(requestObj.toString());
 			request.setJMSReplyTo(tempDest);
-			producer.send(seedQueue, request);
+			seedProducer.send(seedQueue, request);
 
 			TextMessage response = (TextMessage) responseConsumer.receive();
 			String msgText = ((TextMessage) response).getText();
@@ -192,8 +205,7 @@ public class FileSharing {
 		if (userId.equals(Configurations.getUserConfig().getUser().getHash()
 				.toString()))
 			user = Configurations.getUserConfig().getUser();
-		else
-		{
+		else {
 			// The right user should be searched in the user's friends
 			user = Configurations.getUserConfig().getFriend(userId);
 
@@ -207,6 +219,7 @@ public class FileSharing {
 		userData.setActivityStream(getFeed(userId));
 		userData.setAlbums(getAlbums(userId));
 		userData.setMediaItems(getMediaItems(userId));
+		userData.setUserPublicKey(getPublicKey(userId));
 		return userData;
 	}
 
@@ -271,8 +284,10 @@ public class FileSharing {
 			try {
 				String latestHash = FileSharing.getHashFromMagnetURI(record
 						.getString("uri"));
+
 				File dbFile = new File(CACHE_FOLDER + File.separator
 						+ latestHash + ".json");
+
 				System.out.println("Getting feed: " + dbFile.getAbsolutePath());
 				JSONObject db = new JSONObject(new JSONTokener(new FileReader(
 						dbFile)));
@@ -325,6 +340,7 @@ public class FileSharing {
 
 			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
 					+ ".json");
+
 			System.out.println("Getting media data: "
 					+ dbFile.getAbsolutePath());
 			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
@@ -373,10 +389,51 @@ public class FileSharing {
 		for (MediaItem item : mediaItems) {
 			String itemMagneUri = item.getUrl();
 			download(itemMagneUri);
-			item.setUrl("cache/" + getHashFromMagnetURI(itemMagneUri));
+			String extension = FileExtensionConverter.toDefaultExtension(item
+					.getMimeType());
+			if (extension != null && !extension.isEmpty())
+				extension = "." + extension;
+			item.setUrl("cache/"
+					+ getHashFromMagnetURI(itemMagneUri) + extension);
 		}
 
 		return mediaItems;
+	}
+
+	/**
+	 * Gets the image from user's 'mediaUri' file given the userId, the
+	 * associated albumId, and media id. Attempts to download the images from
+	 * DHT. If successful, set's the URL with the cached image link
+	 * 
+	 * @param userId
+	 * @param albumId
+	 * @param mediaItemId
+	 * @return MediaItem data if found, null otherwise
+	 */
+	public static MediaItem getMediaItemWithCachedImage(String userId,
+			String albumId, String mediaItemId) {
+
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		if (albumId == null)
+			throw new InvalidParameterException("albumId cannot be null");
+
+		List<MediaItem> mediaItems = getMediaItems(userId, albumId);
+
+		for (MediaItem item : mediaItems) {
+			if (item.getId().equals(mediaItemId)) {
+				String itemMagneUri = item.getUrl();
+				download(itemMagneUri);
+				String extension = FileExtensionConverter.toDefaultExtension(item
+						.getMimeType());
+				if (extension != null && !extension.isEmpty())
+					extension = "." + extension;
+				item.setUrl("cache/" + getHashFromMagnetURI(itemMagneUri) + extension);
+				return item;
+			}
+		}
+		return null;
 	}
 
 	/**
@@ -498,10 +555,14 @@ public class FileSharing {
 			for (Entry<File, String> mapEntry : photos.entrySet()) {
 				File photo = mapEntry.getKey();
 				String mimeType = mapEntry.getValue();
+				String extension = FileExtensionConverter
+						.toDefaultExtension(mimeType);
+				if (extension != null && !extension.isEmpty())
+					extension = "." + extension;
 				String fileHash = hash(photo);
 
 				final File photoCachedFile = new File(CACHE_FOLDER
-						+ File.separator + fileHash);
+						+ File.separator + fileHash + extension);
 
 				FileUtils.copyFile(photo, photoCachedFile);
 				photo.delete();
@@ -595,7 +656,7 @@ public class FileSharing {
 		}
 	}
 
-	private String seedUserData(final UserData userData) throws JSONException,
+	public String seedUserData(final UserData userData) throws JSONException,
 			IOException {
 		final File feedFile = new File(CACHE_FOLDER + File.separator
 				+ userData.getUser().getHash().toString() + ".json");
@@ -629,6 +690,7 @@ public class FileSharing {
 		db.put("albums", albumsData);
 		db.put("mediaItems", mediaItemsData);
 		db.put("items", items);
+		db.put("publicKey", userData.getUserPublicKey());
 
 		FileWriter writer = new FileWriter(feedFile);
 		db.write(writer);
@@ -650,20 +712,92 @@ public class FileSharing {
 		return hash;
 	}
 
+	/***
+	 * Adds a file to the bittorrent download queue. The file is downloaded to
+	 * the CACHE_FOLDER and it will be named after the file hash
+	 * 
+	 * @param uri
+	 *            the file's magnet-uri
+	 */
 	public static void download(final String uri) {
-		String hash = getHashFromMagnetURI(uri);
-		THE_INSTANCE.downloadByHash(hash);
+		download(uri, null);
 	}
 
+	/***
+	 * Adds a file to the bittorrent download queue. The file is downloaded to
+	 * the CACHE_FOLDER and it will be named after the file hash. When the
+	 * download completes FileSharingDownloadListener.onFileDownloaded(String
+	 * filePath) method is called.
+	 * 
+	 * @param uri
+	 *            the file's magnet-uri
+	 * @param donwloadCompleteListener
+	 *            a listener for the completion event of this download
+	 */
+	public static void download(final String uri,
+			final FileSharingDownloadListener downloadCompleteListener) {
+		String hash = getHashFromMagnetURI(uri);
+		THE_INSTANCE.downloadByHash(hash, downloadCompleteListener);
+	}
+
+	/***
+	 * Adds a file to the bittorrent download queue. The file is downloaded to
+	 * the CACHE_FOLDER and it will be named after the file hash
+	 * 
+	 * @param hash
+	 *            the file hash
+	 */
 	public void downloadByHash(final String hash) {
+		downloadByHash(hash, null);
+	}
+
+	/***
+	 * Adds a file to the bittorrent download queue. The file is downloaded to
+	 * the CACHE_FOLDER and it will be named after the file hash. When the
+	 * download completes FileSharingDownloadListener.onFileDownloaded(String
+	 * filePath) method is called.
+	 * 
+	 * @param hash
+	 *            the file hash
+	 * @param donwloadCompleteListener
+	 *            a listener for the completion event of this download
+	 */
+	public void downloadByHash(final String hash,
+			final FileSharingDownloadListener downloadCompleteListener) {
 		try {
 			JSONObject sharedFile = new JSONObject();
 			sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
 			sharedFile.put("file", CACHE_FOLDER + File.separator + hash);
 
-			TextMessage message = session.createTextMessage();
+			Destination tempDest = null;
+			if (downloadCompleteListener != null) {
+				tempDest = downloadSession.createTemporaryQueue();
+				MessageConsumer responseConsumer = downloadSession
+						.createConsumer(tempDest);
+				responseConsumer.setMessageListener(new MessageListener() {
+					@Override
+					public void onMessage(Message response) {
+						try {
+							String msgText = ((TextMessage) response).getText();
+							JSONObject keyValue = new JSONObject(msgText);
+							String fileFullPath = keyValue
+									.getString("fileFullPath");
+
+							if (downloadCompleteListener != null)
+								downloadCompleteListener
+										.onFileDownloaded(fileFullPath);
+						} catch (Exception e) {
+							e.printStackTrace();
+						}
+					}
+				});
+			}
+
+			TextMessage message = downloadSession.createTextMessage();
 			message.setText(sharedFile.toString());
-			producer.send(downloadQueue, message);
+			if (tempDest != null)
+				message.setJMSReplyTo(tempDest);
+			downloadProducer.send(downloadQueue, message);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -698,6 +832,7 @@ public class FileSharing {
 
 			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
 					+ ".json");
+
 			System.out.println("Getting media data: "
 					+ dbFile.getAbsolutePath());
 			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
@@ -719,6 +854,49 @@ public class FileSharing {
 		}
 
 		return mediaItems;
+	}
+
+	public static String getPublicKey(String userId) {
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		if (userId.equals(Configurations.getUserConfig().getUser().getHash()
+				.toString()))
+			return JsonWebSignature.getPublicKeyString(Configurations
+					.getUserConfig().getUserKeyPair().getPublic());
+
+		String pKey = null;
+		try {
+			JSONObject recordDb = DistributedHashTable.getSingleton()
+					.getRecord(userId);
+
+			if (recordDb == null)
+				return pKey;
+
+			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
+					.getString("uri"));
+
+			if (latestHash == null)
+				return pKey;
+
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
+					+ ".json");
+
+			System.out.println("Getting user publicKey data: "
+					+ dbFile.getAbsolutePath());
+			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
+					dbFile)));
+
+			if (db.has("publicKey"))
+				pKey = db.getString("publicKey");
+			else
+				pKey = null;
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return pKey;
+
 	}
 
 }
