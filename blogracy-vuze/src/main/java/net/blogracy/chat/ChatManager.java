@@ -36,7 +36,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.gudy.azureus2.plugins.Plugin;
-import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.config.ConfigParameter;
 import org.gudy.azureus2.plugins.config.ConfigParameterListener;

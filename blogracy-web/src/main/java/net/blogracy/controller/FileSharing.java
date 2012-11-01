@@ -61,7 +61,6 @@ import net.blogracy.util.JsonWebSignature;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
-import org.apache.commons.codec.binary.Base64;
 import org.apache.shindig.protocol.conversion.BeanConverter;
 import org.apache.shindig.protocol.conversion.BeanJsonConverter;
 import org.apache.shindig.social.opensocial.model.ActivityEntry;

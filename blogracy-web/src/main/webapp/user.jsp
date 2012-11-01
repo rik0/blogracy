@@ -43,7 +43,6 @@ String loc = Configurations.getUserConfig().getUser().getHash().toString();
 ChatController.setLocalUser(loc);
 ChatController.setRemoteUser(userHash);
 
-List<Album> albums= FileSharing.getSingleton().getAlbums(userHash);
 
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
 for (Album a : albums)

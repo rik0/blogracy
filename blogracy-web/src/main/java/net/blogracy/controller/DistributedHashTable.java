@@ -27,16 +27,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.security.KeyFactory;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
-import java.security.PublicKey;
 import java.security.SignatureException;
-import java.security.spec.InvalidKeySpecException;
-import java.security.spec.X509EncodedKeySpec;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -55,19 +49,10 @@ import net.blogracy.util.JsonWebSignature;
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.shindig.protocol.conversion.BeanConverter;
-import org.apache.shindig.protocol.conversion.BeanJsonConverter;
-import org.apache.shindig.social.opensocial.model.Album;
-import org.apache.shindig.social.opensocial.model.MediaItem;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONTokener;
-
-import com.google.inject.Binder;
-import com.google.inject.Guice;
-import com.google.inject.Module;
-import com.google.inject.name.Names;
 
 /**
  * Generic functions to manipulate feeds are defined in this class.
