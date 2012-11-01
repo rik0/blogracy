@@ -2,6 +2,7 @@
 <%@ page import="net.blogracy.model.users.Users" %>
 <%@ page import="net.blogracy.model.users.User" %>
 <%@ page import="net.blogracy.controller.FileSharing" %>
+<%@ page import="net.blogracy.controller.ChatController" %>
 <%@ page import="net.blogracy.controller.DistributedHashTable" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
@@ -16,6 +17,7 @@ if (userHash == null || userHash.length() == 0) {
 } else if (userHash.length() != 32) {
 	userHash = Hashes.hash(userHash); // TODO: remove
 }
+
 User user = null;
 
 if (userHash.equals(Configurations.getUserConfig().getUser().getHash().toString()))
@@ -32,6 +34,17 @@ else
 	
 //DistributedHashTable.getSingleton().lookup(userHash);
 List<Album> albums= FileSharing.getAlbums(userHash);
+
+
+pageContext.setAttribute("loc",  Configurations.getUserConfig().getUser().getHash().toString());
+pageContext.setAttribute("rem", userHash);
+
+String loc = Configurations.getUserConfig().getUser().getHash().toString();
+ChatController.setLocalUser(loc);
+ChatController.setRemoteUser(userHash);
+
+List<Album> albums= FileSharing.getSingleton().getAlbums(userHash);
+
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
 for (Album a : albums)
 	mediaItemMap.put(a.getId(), FileSharing.getMediaItemsWithCachedImages(userHash, a.getId()));
@@ -95,8 +108,67 @@ pageContext.setAttribute("photoMap", mediaItemMap);
         });
 
     </script>
+
     <script type="text/javascript" src="/scripts/blogracy-userGalleryHelper.js"></script>
     <script type="text/javascript" src="/scripts/blogracy-mediaThumbnailViewer.js"></script>
+
+
+	<script type="text/javascript">
+		function openChat(){
+		document.getElementById('chatbody').innerHTML = '<iframe src="chatform.jsp" id="iframe" width="300" height="300"></iframe>';
+		}
+	</script>
+	
+	<script type="text/javascript">
+		function closeChat(){
+		document.getElementById('chatbody').innerHTML = '';
+		}
+	</script>
+	
+	<script type="text/javascript">
+		function privateChat(){
+		document.getElementById('privbody').innerHTML = '<iframe src="chatform3.jsp" id="iframe3" width="300" height="300"></iframe>';
+		}
+	</script>
+	
+	<script type="text/javascript">
+		function privateChat2(){
+		document.getElementById('privbody').innerHTML = '<iframe src="chatform4.jsp" id="iframe4" width="300" height="300"></iframe>';
+		}
+	</script>
+	
+	<script type="text/javascript">
+		function closePrivateChat(){
+		document.getElementById('privbody').innerHTML = '';
+		}
+	</script>
+	
+	<script type="text/javascript">
+		function resizeChat2(){
+		document.getElementById('chatlink2').innerHTML = 'Close';
+		document.getElementById('iframe2').height = 300;
+		document.getElementById('iframe2').width = 300;
+		}
+	</script>
+	
+	<script type="text/javascript">
+		function closeChat2(){
+		document.getElementById('chatlink2').innerHTML = '';
+		document.getElementById('chatbody2').innerHTML = '<iframe src="chatform2.jsp" id="iframe2" width="0" height="0"></iframe>';
+		}
+	</script>
+	
+	<script type="text/javascript">
+		window.onload = function() {
+			var local = document.getElementById('localUser').getAttribute('title');
+			var remote = document.getElementById('remoteUser').getAttribute('title');
+			if (local == remote) {
+				document.getElementById('openlink').innerHTML = '';
+			}
+			document.getElementById('chatbody2').innerHTML = '<iframe src="chatform2.jsp" id="iframe2" width="0" height="0"></iframe>';
+			document.getElementById('openlink2').innerHTML = '';
+		};
+	</script> 
 	
     <style type="text/css">
             /* Override some defaults */
@@ -322,6 +394,9 @@ pageContext.setAttribute("photoMap", mediaItemMap);
 				</c:forEach>
 				</ul>
                 <h3>Tags</h3>
+<br/>
+				<h3>Chat</h3>
+				<a href='#self' id='openlink' onclick='openChat()' style='font-size: 10px;'>Chat with ${user.localNick}</a>
             </div>
         </div>
       
@@ -331,8 +406,27 @@ pageContext.setAttribute("photoMap", mediaItemMap);
         <p>&copy; University of Parma 2011</p>
     </footer>
 
+
+
 </div>
 <!-- /container -->
+<div class="span10" id="chatframe2" style="width:310px; position:fixed; bottom:0; left:0;">	
+	<div id="chathead2" style="text-align: left;"> 
+		<a href='#self' id="chatlink2" onclick='closeChat2()'> </a>
+	</div>
+	<div id="chatbody2"> </div>
+</div>
+<div class="span10" id="privatechat" style="width:310px; position:fixed; bottom:0; left:50%; margin-left: -100px;">	
+	<div id="privbody"> </div>
+</div>
+
+<div class="span10" id="chatframe" style="width:310px; position:fixed; bottom:0; right:0;">	
+	<div id="chatbody"> </div>
+</div>
+
+<div id="localUser" title="${loc}"></div>
+<div id="remoteUser" title="${rem}"></div>
+<div id="localNick" title="${localUser.localNick}"></div>
 
 </body>
 </html>
