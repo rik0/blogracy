@@ -16,8 +16,8 @@ Vuze is not packaged for Maven right now. This may change in the future.
 Right now, it is necessary to:
 
 1. Download the latest AzureusXYZ.jar from main Vuze site: http://dev.vuze.com/
-   Rename the downloaded file to Azureus2.jar, as suggested on the Vuze site
-2. In the same directory where the files have been downloaded, execute
+2. Rename the downloaded file to Azureus2.jar, as suggested on the Vuze site
+3. In the same directory where the files have been downloaded, execute
    the "mvn-install-vuze.sh" script.
 
 ### Compile ###
