@@ -52,7 +52,10 @@ Issue the following command:
 ./build.sh
 ```
 
-For more detailed information, read the instructions in the folder of each module.
+For more detailed information, read the instructions in the folder of each module:
+
+* [blogracy-vuze](tree/master/blogracy-vuze)
+* [blogracy-web](tree/master/blogracy-web)
 
 ## Authors ##
 
