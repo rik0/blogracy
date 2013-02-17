@@ -392,8 +392,14 @@ public class FileSharing {
 					.getMimeType());
 			if (extension != null && !extension.isEmpty())
 				extension = "." + extension;
-			item.setUrl("cache/"
+			File f = new File("cache/"
 					+ getHashFromMagnetURI(itemMagneUri) + extension);
+			if (f.exists())
+				item.setUrl("cache/"
+					+ getHashFromMagnetURI(itemMagneUri) + extension);
+			else 
+				item.setUrl("cache/"
+						+ getHashFromMagnetURI(itemMagneUri));
 		}
 
 		return mediaItems;
@@ -428,7 +434,14 @@ public class FileSharing {
 						.getMimeType());
 				if (extension != null && !extension.isEmpty())
 					extension = "." + extension;
-				item.setUrl("cache/" + getHashFromMagnetURI(itemMagneUri) + extension);
+				File f = new File("cache/"
+						+ getHashFromMagnetURI(itemMagneUri) + extension);
+				if (f.exists())
+					item.setUrl("cache/"
+						+ getHashFromMagnetURI(itemMagneUri) + extension);
+				else 
+					item.setUrl("cache/"
+							+ getHashFromMagnetURI(itemMagneUri));
 				return item;
 			}
 		}

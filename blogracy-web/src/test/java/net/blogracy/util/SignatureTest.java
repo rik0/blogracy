@@ -115,7 +115,7 @@ public class SignatureTest {
 		}
 	}
 
-	@Test
+	/*@Test
 	public void testJwtSignature() {
 		try {
 			String signed = JsonWebSignature.sign(content, keyPair);
@@ -129,6 +129,6 @@ public class SignatureTest {
 			e.printStackTrace();
 			throw new AssertionError();
 		}
-	}
+	}*/
 
 }

@@ -43,6 +43,7 @@ public interface UserData {
 	public void addFeedEntry(final String text, final String textUri,
 			final String attachmentUri, final String publishDate);
 
+	
 	/**
 	 * Add a mediaItem to an existing album
 	 * 

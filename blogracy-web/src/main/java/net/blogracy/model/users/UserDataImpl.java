@@ -1,13 +1,13 @@
 package net.blogracy.model.users;
 
 import java.security.InvalidParameterException;
+import java.util.UUID;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-
 
 import net.blogracy.errors.BlogracyItemNotFound;
 import net.blogracy.errors.PhotoAlbumDuplicated;
@@ -35,24 +35,34 @@ public class UserDataImpl implements UserData {
 		this.user = user;
 	}
 
-	public void addComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate) throws BlogracyItemNotFound{
+	public void addComment(final User commentingUser, final String commentText,
+			final String commentedObjectId, final String publishDate)
+			throws BlogracyItemNotFound {
+		this.addComment(commentingUser, commentText, commentedObjectId,
+				publishDate, UUID.randomUUID().toString());
+	}
+
+	public void addComment(final User commentingUser, final String commentText,
+			final String commentedObjectId, final String publishDate,
+			final String commentId) throws BlogracyItemNotFound {
 		List<ActivityEntry> currentUserActivities = this.getActivityStream();
-		
-		// Getting the entry in the activity stream that commentingUser is actually posting a comment for...
+
+		// Getting the entry in the activity stream that commentingUser is
+		// actually posting a comment for...
 		ActivityEntry commentedEntry = null;
-		for (ActivityEntry entry : currentUserActivities)
-		{
-			if (entry.getObject() != null && entry.getObject().getId() != null && entry.getObject().getId().equals(commentedObjectId))
-			{
+		for (ActivityEntry entry : currentUserActivities) {
+			if (entry.getObject() != null && entry.getObject().getId() != null
+					&& entry.getObject().getId().equals(commentedObjectId)) {
 				commentedEntry = entry;
 				break;
 			}
 		}
-		
-		// Cannot comment nothing! Probably the content to be commented has been removed.... 
+
+		// Cannot comment nothing! Probably the content to be commented has been
+		// removed....
 		if (commentedEntry == null)
 			throw new BlogracyItemNotFound(commentedObjectId);
-		
+
 		final ActivityEntry comment = new ActivityEntryImpl();
 		ActivityObject actor = new ActivityObjectImpl();
 		actor.setObjectType("person");
@@ -64,11 +74,33 @@ public class UserDataImpl implements UserData {
 		final ActivityObject commentObject = new ActivityObjectImpl();
 		commentObject.setObjectType("comment");
 		commentObject.setContent(commentText);
+		commentObject.setId(commentId);
 		comment.setObject(commentObject);
 		comment.setTarget(commentedEntry.getObject());
 		this.activityStream.add(0, comment);
 	}
-	
+
+	public static  ActivityEntry createComment(final User commentingUser,
+			final String commentText, final String commentedObjectId,
+			final String publishDate)
+			throws BlogracyItemNotFound {
+
+		final ActivityEntry comment = new ActivityEntryImpl();
+		ActivityObject actor = new ActivityObjectImpl();
+		actor.setObjectType("person");
+		actor.setId(commentingUser.getHash().toString());
+		actor.setDisplayName(commentingUser.getLocalNick());
+		comment.setActor(actor);
+		comment.setVerb("post");
+		comment.setPublished(publishDate);
+		final ActivityObject commentObject = new ActivityObjectImpl();
+		commentObject.setObjectType("comment");
+		commentObject.setContent(commentText);
+		commentObject.setId(UUID.randomUUID().toString());
+		comment.setObject(commentObject);
+		return comment;
+	}
+
 	public void addFeedEntry(final String text, final String textUri,
 			final String attachmentUri, final String publishDate) {
 		final ActivityEntry entry = new ActivityEntryImpl();
@@ -88,7 +120,7 @@ public class UserDataImpl implements UserData {
 		}
 		this.activityStream.add(0, entry);
 	}
-	
+
 	public void addMediaItemToAlbum(final String albumId,
 			final String photoUrl, final String photoUrlHash,
 			final String mimeType, final String publishedDate) {
@@ -205,27 +237,27 @@ public class UserDataImpl implements UserData {
 		return albums;
 	}
 
-	public List<ActivityEntry> getCommentsByObjectId(final String objectId)
-	{
+	public List<ActivityEntry> getCommentsByObjectId(final String objectId) {
 		List<ActivityEntry> comments = new ArrayList<ActivityEntry>();
-		
-		for (ActivityEntry entry :  this.getActivityStream())
-		{
-			if (entry.getTarget() != null && entry.getTarget().getId() != null && entry.getTarget().getId().equals(objectId) 
-					&& entry.getObject() != null &&  entry.getObject().getObjectType() != null && entry.getObject().getObjectType().equals("comment")
-					&& entry.getVerb() != null && entry.getVerb().equals("post"))
-			{
+
+		for (ActivityEntry entry : this.getActivityStream()) {
+			if (entry.getTarget() != null && entry.getTarget().getId() != null
+					&& entry.getTarget().getId().equals(objectId)
+					&& entry.getObject() != null
+					&& entry.getObject().getObjectType() != null
+					&& entry.getObject().getObjectType().equals("comment")
+					&& entry.getVerb() != null
+					&& entry.getVerb().equals("post")) {
 				comments.add(entry);
 			}
 		}
-		
+
 		java.util.Collections.sort(comments, new Comparator<ActivityEntry>() {
 			public int compare(ActivityEntry o1, ActivityEntry o2) {
 				return o1.getPublished().compareTo(o2.getPublished());
 			}
-		}
-		);
-		
+		});
+
 		return comments;
 	}
 
@@ -237,14 +269,12 @@ public class UserDataImpl implements UserData {
 		return this.user;
 	}
 
-
-	public String getUserPublicKey()
-	{
+	public String getUserPublicKey() {
 		return this.userPublicKey;
 	}
 
-	public void removeMediaItem(final String mediaId, final String albumId, final String publishedDate)
-	{
+	public void removeMediaItem(final String mediaId, final String albumId,
+			final String publishedDate) {
 		Album album = null;
 		for (Album a : this.albums) {
 			if (a.getId().equals(albumId)) {
@@ -257,7 +287,7 @@ public class UserDataImpl implements UserData {
 			throw new InvalidParameterException("AlbumId " + albumId
 					+ " does not correspond to a valid album for the user "
 					+ this.user.getHash().toString());
-		
+
 		for (Iterator<MediaItem> iter = this.mediaItems.iterator(); iter
 				.hasNext();) {
 			MediaItem mediaItem = iter.next();
@@ -267,7 +297,7 @@ public class UserDataImpl implements UserData {
 		}
 
 		album.setMediaItemCount(mediaItems.size());
-		
+
 		final ActivityEntry entry = new ActivityEntryImpl();
 		ActivityObject actor = new ActivityObjectImpl();
 		actor.setObjectType("person");
@@ -290,7 +320,7 @@ public class UserDataImpl implements UserData {
 		entry.setTarget(mediaAlbumObject);
 
 		this.activityStream.add(0, entry);
-		
+
 	}
 
 	public void setActivityStream(Collection<ActivityEntry> activityStream) {
@@ -300,14 +330,13 @@ public class UserDataImpl implements UserData {
 	public void setAlbums(Collection<Album> albums) {
 		this.albums = new ArrayList<Album>(albums);
 	}
-	
+
 	public void setMediaItems(Collection<MediaItem> mediaItems) {
 		this.mediaItems = new ArrayList<MediaItem>(mediaItems);
 	}
-	
-	public void setUserPublicKey(String pKey)
-	{
+
+	public void setUserPublicKey(String pKey) {
 		this.userPublicKey = pKey;
 	}
-	
+
 }

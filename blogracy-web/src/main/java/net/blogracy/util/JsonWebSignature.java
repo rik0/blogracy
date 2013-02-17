@@ -80,7 +80,7 @@ public class JsonWebSignature {
 	 * @param signed
 	 * @return
 	 */
-	@Deprecated
+/*	@Deprecated
 	public static PublicKey getSignerKey(String signed) {
 		PublicKey signerKey = null;
 		try {
@@ -104,7 +104,7 @@ public class JsonWebSignature {
 			e.printStackTrace();
 		}
 		return signerKey;
-	}
+	}**/
 
 	public static String getPublicKeyString(PublicKey pKey) {
 		if(pKey == null)

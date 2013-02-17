@@ -3,6 +3,7 @@
 <%@ page import="net.blogracy.model.users.User" %>
 <%@ page import="net.blogracy.controller.FileSharing" %>
 <%@ page import="net.blogracy.controller.ChatController" %>
+<%@ page import="net.blogracy.controller.CommentsController" %>
 <%@ page import="net.blogracy.controller.DistributedHashTable" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
@@ -11,6 +12,9 @@
 <%@ page import="org.apache.shindig.social.opensocial.model.Album" %>
 <%@ page import="org.apache.shindig.social.opensocial.model.MediaItem" %>
 <%
+
+CommentsController.getInstance().initializeConnection();
+
 String userHash = request.getParameter("user");
 if (userHash == null || userHash.length() == 0) {
     userHash = Configurations.getUserConfig().getUser().getHash().toString();

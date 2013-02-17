@@ -15,6 +15,7 @@ import net.blogracy.logging.Logger;
 import net.blogracy.services.ChatService;
 import net.blogracy.services.DownloadService;
 import net.blogracy.services.LookupService;
+import net.blogracy.services.SalmonContentService;
 import net.blogracy.services.SeedService;
 import net.blogracy.services.StoreService;
 
@@ -40,6 +41,7 @@ public class Blogracy implements Plugin {
     private DownloadService downloadService;
     private ChatService chatService;
     private ChatManager chatManager;
+    private SalmonContentService salmonService;
 
     /*
      * (non-Javadoc)
@@ -66,9 +68,14 @@ public class Blogracy implements Plugin {
             seedService = new SeedService(connection, plugin);
             downloadService = new DownloadService(connection, plugin);
             
+            /** Removed for the moment
             chatManager = new ChatManager();
             chatManager.initialize(plugin);
             chatService = new ChatService(connection,chatManager, plugin);
+    
+            **/ 
+            salmonService = new SalmonContentService(connection, plugin);
+            
             Logger.info("Blogracy Vuze plugin has started correctly");
             
         } catch (Exception e) {
@@ -89,7 +96,7 @@ public class Blogracy implements Plugin {
 
         List<String> argList = new ArrayList<String>();
         argList.addAll(Arrays.asList(args));
-        argList.add("--ui=console");
+      //  argList.add("--ui=console");
         org.gudy.azureus2.ui.common.Main.main(argList.toArray(args));
     }
 }

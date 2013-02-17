@@ -39,7 +39,7 @@ ChatController.privateChatting();
 	<script type="text/javascript" src="chat files/amq.js"></script>
 	<script type="text/javascript" src="chat files/chat3.js"></script>
 	
-	<script src="/scripts/jquery-1.7.js"></script>
+	 <script type="text/javascript" src="/scripts/jquery-1.8.2.js"></script>
     <script src="/scripts/jquery.form.js"></script>
     <script src="/scripts/bootstrap-alerts.js"></script>
 	
