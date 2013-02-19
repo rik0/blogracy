@@ -6,7 +6,7 @@ Blogracy is a simple peer-to-peer social networking system, built on top of Bitt
 Essentially Blogracy is composed by two main modules:
 
 1. a Vuze plugin
-2. a web application
+2. a Web application
 
 This information regards the second module, the Web application.
 
