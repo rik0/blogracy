@@ -6,7 +6,7 @@ Blogracy is a simple peer-to-peer social networking system, built on top of Bitt
 Essentially Blogracy is composed by two main modules:
 
 1. a Vuze plugin
-2. a web application
+2. a Web application
 
 This information regards the second module, the Web application.
 
@@ -57,12 +57,12 @@ With IntelliJ things mostly work out of the box.
 Issue the following command:
 
 ```
-mvn jetty:run
+mvn exec:exec
 ```
 
 Alternatively, you can deploy the webapp into any Java web container.
 
-Blogracy web interface is available at: htpp://localhost:8080
+Blogracy web interface is available at: htpp://localhost:8080/
 
 ### Executing Blogracy inside the IDE ###
 

@@ -9,7 +9,6 @@
   <properties>
     <jettyVersion>8.1.2.v20120308</jettyVersion>
   </properties>
-
  
   <dependencies>
     <dependency>
@@ -23,22 +22,22 @@
       <artifactId>jetty-all-server</artifactId>
       <version>${jettyVersion}</version>
     </dependency>
-	<dependency>
-        <groupId>org.eclipse.jetty</groupId>
-        <artifactId>jetty-servlet</artifactId>
-        <version>${jettyVersion}</version>
-      </dependency>
+    <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-servlet</artifactId>
+      <version>${jettyVersion}</version>
+    </dependency>
     <dependency>
       <groupId>org.mortbay.jetty</groupId>
       <artifactId>jetty-util</artifactId>
       <version>6.1.26</version>
     </dependency>
-	<dependency>
-	  <groupId>org.mortbay.jetty</groupId>
-	  <artifactId>jsp-2.1-glassfish</artifactId>
-	  <version>2.1.v20100127</version>
+    <dependency>
+      <groupId>org.mortbay.jetty</groupId>
+      <artifactId>jsp-2.1-glassfish</artifactId>
+      <version>2.1.v20100127</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>org.mortbay.jetty</groupId>
       <artifactId>jsp-api-2.1-glassfish</artifactId>
       <version>2.1.v20100127</version>
@@ -48,22 +47,22 @@
       <artifactId>commons-codec</artifactId>
       <version>1.6</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-api</artifactId>
       <version>1.6.4</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>org.slf4j</groupId>
       <artifactId>slf4j-log4j12</artifactId>
       <version>1.6.4</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>log4j</groupId>
       <artifactId>log4j</artifactId>
       <version>1.2.14</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-all</artifactId>
       <version>5.5.1</version>
@@ -73,7 +72,7 @@
       <artifactId>activemq-core</artifactId>
       <version>5.5.1</version>
     </dependency>
-	<dependency>
+    <dependency>
       <groupId>org.apache.activemq</groupId>
       <artifactId>activemq-web</artifactId>
       <version>5.5.1</version>
@@ -99,6 +98,10 @@
       <resource>
         <directory>src/main/resources</directory>
       </resource>
+      <resource>
+        <directory>src/main/webapp</directory>
+        <targetPath>../webapp</targetPath>
+      </resource>
     </resources>
 
     <plugins>
@@ -109,6 +112,20 @@
         <configuration>
           <source>1.6</source>
           <target>1.6</target>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>1.2.1</version>
+        <configuration>
+          <executable>java</executable>
+          <workingDirectory>target/</workingDirectory>
+          <arguments>
+            <argument>-classpath</argument>
+            <classpath/>
+            <argument>net.blogracy.WebServer</argument>
+          </arguments>
         </configuration>
       </plugin>
       <plugin>
@@ -124,32 +141,55 @@
           <fork>true</fork>
         </configuration>
         <dependencies>
-		  <dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-api</artifactId>
-			<version>1.6.4</version>
-		  </dependency>
-		  <dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.14</version>
-		  </dependency>
-		  <dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-all</artifactId>
-			<version>5.5.1</version>
-		  </dependency>
-		  <dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-core</artifactId>
-			<version>5.5.1</version>
-		  </dependency>
-		  <dependency>
-			<groupId>org.apache.activemq</groupId>
-			<artifactId>activemq-web</artifactId>
-			<version>5.5.1</version>
-		  </dependency>
+      <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.6.4</version>
+      </dependency>
+      <dependency>
+      <groupId>log4j</groupId>
+      <artifactId>log4j</artifactId>
+      <version>1.2.14</version>
+      </dependency>
+      <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-all</artifactId>
+      <version>5.5.1</version>
+      </dependency>
+      <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-core</artifactId>
+      <version>5.5.1</version>
+      </dependency>
+      <dependency>
+      <groupId>org.apache.activemq</groupId>
+      <artifactId>activemq-web</artifactId>
+      <version>5.5.1</version>
+      </dependency>
         </dependencies>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>net.blogracy.WebServer</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+          <includeProjectDependencies>true</includeProjectDependencies>
+        </configuration>
+        <executions>
+          <execution>
+            <id>make-assembly</id>
+            <phase>package</phase>
+            <goals>
+              <goal>single</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
