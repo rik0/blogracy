@@ -55,7 +55,7 @@ Issue the following command:
 For more detailed information, read the instructions in the folder of each module:
 
 * [blogracy-vuze](blogracy-vuze)
-* [blogracy-web](blogracy-vuze)
+* [blogracy-web](blogracy-web)
 
 ## Authors ##
 
