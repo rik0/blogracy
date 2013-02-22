@@ -201,7 +201,7 @@ public class FileSharing {
 				}
 				System.out.println("Feed loaded");
 			} catch (Exception e) {
-				e.printStackTrace();
+				// e.printStackTrace();
 				System.out.println("Feed not found");
 			}
 		}
