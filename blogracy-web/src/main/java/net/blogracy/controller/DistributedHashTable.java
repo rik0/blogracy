@@ -135,7 +135,7 @@ public class DistributedHashTable {
 										.compareTo(record.getString("version")) < 0) {
 							putRecord(record);
 							String uri = record.getString("uri");
-							FileSharing.getSingleton().download(uri);
+							FileSharing.getSingleton().download(uri, ".json");
 						}
 					} catch (Exception e) {
 						e.printStackTrace();

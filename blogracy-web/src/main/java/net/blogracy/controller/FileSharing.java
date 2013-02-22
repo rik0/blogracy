@@ -201,7 +201,7 @@ public class FileSharing {
 				}
 				System.out.println("Feed loaded");
 			} catch (Exception e) {
-				// e.printStackTrace();
+				e.printStackTrace();
 				System.out.println("Feed not found");
 			}
 		}
@@ -721,14 +721,25 @@ public class FileSharing {
 
 	public void download(final String uri) {
 		String hash = getHashFromMagnetURI(uri);
-		downloadByHash(hash);
+		downloadByHash(hash, null);
+	}
+
+	public void download(final String uri, final String ext) {
+		String hash = getHashFromMagnetURI(uri);
+		downloadByHash(hash, ext);
 	}
 
 	public void downloadByHash(final String hash) {
+	  downloadByHash(hash, null);
+	}
+	
+	public void downloadByHash(final String hash, final String ext) {
 		try {
+		  String file = CACHE_FOLDER + File.separator + hash;
+		  if (ext != null) file += ext;
 			JSONObject sharedFile = new JSONObject();
 			sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
-			sharedFile.put("file", CACHE_FOLDER + File.separator + hash);
+			sharedFile.put("file", file);
 
 			TextMessage message = session.createTextMessage();
 			message.setText(sharedFile.toString());
