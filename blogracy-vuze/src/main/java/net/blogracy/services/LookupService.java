@@ -122,7 +122,7 @@ public class LookupService implements MessageListener {
             final long TIMEOUT = 5 * 60 * 1000; // 5 mins
             DistributedDatabase ddb = plugin.getDistributedDatabase();
             ddb.read(new DhtListener(textRequest),
-                    ddb.createKey(record.getString("key")), TIMEOUT,
+                    ddb.createKey(record.getString("id")), TIMEOUT,
                     DistributedDatabase.OP_EXHAUSTIVE_READ);
         } catch (DistributedDatabaseException e) {
             Logger.error("DDB error: lookup service: " + text);
