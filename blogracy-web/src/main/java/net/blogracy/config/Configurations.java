@@ -24,6 +24,7 @@ package net.blogracy.config;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.FileInputStream;
 import java.io.InputStream;
 import java.security.Key;
 import java.security.KeyPair;
@@ -63,8 +64,14 @@ public class Configurations {
     static private Properties loadProperties(String file) throws IOException {
         // ClassLoader loader = ClassLoader.getSystemClassLoader();
         // InputStream is = loader.getResourceAsStream(file);
-        InputStream is = Configurations.class.getClassLoader()
+        InputStream is = null;
+        File f = new File(file);
+        if (f.exists()) {
+            is = new FileInputStream(f);
+        } else {
+            is = Configurations.class.getClassLoader()
                 .getResourceAsStream(file);
+        }
 
         if (is != null) {
             Properties properties = new Properties();
