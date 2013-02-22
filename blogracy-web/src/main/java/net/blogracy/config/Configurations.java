@@ -99,8 +99,9 @@ public class Configurations {
                     String cachedFilesDirectoryPath = pathProperties
                             .getProperty(BLOGRACY_PATHS_CACHED);
                     // "Lazy" creation of cached files folder if non-existent
-                    this.createDirIfMissing(new File(cachedFilesDirectoryPath));
-                    return cachedFilesDirectoryPath;
+                    File f = new File(cachedFilesDirectoryPath);
+                    this.createDirIfMissing(f);
+                    return f.getAbsolutePath();
                 }
 
                 @Override
