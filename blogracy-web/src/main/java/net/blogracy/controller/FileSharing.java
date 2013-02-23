@@ -31,6 +31,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.TimeZone;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -93,7 +94,7 @@ public class FileSharing {
     private MessageConsumer consumer;
 
     static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss");
+            "yyyy-MM-dd'T'HH:mm:ss'Z'");
     static final String CACHE_FOLDER = Configurations.getPathConfig()
             .getCachedFilesDirectoryPath();
 
@@ -143,6 +144,7 @@ public class FileSharing {
     }
 
     public FileSharing() {
+        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         try {
             connectionFactory = new ActiveMQConnectionFactory(
                     ActiveMQConnection.DEFAULT_BROKER_URL);
