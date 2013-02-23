@@ -42,6 +42,7 @@ import net.blogracy.logging.Logger;
 
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
+import org.gudy.azureus2.plugins.download.DownloadCompletionListener;
 import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
@@ -61,6 +62,28 @@ import org.json.JSONObject;
  * ...
  */
 public class DownloadService implements MessageListener {
+    class CompletionListener implements DownloadCompletionListener {
+        private TextMessage request;
+
+        CompletionListener(TextMessage request) {
+            this.request = request;
+        }
+
+        public void onCompletion(Download d) {
+            try {
+                JSONObject record = new JSONObject(request.getText());
+                TextMessage response = session.createTextMessage();
+                response.setText(record.toString());
+                response.setJMSCorrelationID(request.getJMSCorrelationID());
+                producer.send(request.getJMSReplyTo(), response);
+            } catch (JMSException e) {
+                Logger.error("JMS error: download completion");
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private PluginInterface plugin;
 
     private Session session;
@@ -101,8 +124,10 @@ public class DownloadService implements MessageListener {
                         .createFromBEncodedInputStream(is);
                 download = plugin.getDownloadManager().addDownload(torrent,
                         null, folder);
-                if (download != null && file != null)
+                if (download != null && file != null) {
                     download.renameDownload(file.getName());
+                    download.addCompletionListener(new CompletionListener((TextMessage) request));
+                }
                 Logger.info(magnetUri + " added to download list");
             } catch (ResourceDownloaderException e) {
                 Logger.error("Torrent download error: download service: "
