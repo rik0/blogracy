@@ -188,21 +188,30 @@ public class FileSharing {
 						.getString("uri"));
 				File dbFile = new File(CACHE_FOLDER + File.separator
 						+ latestHash + ".json");
-				System.out.println("Getting feed: " + dbFile.getAbsolutePath());
-				JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-						dbFile)));
-
-				JSONArray items = db.getJSONArray("items");
-				for (int i = 0; i < items.length(); ++i) {
-					JSONObject item = items.getJSONObject(i);
-					ActivityEntry entry = (ActivityEntry) CONVERTER
-							.convertToObject(item, ActivityEntry.class);
-					result.add(entry);
+				if (! dbFile.exists() && record.has("prev")) {
+				  latestHash = FileSharing.getHashFromMagnetURI(record
+					    .getString("prev"));
+			    dbFile = new File(CACHE_FOLDER + File.separator
+					    + latestHash + ".json");
 				}
-				System.out.println("Feed loaded");
+				if (dbFile.exists()) {
+   			  System.out.println("Getting feed: " + dbFile.getAbsolutePath());
+			    JSONObject db = new JSONObject(new JSONTokener(new FileReader(
+					    dbFile)));
+
+			    JSONArray items = db.getJSONArray("items");
+			    for (int i = 0; i < items.length(); ++i) {
+				    JSONObject item = items.getJSONObject(i);
+				    ActivityEntry entry = (ActivityEntry) CONVERTER
+						    .convertToObject(item, ActivityEntry.class);
+				    result.add(entry);
+			    }
+			    System.out.println("Feed loaded");
+				}	else {
+				  System.out.println("Feed not found");
+				}
 			} catch (Exception e) {
-				// e.printStackTrace();
-				System.out.println("Feed not found");
+				e.printStackTrace();
 			}
 		}
 		return result;

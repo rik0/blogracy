@@ -200,7 +200,13 @@ public class DistributedHashTable {
 
 	public void putRecord(JSONObject record) {
 		try {
-			records.put(record.getString("id"), record);
+		  String id = record.getString("id");
+		  JSONObject old = records.get(id);
+		  if (old != null) {
+		    String prev = old.getString("uri");
+		    record.put("prev", prev);
+		  }
+			records.put(id, record);
 		} catch (JSONException e1) {
 			e1.printStackTrace();
 		}
