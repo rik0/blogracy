@@ -15,8 +15,8 @@ public class WebServer
         Server server = new Server(8080);
  
         WebAppContext context = new WebAppContext();
-        context.setDescriptor("webapp/WEB-INF/web.xml");
-        context.setResourceBase("webapp");
+        context.setDescriptor("target/webapp/WEB-INF/web.xml");
+        context.setResourceBase("target/webapp");
         context.setContextPath("/");
         context.setParentLoaderPriority(true);
  
