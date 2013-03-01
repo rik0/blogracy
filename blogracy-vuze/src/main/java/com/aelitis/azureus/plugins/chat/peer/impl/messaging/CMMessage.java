@@ -1,5 +1,5 @@
 /*
- * Created on 28 fevr. 2005
+ * Created on 28 feb. 2005
  * Created by Olivier Chalouhi
  * 
  * Copyright (C) 2004 Aelitis SARL, All rights Reserved
@@ -20,14 +20,14 @@
  * AELITIS, SARL au capital de 30,000 euros,
  * 8 Allee Lenotre, La Grille Royale, 78600 Le Mesnil le Roi, France.
  */
+package com.aelitis.azureus.plugins.chat.peer.impl.messaging;
 
-package net.blogracy.chat.messaging.impl;
-
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 
-import net.blogracy.chat.ChatManager;
+import com.aelitis.azureus.plugins.chat.ChatPlugin;
 
 import org.gudy.azureus2.plugins.messaging.Message;
 import org.gudy.azureus2.plugins.messaging.MessageException;
@@ -37,6 +37,7 @@ public class CMMessage implements ChatMessage{
   
   private String description;
   private ByteBuffer buffer;
+  
   
   //A unique message ID, computed as :
   //hash(time,sender,text);
@@ -53,19 +54,36 @@ public class CMMessage implements ChatMessage{
   //The message itself
   private final String text;
   
-  public CMMessage(int id, String senderNick, byte[] senderID, int hops, String text) {
+  public CMMessage(
+      int id,
+      String senderNick,
+      byte[] senderID,
+      int hops,
+      String text) {
     this(senderNick,senderID,hops,text,false);
     this.messageID = id;
+    
     generateBuffer();
   }
   
-  public CMMessage(String senderNick, byte[] senderID, int hops, String text) {
+  public CMMessage(
+      String senderNick,
+      byte[] senderID,
+      int hops,
+      String text      
+      ) {
     this(senderNick,senderID,hops,text,true);
   }
   
-  private CMMessage(String senderNick, byte[] senderID, int hops, String text, boolean generateBuffer) {
+  private CMMessage(
+      String senderNick,
+      byte[] senderID,
+      int hops,
+      String text,
+      boolean generateBuffer
+      ) {
     
-	this.senderNick = senderNick;
+    this.senderNick = senderNick;
     this.senderID = senderID;
     this.hops = hops;
     this.text = text;
@@ -73,16 +91,15 @@ public class CMMessage implements ChatMessage{
     String hash = senderID + "," + System.currentTimeMillis() + "," + text;
     
     this.messageID = hash.hashCode();
-       
+    
+        
     if(generateBuffer) generateBuffer();
   }
     
-    @SuppressWarnings("unchecked")
-	private void generateBuffer() {
+    private void generateBuffer() {
       
     this.description = getID()+ " from " + senderNick + " : " + text +  " (id: " + messageID + ", hops:" + hops + ")";
-    @SuppressWarnings("rawtypes")
-	Map mMessage = new HashMap();
+    Map mMessage = new HashMap();
     mMessage.put("id",new Long(messageID));
     mMessage.put("s",senderID);
     mMessage.put("n",senderNick);
@@ -92,65 +109,74 @@ public class CMMessage implements ChatMessage{
     byte[] bMessage = new byte[0];
     
     try {
-      bMessage = ChatManager.bEncode(mMessage);      
+      bMessage = ChatPlugin.bEncode(mMessage);      
     } catch(Exception exception) {
       exception.printStackTrace();
     }    
-    buffer = ByteBuffer.allocate(bMessage.length);
-    buffer.put(bMessage);
+    buffer = ByteBuffer.allocate( bMessage.length );
+    buffer.put( bMessage );
     buffer.flip();
   }
   
   
-  public int getMessageID() {return messageID;}
-  public byte[] getSenderID() {return senderID;}
-  public String getSenderNick() {return senderNick;}
-  public int getNbHops() {return hops;}
-  public String getText() {return text;}
+  public int getMessageID() { return messageID; }
   
-  public String getID() {return ChatMessage.ID_CHAT_MESSAGE;}
-  public byte getVersion() {return ChatMessage.CHAT_DEFAULT_VERSION;}
-  public int getType() {return Message.TYPE_PROTOCOL_PAYLOAD;}  
-  public String getDescription() {return description;} 
-  public ByteBuffer[] getPayload() {return new ByteBuffer[] { buffer };}  
-  public void destroy() {/*nothing*/}
+  public byte[] getSenderID() { return senderID; }
+  
+  public String getSenderNick() { return senderNick; }
+  
+  public int getNbHops() { return hops; }
+  
+  public String getText() { return text; }
   
   
-  public Message create(ByteBuffer data) throws MessageException {
-    if(data == null) {
+  
+  public String getID() {  return ChatMessage.ID_CHAT_MESSAGE;  }
+
+  public byte getVersion() {  return ChatMessage.CHAT_DEFAULT_VERSION;  }
+
+  public int getType() {  return Message.TYPE_PROTOCOL_PAYLOAD;  }
+    
+  public String getDescription() {  return description;  }
+  
+  public ByteBuffer[] getPayload() {  return new ByteBuffer[] { buffer };  }
+    
+  public void destroy() { /*nothing*/ }
+  
+  
+  public Message create( ByteBuffer data ) throws MessageException {
+    if( data == null ) {
       throw new MessageException( "[" +getID() + ":" +getVersion()+ "] decode error: data == null" );
     }
     
-    if(data.remaining() < 13) {/*nothing*/}
+    if( data.remaining() < 13 ) {
+      
+    }
+    
     int size = data.remaining();
 
-    byte[] bMessage = new byte[size];
-    data.get(bMessage);
-    
+    byte[] bMessage = new byte[ size ];
+    data.get( bMessage );
     try {
       //mMessage.put("id",new Long(messageID));
       //mMessage.put("s",senderID);
       //mMessage.put("n",senderNick);
       //mMessage.put("h",new Long(hops));
       //mMessage.put("t",text);
-    	
-      @SuppressWarnings("rawtypes")
-	  Map mMessage = ChatManager.bDecode(bMessage);
+      Map mMessage = ChatPlugin.bDecode(bMessage);
       int messageID = ((Long)mMessage.get("id")).intValue();
       byte[] senderID = (byte[])mMessage.get("s");
       String senderNick = new String((byte[])mMessage.get("n"));
       int hops = ((Long)mMessage.get("h")).intValue();
       String text = new String((byte[])mMessage.get("t"));
-      
       return new CMMessage(messageID,senderNick,senderID,hops,text);  
-    } 
-    
-    catch(Exception e) {
+    } catch(Exception e) {
       throw new MessageException( "[" +getID() + ":" +getVersion()+ "] decode error: " + e );
     }
 
-        
+    
+    
+    
   }
   
 }
-

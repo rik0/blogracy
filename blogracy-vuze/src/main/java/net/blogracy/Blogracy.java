@@ -49,26 +49,26 @@ public class Blogracy implements Plugin {
      * .PluginInterface)
      */
     @Override
-    public void initialize(PluginInterface plugin) throws PluginException {
+    public void initialize(PluginInterface vuze) throws PluginException {
         // TODO Auto-generated method stub
-        createQueues(plugin);
+        createQueues(vuze);
     }
 
-    void createQueues(final PluginInterface plugin) {
+    void createQueues(final PluginInterface vuze) {
         String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
         try {
             connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
             connection = connectionFactory.createConnection();
             connection.start();
 
-            storeService = new StoreService(connection, plugin);
-            lookupService = new LookupService(connection, plugin);
-            seedService = new SeedService(connection, plugin);
-            downloadService = new DownloadService(connection, plugin);
+            storeService = new StoreService(connection, vuze);
+            lookupService = new LookupService(connection, vuze);
+            seedService = new SeedService(connection, vuze);
+            downloadService = new DownloadService(connection, vuze);
             
-            chatManager = new ChatManager();
-            chatManager.initialize(plugin);
-            chatService = new ChatService(connection,chatManager, plugin);
+//            chatManager = new ChatManager();
+//            chatManager.initialize(plugin);
+            chatService = new ChatService(connection, /*chatManager,*/ vuze);
             Logger.info("Blogracy Vuze plugin has started correctly");
             
         } catch (Exception e) {

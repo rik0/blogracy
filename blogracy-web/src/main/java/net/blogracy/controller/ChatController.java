@@ -62,6 +62,18 @@ public class ChatController {
     	}
     }
     
+    public static void createChannel(String channel) {
+	    	System.out.println("Creating chat channel for: " + channel);
+	    	TextMessage msg;
+			try {
+				msg = session.createTextMessage();
+				msg.setText(channel);
+		        producer.send(hashQueue, msg);
+			} catch (JMSException e) {
+				System.out.println("JMS error: sending messages");
+			}
+    }
+    
     public static void setRemoteUser(String remote) {
     	remoteUser = remote;
     	System.out.println("Remote user hash: " + remoteUser);     
