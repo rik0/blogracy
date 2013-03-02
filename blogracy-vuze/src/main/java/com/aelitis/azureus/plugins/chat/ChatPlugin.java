@@ -1,5 +1,5 @@
 /*
- * Created on 28 fevr. 2005
+ * Created on 28 feb. 2005
  * Created by Olivier Chalouhi
  * 
  * Copyright (C) 2004 Aelitis SARL, All rights Reserved
@@ -60,7 +60,7 @@ public class ChatPlugin implements Plugin, MessageListener, ConfigParameterListe
   private static final String COLUMN_ID_CHAT_ACTIVITY = "ChatActivityColumn";
   
   private PluginInterface plugin_interface;
-//  private UISWTInstance swtui;
+  private UISWTInstance swtui;
   private PeerController  controller;
 //  private LoggerChannel   logger;
   
@@ -74,10 +74,10 @@ public class ChatPlugin implements Plugin, MessageListener, ConfigParameterListe
   
 //  private String  resInactive = "com/aelitis/azureus/plugins/chat/ui/icons/red.png"; 
 //  public  Image   imgInactive;
-  
+//  
 //  private String  resActive = "com/aelitis/azureus/plugins/chat/ui/icons/dgreen.png";
 //  public  Image   imgActive;
-  
+//  
 //  private String  resActivity = "com/aelitis/azureus/plugins/chat/ui/icons/lgreen.png";
 //  public  Image   imgActivity;
   
@@ -86,6 +86,7 @@ public class ChatPlugin implements Plugin, MessageListener, ConfigParameterListe
   public Torrent genericTorrent;
 
 	private static Formatters formatters = null;
+  
   
   public void
   initialize(
@@ -116,37 +117,36 @@ public class ChatPlugin implements Plugin, MessageListener, ConfigParameterListe
       controller.initialize();
       controller.startPeerProcessing();
       
-/*  	plugin_interface.getUIManager().addUIListener(
-			new UIManagerListener()
-			{
-				public void
-				UIAttached(
-					UIInstance		instance )
-				{
-					if ( instance instanceof UISWTInstance ){
-						
-						swtui = (UISWTInstance)instance;
-						
-					    imgInactive = loadImage(resInactive);
-					    imgActive   = loadImage(resActive);
-					    imgActivity = loadImage(resActivity);
-						
-					  ChatPanelsManager cpm = new ChatPanelsManager(ChatPlugin.this);
-						swtui.addView(UISWTInstance.VIEW_MYTORRENTS, "Chat", cpm);
-						swtui.addView(UISWTInstance.VIEW_MAIN, "CreateChat", cpm);
-						
-						addMyTorrentsColumn();
-					}
-				}
-				
-				public void
-				UIDetached(
-					UIInstance		instance )
-				{
-					
-				}
-			});
-    */
+//  	plugin_interface.getUIManager().addUIListener(
+//			new UIManagerListener()
+//			{
+//				public void
+//				UIAttached(
+//					UIInstance		instance )
+//				{
+//					if ( instance instanceof UISWTInstance ){
+//						
+//						swtui = (UISWTInstance)instance;
+//						
+//					    imgInactive = loadImage(resInactive);
+//					    imgActive   = loadImage(resActive);
+//					    imgActivity = loadImage(resActivity);
+//						
+//					  ChatPanelsManager cpm = new ChatPanelsManager(ChatPlugin.this);
+//						swtui.addView(UISWTInstance.VIEW_MYTORRENTS, "Chat", cpm);
+//						swtui.addView(UISWTInstance.VIEW_MAIN, "CreateChat", cpm);
+//						
+//						addMyTorrentsColumn();
+//					}
+//				}
+//				
+//				public void
+//				UIDetached(
+//					UIInstance		instance )
+//				{
+//					
+//				}
+//			});
       
     }
   }
@@ -291,29 +291,28 @@ public class ChatPlugin implements Plugin, MessageListener, ConfigParameterListe
     return null;
   }
   
-/*  private void addMyTorrentsColumn() {
-        
-    MyTorrentsActivityIndicator activityIndicator = new MyTorrentsActivityIndicator(this, controller, swtui);
-    
-    addIndicatorToTable(TableManager.TABLE_MYTORRENTS_INCOMPLETE,activityIndicator);
-    addIndicatorToTable(TableManager.TABLE_MYTORRENTS_COMPLETE,activityIndicator);
-  }
-  
-  private void addIndicatorToTable(String tableID,MyTorrentsActivityIndicator activityIndicator) {
-    UIManager uiManager = plugin_interface.getUIManager();
-    TableManager tableManager = uiManager.getTableManager();
-    TableColumn activityColumn = tableManager.createColumn(tableID, COLUMN_ID_CHAT_ACTIVITY);
-   
-    activityColumn.setAlignment(TableColumn.ALIGN_CENTER);
-    activityColumn.setPosition(2);
-    activityColumn.setRefreshInterval(TableColumn.INTERVAL_GRAPHIC);
-    activityColumn.setType(TableColumn.TYPE_GRAPHIC);
-    
-    activityColumn.addCellRefreshListener(activityIndicator);
-    
-    tableManager.addColumn(activityColumn);
-  }
-*/
+//  private void addMyTorrentsColumn() {
+//        
+//    MyTorrentsActivityIndicator activityIndicator = new MyTorrentsActivityIndicator(this, controller, swtui);
+//    
+//    addIndicatorToTable(TableManager.TABLE_MYTORRENTS_INCOMPLETE,activityIndicator);
+//    addIndicatorToTable(TableManager.TABLE_MYTORRENTS_COMPLETE,activityIndicator);
+//  }
+//  
+//  private void addIndicatorToTable(String tableID,MyTorrentsActivityIndicator activityIndicator) {
+//    UIManager uiManager = plugin_interface.getUIManager();
+//    TableManager tableManager = uiManager.getTableManager();
+//    TableColumn activityColumn = tableManager.createColumn(tableID, COLUMN_ID_CHAT_ACTIVITY);
+//   
+//    activityColumn.setAlignment(TableColumn.ALIGN_CENTER);
+//    activityColumn.setPosition(2);
+//    activityColumn.setRefreshInterval(TableColumn.INTERVAL_GRAPHIC);
+//    activityColumn.setType(TableColumn.TYPE_GRAPHIC);
+//    
+//    activityColumn.addCellRefreshListener(activityIndicator);
+//    
+//    tableManager.addColumn(activityColumn);
+//  }
 
   /**
    * @return Returns the nick.
@@ -370,9 +369,9 @@ public class ChatPlugin implements Plugin, MessageListener, ConfigParameterListe
     return null;
   }
   
-//  public UISWTInstance getSWTUI() {
-//  	return swtui;
-//  }
+  public UISWTInstance getSWTUI() {
+  	return swtui;
+  }
   
   public static byte[] bEncode(Map map) {
   	if (formatters == null) {
