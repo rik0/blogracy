@@ -68,8 +68,7 @@ public class DistributedHashTable {
 	private MessageProducer producer;
 	private MessageConsumer consumer;
 
-	static final String CACHE_FOLDER = Configurations.getPathConfig()
-			.getCachedFilesDirectoryPath();
+	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
 	private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
 
@@ -81,19 +80,16 @@ public class DistributedHashTable {
 
 	public DistributedHashTable() {
 		try {
-			File recordsFile = new File(CACHE_FOLDER + File.separator
-					+ "records.json");
+			File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
 			if (recordsFile.exists()) {
-				JSONArray recordList = new JSONArray(new JSONTokener(
-						new FileReader(recordsFile)));
+				JSONArray recordList = new JSONArray(new JSONTokener(new FileReader(recordsFile)));
 				for (int i = 0; i < recordList.length(); ++i) {
 					JSONObject record = recordList.getJSONObject(i);
 					records.put(record.getString("id"), record);
 				}
 			}
 
-			connectionFactory = new ActiveMQConnectionFactory(
-					ActiveMQConnection.DEFAULT_BROKER_URL);
+			connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
 			connection = connectionFactory.createConnection();
 			connection.start();
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -129,50 +125,38 @@ public class DistributedHashTable {
 						 * signerKey));
 						 */
 						String[] split = value.split("\\.");
-						final JSONObject record = new JSONObject(new String(
-								Base64.decodeBase64(split[1]), "UTF-8"));
+						final JSONObject record = new JSONObject(new String(Base64.decodeBase64(split[1]), "UTF-8"));
 
 						JSONObject currentRecord = getRecord(id);
-						if (currentRecord == null
-								|| currentRecord.getString("version")
-										.compareTo(record.getString("version")) < 0) {
+						if (currentRecord == null || currentRecord.getString("version").compareTo(record.getString("version")) < 0) {
 
 							String uri = record.getString("uri");
-							FileSharing.download(uri,
-									new FileSharingDownloadListener() {
+							FileSharing.download(uri, null, new FileSharingDownloadListener() {
 
-										@Override
-										public void onFileDownloaded(
-												String fileFullPath) {
+								@Override
+								public void onFileDownloaded(String fileFullPath) {
 
-											try {
-												JSONObject db = new JSONObject(
-														new JSONTokener(
-																new FileReader(
-																		fileFullPath)));
+									try {
+										JSONObject db = new JSONObject(new JSONTokener(new FileReader(fileFullPath)));
 
-												String pKey = null;
-												if (db.has("publicKey"))
-													pKey = db
-															.getString("publicKey");
+										String pKey = null;
+										if (db.has("publicKey"))
+											pKey = db.getString("publicKey");
 
-												if (pKey != null) {
-													JSONObject userRecord = new JSONObject(
-															JsonWebSignature
-																	.verify(value,
-																			pKey));
-													putRecord(userRecord);
-												}
-											} catch (FileNotFoundException e) {
-												e.printStackTrace();
-											} catch (JSONException e) {
-												e.printStackTrace();
-											} catch (SignatureException e) {
-												e.printStackTrace();
-											}
-
+										if (pKey != null) {
+											JSONObject userRecord = new JSONObject(JsonWebSignature.verify(value, pKey));
+											putRecord(userRecord);
 										}
-									});
+									} catch (FileNotFoundException e) {
+										e.printStackTrace();
+									} catch (JSONException e) {
+										e.printStackTrace();
+									} catch (SignatureException e) {
+										e.printStackTrace();
+									}
+
+								}
+							});
 						}
 					} catch (Exception e) {
 						e.printStackTrace();
@@ -224,7 +208,16 @@ public class DistributedHashTable {
 
 	public void putRecord(JSONObject record) {
 		try {
-			records.put(record.getString("id"), record);
+			String id = record.getString("id");
+			JSONObject old = records.get(id);
+			if (old != null) {
+				if (record.getString("version").compareTo(old.getString("version")) < 0) {
+					return;
+				}
+				String prev = old.getString("uri");
+				record.put("prev", prev);
+			}
+			records.put(id, record);
 		} catch (JSONException e1) {
 			e1.printStackTrace();
 		}
@@ -234,8 +227,7 @@ public class DistributedHashTable {
 			JSONObject entry = entries.next();
 			recordList.put(entry);
 		}
-		File recordsFile = new File(CACHE_FOLDER + File.separator
-				+ "records.json");
+		File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
 		try {
 			FileWriter writer = new FileWriter(recordsFile);
 			recordList.write(writer);

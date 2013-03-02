@@ -1,5 +1,5 @@
 /*
- * Created on 28 fevr. 2005
+ * Created on 28 feb. 2005
  * Created by Olivier Chalouhi
  * 
  * Copyright (C) 2004 Aelitis SARL, All rights Reserved
@@ -20,26 +20,15 @@
  * AELITIS, SARL au capital de 30,000 euros,
  * 8 Allee Lenotre, La Grille Royale, 78600 Le Mesnil le Roi, France.
  */
+package com.aelitis.azureus.plugins.chat.peer.impl.messaging;
 
-package net.blogracy.chat.messaging.impl;
-
-import java.nio.ByteBuffer;
 import org.gudy.azureus2.plugins.messaging.Message;
-import org.gudy.azureus2.plugins.messaging.MessageException;
 
-public class CMRoute implements ChatMessage {
+public interface ChatMessage extends Message {
   
-  private final String     description  = getID();
-  private final ByteBuffer buffer       = ByteBuffer.allocate(0);
+  public static final String ID_CHAT_MESSAGE      = "CHAT_MESSAGE";
+  public static final String ID_CHAT_NO_ROUTE     = "CHAT_NO_ROUTE";
+  public static final String ID_CHAT_ROUTE        = "CHAT_ROUTE";
   
-  public String getID() {return ChatMessage.ID_CHAT_ROUTE;}
-  public byte getVersion() {return ChatMessage.CHAT_DEFAULT_VERSION;}
-  public int getType() {return Message.TYPE_PROTOCOL_PAYLOAD;}    
-  public String getDescription() {return description;} 
-  public ByteBuffer[] getPayload() {return new ByteBuffer[] { buffer };}    
-  public void destroy() {/*nothing*/}
-  
-  public Message create(ByteBuffer data) throws MessageException {    
-    return new CMRoute();
-  }
+  public static final byte CHAT_DEFAULT_VERSION = (byte)2;
 }

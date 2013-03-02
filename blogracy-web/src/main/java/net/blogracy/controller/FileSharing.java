@@ -36,6 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TimeZone;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -91,23 +92,17 @@ public class FileSharing {
 	private MessageProducer downloadProducer;
 	private MessageConsumer consumer;
 
-	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss");
-	static final String CACHE_FOLDER = Configurations.getPathConfig()
-			.getCachedFilesDirectoryPath();
+	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
 	private static final FileSharing THE_INSTANCE = new FileSharing();
 
-	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(
-			Guice.createInjector(new Module() {
-				@Override
-				public void configure(Binder b) {
-					b.bind(BeanConverter.class)
-							.annotatedWith(
-									Names.named("shindig.bean.converter.json"))
-							.to(BeanJsonConverter.class);
-				}
-			}));
+	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
+		@Override
+		public void configure(Binder b) {
+			b.bind(BeanConverter.class).annotatedWith(Names.named("shindig.bean.converter.json")).to(BeanJsonConverter.class);
+		}
+	}));
 
 	public static FileSharing getSingleton() {
 		return THE_INSTANCE;
@@ -136,15 +131,13 @@ public class FileSharing {
 	}
 
 	public FileSharing() {
+		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 		try {
-			connectionFactory = new ActiveMQConnectionFactory(
-					ActiveMQConnection.DEFAULT_BROKER_URL);
+			connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
 			connection = connectionFactory.createConnection();
 			connection.start();
-			seedSession = connection.createSession(false,
-					Session.AUTO_ACKNOWLEDGE);
-			downloadSession = connection.createSession(false,
-					Session.AUTO_ACKNOWLEDGE);
+			seedSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			downloadSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			seedProducer = seedSession.createProducer(null);
 			seedProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 			seedQueue = seedSession.createQueue("seed");
@@ -167,8 +160,7 @@ public class FileSharing {
 		String uri = null;
 		try {
 			Destination tempDest = seedSession.createTemporaryQueue();
-			MessageConsumer responseConsumer = seedSession
-					.createConsumer(tempDest);
+			MessageConsumer responseConsumer = seedSession.createConsumer(tempDest);
 
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("file", file.getAbsolutePath());
@@ -189,6 +181,46 @@ public class FileSharing {
 	}
 
 	/**
+	 * Fetched the user ActivityStream from the User's DB
+	 * 
+	 * @param user
+	 * @return
+	 */
+	static public List<ActivityEntry> getFeed(String user) {
+		List<ActivityEntry> result = new ArrayList<ActivityEntry>();
+		System.out.println("Getting feed: " + user);
+		JSONObject record = DistributedHashTable.getSingleton().getRecord(user);
+		if (record != null) {
+			try {
+				String latestHash = FileSharing.getHashFromMagnetURI(record.getString("uri"));
+
+				File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
+				if (!dbFile.exists() && record.has("prev")) {
+					latestHash = FileSharing.getHashFromMagnetURI(record.getString("prev"));
+					dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
+				}
+				if (dbFile.exists()) {
+					System.out.println("Getting feed: " + dbFile.getAbsolutePath());
+					JSONObject db = new JSONObject(new JSONTokener(new FileReader(dbFile)));
+
+					JSONArray items = db.getJSONArray("items");
+					for (int i = 0; i < items.length(); ++i) {
+						JSONObject item = items.getJSONObject(i);
+						ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(item, ActivityEntry.class);
+						result.add(entry);
+					}
+					System.out.println("Feed loaded");
+				} else {
+					System.out.println("Feed not found");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
+
+	/**
 	 * Gets the user data (ActivityStream, Albums and MediaItems) from the
 	 * user's db
 	 * 
@@ -201,8 +233,7 @@ public class FileSharing {
 
 		User user = null;
 
-		if (userId.equals(Configurations.getUserConfig().getUser().getHash()
-				.toString()))
+		if (userId.equals(Configurations.getUserConfig().getUser().getHash().toString()))
 			user = Configurations.getUserConfig().getUser();
 		else {
 			// The right user should be searched in the user's friends
@@ -223,6 +254,77 @@ public class FileSharing {
 	}
 
 	/**
+	 * Adds a new message / attachment to the user's ActivityStream (verb
+	 * "POST")
+	 * 
+	 * @param userId
+	 * @param text
+	 * @param attachment
+	 */
+	public void addFeedEntry(String userId, String text, File attachment) {
+		try {
+			String hash = hash(text);
+			File textFile = new File(CACHE_FOLDER + File.separator + hash + ".txt");
+
+			FileWriter w = new FileWriter(textFile);
+			w.write(text);
+			w.close();
+
+			String textUri = seed(textFile);
+			String attachmentUri = null;
+			if (attachment != null) {
+				attachmentUri = seed(attachment);
+			}
+
+			final String publishDate = ISO_DATE_FORMAT.format(new Date());
+
+			UserData userData = getUserData(userId);
+			userData.addFeedEntry(text, textUri, attachmentUri, publishDate);
+
+			String dbUri = this.seedUserData(userData);
+
+			DistributedHashTable.getSingleton().store(userId, dbUri, publishDate);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Create a new Album for the user. Adds the album to the user's recordDB
+	 * entry Adds the action to the ActivityStream (verb: create)
+	 * 
+	 * @param userId
+	 * @param photoAlbumName
+	 * @throws PhotoAlbumDuplicated
+	 */
+	public synchronized String createPhotoAlbum(String userId, String photoAlbumTitle) throws PhotoAlbumDuplicated {
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		if (photoAlbumTitle == null || photoAlbumTitle.isEmpty())
+			return null;
+
+		UserData userData = getUserData(userId);
+
+		for (Album existingAlbum : userData.getAlbums())
+			if (existingAlbum.getTitle().equals(photoAlbumTitle))
+				throw new PhotoAlbumDuplicated(photoAlbumTitle);
+
+		String albumHash = null;
+		try {
+			final String publishedDate = ISO_DATE_FORMAT.format(new Date());
+
+			albumHash = userData.createPhotoAlbum(photoAlbumTitle, publishedDate);
+			String dbUri = this.seedUserData(userData);
+
+			DistributedHashTable.getSingleton().store(userId, dbUri, publishedDate);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return albumHash;
+	}
+
+	/**
 	 * Gets the photo albums from the user's 'mediaUri' file given the userId.
 	 * 
 	 * @param userId
@@ -233,32 +335,26 @@ public class FileSharing {
 
 		List<Album> albums = new ArrayList<Album>();
 		try {
-			JSONObject recordDb = DistributedHashTable.getSingleton()
-					.getRecord(userId);
+			JSONObject recordDb = DistributedHashTable.getSingleton().getRecord(userId);
 
 			if (recordDb == null)
 				return albums;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.getString("uri"));
+			String latestHash = FileSharing.getHashFromMagnetURI(recordDb.getString("uri"));
 
 			if (latestHash == null)
 				return albums;
 
-			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
-					+ ".json");
-			System.out.println("Getting album data: "
-					+ dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
+			System.out.println("Getting album data: " + dbFile.getAbsolutePath());
+			JSONObject db = new JSONObject(new JSONTokener(new FileReader(dbFile)));
 
 			JSONArray albumArray = db.optJSONArray("albums");
 
 			if (albumArray != null) {
 				for (int i = 0; i < albumArray.length(); ++i) {
 					JSONObject singleAlbumObject = albumArray.getJSONObject(i);
-					Album entry = (Album) CONVERTER.convertToObject(
-							singleAlbumObject, Album.class);
+					Album entry = (Album) CONVERTER.convertToObject(singleAlbumObject, Album.class);
 					albums.add(entry);
 				}
 			}
@@ -267,44 +363,6 @@ public class FileSharing {
 			e.printStackTrace();
 		}
 		return albums;
-	}
-
-	/**
-	 * Fetched the user ActivityStream from the User's DB
-	 * 
-	 * @param user
-	 * @return
-	 */
-	static public List<ActivityEntry> getFeed(String user) {
-		List<ActivityEntry> result = new ArrayList<ActivityEntry>();
-		System.out.println("Getting feed: " + user);
-		JSONObject record = DistributedHashTable.getSingleton().getRecord(user);
-		if (record != null) {
-			try {
-				String latestHash = FileSharing.getHashFromMagnetURI(record
-						.getString("uri"));
-
-				File dbFile = new File(CACHE_FOLDER + File.separator
-						+ latestHash + ".json");
-
-				System.out.println("Getting feed: " + dbFile.getAbsolutePath());
-				JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-						dbFile)));
-
-				JSONArray items = db.getJSONArray("items");
-				for (int i = 0; i < items.length(); ++i) {
-					JSONObject item = items.getJSONObject(i);
-					ActivityEntry entry = (ActivityEntry) CONVERTER
-							.convertToObject(item, ActivityEntry.class);
-					result.add(entry);
-				}
-				System.out.println("Feed loaded");
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("Feed created");
-			}
-		}
-		return result;
 	}
 
 	/**
@@ -325,34 +383,27 @@ public class FileSharing {
 		List<MediaItem> mediaItems = new ArrayList<MediaItem>();
 
 		try {
-			JSONObject recordDb = DistributedHashTable.getSingleton()
-					.getRecord(userId);
+			JSONObject recordDb = DistributedHashTable.getSingleton().getRecord(userId);
 
 			if (recordDb == null)
 				return mediaItems;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.getString("uri"));
+			String latestHash = FileSharing.getHashFromMagnetURI(recordDb.getString("uri"));
 
 			if (latestHash == null)
 				return mediaItems;
 
-			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
-					+ ".json");
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
 
-			System.out.println("Getting media data: "
-					+ dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
+			System.out.println("Getting media data: " + dbFile.getAbsolutePath());
+			JSONObject db = new JSONObject(new JSONTokener(new FileReader(dbFile)));
 
 			JSONArray mediaItemsArray = db.optJSONArray("mediaItems");
 
 			if (mediaItemsArray != null) {
 				for (int i = 0; i < mediaItemsArray.length(); ++i) {
-					JSONObject singleAlbumObject = mediaItemsArray
-							.getJSONObject(i);
-					MediaItem entry = (MediaItem) CONVERTER.convertToObject(
-							singleAlbumObject, MediaItem.class);
+					JSONObject singleAlbumObject = mediaItemsArray.getJSONObject(i);
+					MediaItem entry = (MediaItem) CONVERTER.convertToObject(singleAlbumObject, MediaItem.class);
 
 					if (entry.getAlbumId().equals(albumId))
 						mediaItems.add(entry);
@@ -374,8 +425,7 @@ public class FileSharing {
 	 * @param albumId
 	 * @return
 	 */
-	public static List<MediaItem> getMediaItemsWithCachedImages(String userId,
-			String albumId) {
+	public static List<MediaItem> getMediaItemsWithCachedImages(String userId, String albumId) {
 
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
@@ -388,18 +438,14 @@ public class FileSharing {
 		for (MediaItem item : mediaItems) {
 			String itemMagneUri = item.getUrl();
 			download(itemMagneUri);
-			String extension = FileExtensionConverter.toDefaultExtension(item
-					.getMimeType());
+			String extension = FileExtensionConverter.toDefaultExtension(item.getMimeType());
 			if (extension != null && !extension.isEmpty())
 				extension = "." + extension;
-			File f = new File("cache/"
-					+ getHashFromMagnetURI(itemMagneUri) + extension);
+			File f = new File("cache/" + getHashFromMagnetURI(itemMagneUri) + extension);
 			if (f.exists())
-				item.setUrl("cache/"
-					+ getHashFromMagnetURI(itemMagneUri) + extension);
-			else 
-				item.setUrl("cache/"
-						+ getHashFromMagnetURI(itemMagneUri));
+				item.setUrl("cache/" + getHashFromMagnetURI(itemMagneUri) + extension);
+			else
+				item.setUrl("cache/" + getHashFromMagnetURI(itemMagneUri));
 		}
 
 		return mediaItems;
@@ -415,8 +461,7 @@ public class FileSharing {
 	 * @param mediaItemId
 	 * @return MediaItem data if found, null otherwise
 	 */
-	public static MediaItem getMediaItemWithCachedImage(String userId,
-			String albumId, String mediaItemId) {
+	public static MediaItem getMediaItemWithCachedImage(String userId, String albumId, String mediaItemId) {
 
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
@@ -430,98 +475,18 @@ public class FileSharing {
 			if (item.getId().equals(mediaItemId)) {
 				String itemMagneUri = item.getUrl();
 				download(itemMagneUri);
-				String extension = FileExtensionConverter.toDefaultExtension(item
-						.getMimeType());
+				String extension = FileExtensionConverter.toDefaultExtension(item.getMimeType());
 				if (extension != null && !extension.isEmpty())
 					extension = "." + extension;
-				File f = new File("cache/"
-						+ getHashFromMagnetURI(itemMagneUri) + extension);
+				File f = new File("cache/" + getHashFromMagnetURI(itemMagneUri) + extension);
 				if (f.exists())
-					item.setUrl("cache/"
-						+ getHashFromMagnetURI(itemMagneUri) + extension);
-				else 
-					item.setUrl("cache/"
-							+ getHashFromMagnetURI(itemMagneUri));
+					item.setUrl("cache/" + getHashFromMagnetURI(itemMagneUri) + extension);
+				else
+					item.setUrl("cache/" + getHashFromMagnetURI(itemMagneUri));
 				return item;
 			}
 		}
 		return null;
-	}
-
-	/**
-	 * Adds a new message / attachment to the user's ActivityStream (verb
-	 * "POST")
-	 * 
-	 * @param userId
-	 * @param text
-	 * @param attachment
-	 */
-	public void addFeedEntry(String userId, String text, File attachment) {
-		try {
-			String hash = hash(text);
-			File textFile = new File(CACHE_FOLDER + File.separator + hash
-					+ ".txt");
-
-			FileWriter w = new FileWriter(textFile);
-			w.write(text);
-			w.close();
-
-			String textUri = seed(textFile);
-			String attachmentUri = null;
-			if (attachment != null) {
-				attachmentUri = seed(attachment);
-			}
-
-			final String publishDate = ISO_DATE_FORMAT.format(new Date());
-
-			UserData userData = getUserData(userId);
-			userData.addFeedEntry(text, textUri, attachmentUri, publishDate);
-
-			String dbUri = this.seedUserData(userData);
-
-			DistributedHashTable.getSingleton().store(userId, dbUri,
-					publishDate);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
-
-	/**
-	 * Create a new Album for the user. Adds the album to the user's recordDB
-	 * entry Adds the action to the ActivityStream (verb: create)
-	 * 
-	 * @param userId
-	 * @param photoAlbumName
-	 * @throws PhotoAlbumDuplicated
-	 */
-	public synchronized String createPhotoAlbum(String userId,
-			String photoAlbumTitle) throws PhotoAlbumDuplicated {
-		if (userId == null)
-			throw new InvalidParameterException("userId cannot be null");
-
-		if (photoAlbumTitle == null || photoAlbumTitle.isEmpty())
-			return null;
-
-		UserData userData = getUserData(userId);
-
-		for (Album existingAlbum : userData.getAlbums())
-			if (existingAlbum.getTitle().equals(photoAlbumTitle))
-				throw new PhotoAlbumDuplicated(photoAlbumTitle);
-
-		String albumHash = null;
-		try {
-			final String publishedDate = ISO_DATE_FORMAT.format(new Date());
-
-			albumHash = userData.createPhotoAlbum(photoAlbumTitle,
-					publishedDate);
-			String dbUri = this.seedUserData(userData);
-
-			DistributedHashTable.getSingleton().store(userId, dbUri,
-					publishedDate);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return albumHash;
 	}
 
 	/***
@@ -533,8 +498,7 @@ public class FileSharing {
 	 * @param photos
 	 * @return
 	 */
-	public synchronized List<String> addMediaItemsToAlbum(String userId,
-			String albumId, Map<File, String> photos) {
+	public synchronized List<String> addMediaItemsToAlbum(String userId, String albumId, Map<File, String> photos) {
 		if (photos == null)
 			return null;
 
@@ -555,8 +519,7 @@ public class FileSharing {
 		}
 
 		if (album == null)
-			throw new InvalidParameterException("AlbumId " + albumId
-					+ " does not match to a valid album for the user " + userId);
+			throw new InvalidParameterException("AlbumId " + albumId + " does not match to a valid album for the user " + userId);
 
 		List<String> hashList = new ArrayList<String>();
 
@@ -567,30 +530,26 @@ public class FileSharing {
 			for (Entry<File, String> mapEntry : photos.entrySet()) {
 				File photo = mapEntry.getKey();
 				String mimeType = mapEntry.getValue();
-				String extension = FileExtensionConverter
-						.toDefaultExtension(mimeType);
+				String extension = FileExtensionConverter.toDefaultExtension(mimeType);
 				if (extension != null && !extension.isEmpty())
 					extension = "." + extension;
 				String fileHash = hash(photo);
 
-				final File photoCachedFile = new File(CACHE_FOLDER
-						+ File.separator + fileHash + extension);
+				final File photoCachedFile = new File(CACHE_FOLDER + File.separator + fileHash + extension);
 
 				FileUtils.copyFile(photo, photoCachedFile);
 				photo.delete();
 
 				final String fileUrl = this.seed(photoCachedFile);
 
-				userData.addMediaItemToAlbum(albumId, fileUrl,
-						getHashFromMagnetURI(fileUrl), mimeType, publishedDate);
+				userData.addMediaItemToAlbum(albumId, fileUrl, getHashFromMagnetURI(fileUrl), mimeType, publishedDate);
 
 				hashList.add(getHashFromMagnetURI(fileUrl));
 			}
 
 			String dbUri = this.seedUserData(userData);
 
-			DistributedHashTable.getSingleton().store(userId, dbUri,
-					publishedDate);
+			DistributedHashTable.getSingleton().store(userId, dbUri, publishedDate);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -610,8 +569,7 @@ public class FileSharing {
 	 * @param mimeType
 	 * @return
 	 */
-	public synchronized String addMediaItemToAlbum(String userId,
-			String albumId, File photo, String mimeType) {
+	public synchronized String addMediaItemToAlbum(String userId, String albumId, File photo, String mimeType) {
 		Map<File, String> map = new HashMap<File, String>();
 		map.put(photo, mimeType);
 		List<String> hashes = this.addMediaItemsToAlbum(userId, albumId, map);
@@ -626,8 +584,7 @@ public class FileSharing {
 	 * @param albumId
 	 * @param mediaId
 	 */
-	public synchronized void deletePhotoFromAlbum(String userId,
-			String albumId, String mediaId) {
+	public synchronized void deletePhotoFromAlbum(String userId, String albumId, String mediaId) {
 		if (mediaId == null)
 			throw new InvalidParameterException("mediaId cannot be null");
 
@@ -648,9 +605,7 @@ public class FileSharing {
 		}
 
 		if (album == null)
-			throw new InvalidParameterException("AlbumId " + albumId
-					+ " does not correspond to a valid album for the user "
-					+ userId);
+			throw new InvalidParameterException("AlbumId " + albumId + " does not correspond to a valid album for the user " + userId);
 
 		final String publishedDate = ISO_DATE_FORMAT.format(new Date());
 
@@ -659,8 +614,7 @@ public class FileSharing {
 			userData.removeMediaItem(mediaId, albumId, publishedDate);
 			String dbUri = this.seedUserData(userData);
 
-			DistributedHashTable.getSingleton().store(userId, dbUri,
-					publishedDate);
+			DistributedHashTable.getSingleton().store(userId, dbUri, publishedDate);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -668,10 +622,8 @@ public class FileSharing {
 		}
 	}
 
-	public String seedUserData(final UserData userData) throws JSONException,
-			IOException {
-		final File feedFile = new File(CACHE_FOLDER + File.separator
-				+ userData.getUser().getHash().toString() + ".json");
+	public String seedUserData(final UserData userData) throws JSONException, IOException {
+		final File feedFile = new File(CACHE_FOLDER + File.separator + userData.getUser().getHash().toString() + ".json");
 
 		List<ActivityEntry> feed = userData.getActivityStream();
 
@@ -684,16 +636,14 @@ public class FileSharing {
 		List<Album> albums = userData.getAlbums();
 		JSONArray albumsData = new JSONArray();
 		for (int i = 0; i < albums.size(); ++i) {
-			JSONObject item = new JSONObject(CONVERTER.convertToString(albums
-					.get(i)));
+			JSONObject item = new JSONObject(CONVERTER.convertToString(albums.get(i)));
 			albumsData.put(item);
 		}
 
 		List<MediaItem> mediaItems = userData.getMediaItems();
 		JSONArray mediaItemsData = new JSONArray();
 		for (int i = 0; i < mediaItems.size(); ++i) {
-			JSONObject item = new JSONObject(
-					CONVERTER.convertToString(mediaItems.get(i)));
+			JSONObject item = new JSONObject(CONVERTER.convertToString(mediaItems.get(i)));
 			mediaItemsData.put(item);
 		}
 
@@ -732,9 +682,14 @@ public class FileSharing {
 	 *            the file's magnet-uri
 	 */
 	public static void download(final String uri) {
-		download(uri, null);
+		download(uri, null, null);
 	}
 
+    public void download(final String uri, final String ext) {
+        String hash = getHashFromMagnetURI(uri);
+        downloadByHash(hash, ext, null);
+    }
+	
 	/***
 	 * Adds a file to the bittorrent download queue. The file is downloaded to
 	 * the CACHE_FOLDER and it will be named after the file hash. When the
@@ -746,10 +701,9 @@ public class FileSharing {
 	 * @param donwloadCompleteListener
 	 *            a listener for the completion event of this download
 	 */
-	public static void download(final String uri,
-			final FileSharingDownloadListener downloadCompleteListener) {
+	public static void download(final String uri, final String ext, final FileSharingDownloadListener downloadCompleteListener) {
 		String hash = getHashFromMagnetURI(uri);
-		THE_INSTANCE.downloadByHash(hash, downloadCompleteListener);
+		THE_INSTANCE.downloadByHash(hash, ext, downloadCompleteListener);
 	}
 
 	/***
@@ -760,7 +714,7 @@ public class FileSharing {
 	 *            the file hash
 	 */
 	public void downloadByHash(final String hash) {
-		downloadByHash(hash, null);
+		downloadByHash(hash, null, null);
 	}
 
 	/***
@@ -774,36 +728,40 @@ public class FileSharing {
 	 * @param donwloadCompleteListener
 	 *            a listener for the completion event of this download
 	 */
-	public void downloadByHash(final String hash,
-			final FileSharingDownloadListener downloadCompleteListener) {
+	public void downloadByHash(final String hash, final String ext, final FileSharingDownloadListener downloadCompleteListener) {
 		try {
-			JSONObject sharedFile = new JSONObject();
-			sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
-			sharedFile.put("file", CACHE_FOLDER + File.separator + hash);
-
-			Destination tempDest = null;
+			Destination tempDest = downloadSession.createTemporaryQueue();
+			MessageConsumer responseConsumer = downloadSession.createConsumer(tempDest);
 			if (downloadCompleteListener != null) {
-				tempDest = downloadSession.createTemporaryQueue();
-				MessageConsumer responseConsumer = downloadSession
-						.createConsumer(tempDest);
 				responseConsumer.setMessageListener(new MessageListener() {
 					@Override
 					public void onMessage(Message response) {
 						try {
 							String msgText = ((TextMessage) response).getText();
 							JSONObject keyValue = new JSONObject(msgText);
-							String fileFullPath = keyValue
-									.getString("fileFullPath");
+							String fileFullPath = keyValue.getString("fileFullPath");
 
 							if (downloadCompleteListener != null)
-								downloadCompleteListener
-										.onFileDownloaded(fileFullPath);
+								downloadCompleteListener.onFileDownloaded(fileFullPath);
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
 					}
 				});
+			} else {
+				responseConsumer.setMessageListener(new MessageListener() {
+					@Override
+					public void onMessage(Message response) {
+					}
+				});
 			}
+
+			String file = CACHE_FOLDER + File.separator + hash;
+			if (ext != null)
+				file += ext;
+			JSONObject sharedFile = new JSONObject();
+			sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
+			sharedFile.put("file", file);
 
 			TextMessage message = downloadSession.createTextMessage();
 			message.setText(sharedFile.toString());
@@ -830,34 +788,27 @@ public class FileSharing {
 		List<MediaItem> mediaItems = new ArrayList<MediaItem>();
 
 		try {
-			JSONObject recordDb = DistributedHashTable.getSingleton()
-					.getRecord(userId);
+			JSONObject recordDb = DistributedHashTable.getSingleton().getRecord(userId);
 
 			if (recordDb == null)
 				return mediaItems;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.getString("uri"));
+			String latestHash = FileSharing.getHashFromMagnetURI(recordDb.getString("uri"));
 
 			if (latestHash == null)
 				return mediaItems;
 
-			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
-					+ ".json");
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
 
-			System.out.println("Getting media data: "
-					+ dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
+			System.out.println("Getting media data: " + dbFile.getAbsolutePath());
+			JSONObject db = new JSONObject(new JSONTokener(new FileReader(dbFile)));
 
 			JSONArray mediaItemsArray = db.optJSONArray("mediaItems");
 
 			if (mediaItemsArray != null) {
 				for (int i = 0; i < mediaItemsArray.length(); ++i) {
-					JSONObject singleAlbumObject = mediaItemsArray
-							.getJSONObject(i);
-					MediaItem entry = (MediaItem) CONVERTER.convertToObject(
-							singleAlbumObject, MediaItem.class);
+					JSONObject singleAlbumObject = mediaItemsArray.getJSONObject(i);
+					MediaItem entry = (MediaItem) CONVERTER.convertToObject(singleAlbumObject, MediaItem.class);
 					mediaItems.add(entry);
 				}
 			}
@@ -872,32 +823,25 @@ public class FileSharing {
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
 
-		if (userId.equals(Configurations.getUserConfig().getUser().getHash()
-				.toString()))
-			return JsonWebSignature.getPublicKeyString(Configurations
-					.getUserConfig().getUserKeyPair().getPublic());
+		if (userId.equals(Configurations.getUserConfig().getUser().getHash().toString()))
+			return JsonWebSignature.getPublicKeyString(Configurations.getUserConfig().getUserKeyPair().getPublic());
 
 		String pKey = null;
 		try {
-			JSONObject recordDb = DistributedHashTable.getSingleton()
-					.getRecord(userId);
+			JSONObject recordDb = DistributedHashTable.getSingleton().getRecord(userId);
 
 			if (recordDb == null)
 				return pKey;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb
-					.getString("uri"));
+			String latestHash = FileSharing.getHashFromMagnetURI(recordDb.getString("uri"));
 
 			if (latestHash == null)
 				return pKey;
 
-			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash
-					+ ".json");
+			File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
 
-			System.out.println("Getting user publicKey data: "
-					+ dbFile.getAbsolutePath());
-			JSONObject db = new JSONObject(new JSONTokener(new FileReader(
-					dbFile)));
+			System.out.println("Getting user publicKey data: " + dbFile.getAbsolutePath());
+			JSONObject db = new JSONObject(new JSONTokener(new FileReader(dbFile)));
 
 			if (db.has("publicKey"))
 				pKey = db.getString("publicKey");

@@ -10,7 +10,6 @@ import java.util.List;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
-import net.blogracy.chat.ChatManager;
 import net.blogracy.logging.Logger;
 import net.blogracy.services.ChatService;
 import net.blogracy.services.DownloadService;
@@ -40,7 +39,6 @@ public class Blogracy implements Plugin {
     private SeedService seedService;
     private DownloadService downloadService;
     private ChatService chatService;
-    private ChatManager chatManager;
     private SalmonContentService salmonService;
 
     /*
@@ -51,35 +49,32 @@ public class Blogracy implements Plugin {
      * .PluginInterface)
      */
     @Override
-    public void initialize(PluginInterface plugin) throws PluginException {
-        // TODO Auto-generated method stub
-        createQueues(plugin);
+    public void initialize(PluginInterface vuze) throws PluginException {
+        createQueues(vuze);
     }
 
-    void createQueues(final PluginInterface plugin) {
+    void createQueues(final PluginInterface vuze) {
         String brokerUrl = ActiveMQConnection.DEFAULT_BROKER_URL;
         try {
             connectionFactory = new ActiveMQConnectionFactory(brokerUrl);
             connection = connectionFactory.createConnection();
             connection.start();
 
-            storeService = new StoreService(connection, plugin);
-            lookupService = new LookupService(connection, plugin);
-            seedService = new SeedService(connection, plugin);
-            downloadService = new DownloadService(connection, plugin);
-            
+            storeService = new StoreService(connection, vuze);
+            lookupService = new LookupService(connection, vuze);
+            seedService = new SeedService(connection, vuze);
+            downloadService = new DownloadService(connection, vuze);
+
             /** Removed for the moment
-            chatManager = new ChatManager();
-            chatManager.initialize(plugin);
-            chatService = new ChatService(connection,chatManager, plugin);
-    
-            **/ 
-            salmonService = new SalmonContentService(connection, plugin);
             
+            chatService = new ChatService(connection, vuze);
+            
+            **/
+            
+            salmonService = new SalmonContentService(connection, vuze);
             Logger.info("Blogracy Vuze plugin has started correctly");
             
         } catch (Exception e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

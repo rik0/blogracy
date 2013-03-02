@@ -13,8 +13,12 @@
         <directory>src/main/plugins</directory>
         <targetPath>../plugins/</targetPath>
       </resource>
-      <resource>
+      <!--resource>
         <directory>src/main/java/net/blogracy/chat/resources</directory>
+      </resource-->
+      <resource>
+        <directory>src/main/java/com/aelitis/azureus/plugins/chat/resources</directory>
+        <targetPath>com/aelitis/azureus/plugins/chat/resources</targetPath>
       </resource>
     </resources>
     <plugins>
