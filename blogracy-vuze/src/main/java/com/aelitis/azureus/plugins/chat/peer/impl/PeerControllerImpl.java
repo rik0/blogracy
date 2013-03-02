@@ -3,8 +3,6 @@
  * Created by Alon Rohter
  * Copyright (C) 2004-2005 Aelitis, All Rights Reserved.
  *
- * Furtherly modified by Andrea Vida, University of Parma (Italy).
- *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -16,9 +14,14 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ * 
+ * AELITIS, SARL au capital de 30,000 euros
+ * 8 Allee Lenotre, La Grille Royale, 78600 Le Mesnil le Roi, France.
  *
  */
-package net.blogracy.chat.peer.impl;
+
+package com.aelitis.azureus.plugins.chat.peer.impl;
+
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,29 +29,27 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.*;
 import org.gudy.azureus2.plugins.messaging.*;
 import org.gudy.azureus2.plugins.network.IncomingMessageQueueListener;
 import org.gudy.azureus2.plugins.peers.*;
+import com.aelitis.azureus.plugins.chat.ChatPlugin;
+import com.aelitis.azureus.plugins.chat.messaging.MessageListener;
+import com.aelitis.azureus.plugins.chat.peer.PeerController;
+import com.aelitis.azureus.plugins.chat.peer.impl.messaging.CMMessage;
+import com.aelitis.azureus.plugins.chat.peer.impl.messaging.CMNoRoute;
+import com.aelitis.azureus.plugins.chat.peer.impl.messaging.CMRoute;
+import com.aelitis.azureus.plugins.chat.peer.impl.messaging.ChatMessage;
 
-import net.blogracy.chat.ChatManager;
-import net.blogracy.chat.messaging.MessageListener;
-import net.blogracy.chat.peer.PeerController;
-import net.blogracy.chat.messaging.impl.CMMessage;
-import net.blogracy.chat.messaging.impl.CMNoRoute;
-import net.blogracy.chat.messaging.impl.CMRoute;
-import net.blogracy.chat.messaging.impl.ChatMessage;
-
-import net.blogracy.chat.web.Bridge;
-
-@SuppressWarnings("rawtypes")
+/**
+ *
+ */
 public class PeerControllerImpl implements PeerController {
   
   private final int NB_MAX_HOPS = 10;
   
-  private final ChatManager chat_plugin;
+  private final ChatPlugin chat_plugin;
   
   private Map downloadsToLastMessages;
   private static final int NB_LAST_MESSAGES = 512;
@@ -70,27 +71,21 @@ public class PeerControllerImpl implements PeerController {
   private List nickIgnores;
   private List idIgnores;
   
-  //Bridge
-  private Bridge[] bridge;
-  private static final int MAX_CHANNELS_NUMBER = 70;
-  private int bridgeCounter = 0;
-  
-  
-  //private String username;
-  
-  public PeerControllerImpl(ChatManager plugin, String username) { 
+  public PeerControllerImpl( ChatPlugin plugin ) {
     this.chat_plugin = plugin;
-    //this.username = username;
     downloadsToLastMessages = new HashMap();
     downloadsToRouters = new HashMap();
     downloadsToRoutePeer = new HashMap();
     downloadsToPeers = new HashMap();
+    
     listeners = new ArrayList();
+    
     nickIgnores = new LinkedList();
     idIgnores   = new LinkedList();
-    bridge = new Bridge[MAX_CHANNELS_NUMBER];
   }
-   
+  
+  
+  
   public void initialize() {
     try {
       chat_plugin.getPluginInterface().getMessageManager().registerMessageType( new CMMessage( "",new byte[20],-1, "" ) );
@@ -100,96 +95,93 @@ public class PeerControllerImpl implements PeerController {
     catch( MessageException e ) {   e.printStackTrace();  }
   }
   
-  public void addBridge(Download download, String channelName){
-	  if (bridgeCounter<MAX_CHANNELS_NUMBER){
-		  bridge[bridgeCounter] = new Bridge(chat_plugin,download,channelName);
-		  bridgeCounter++;
-	  }
-	  else System.out.println("Max channels number reached");
-    }
   
-  public void removeBridge(String channelName){
-	  int index = findBridgebyChannel(channelName);
-	  bridge[index].finalize();
-  }
+  
   
   public void startPeerProcessing() {
     PluginInterface pi = chat_plugin.getPluginInterface();
     
     pi.getDownloadManager().addListener(new DownloadManagerListener() {
-    	
-    	@SuppressWarnings("unchecked")
-    	public void downloadAdded( Download dwnld ) {       
-    		downloadsToLastMessages.put(dwnld, new LinkedList());
-    		downloadsToRoutePeer.put(dwnld, new LinkedList());
-    		downloadsToRouters.put(dwnld,new ArrayList());
-    		downloadsToPeers.put(dwnld,new ArrayList());
-        
-    		notifyListenersOfDownloadAdded(dwnld);
-    		notifyListenersOfDownloadInactive(dwnld);
-    	}
       
-    	public void downloadRemoved( Download download ) {
-    		notifyListenersOfDownloadRemoved(download);
+      public void downloadAdded( Download dwnld ) {
         
-    		downloadsToLastMessages.remove(download);
-    		downloadsToPeers.remove(download);
-    		downloadsToRoutePeer.remove(download);        
-    		downloadsToRouters.remove(download);
+        downloadsToLastMessages.put(dwnld, new LinkedList());
+        downloadsToRoutePeer.put(dwnld, new LinkedList());
+        downloadsToRouters.put(dwnld,new ArrayList());
+        downloadsToPeers.put(dwnld,new ArrayList());
+        
+        notifyListenersOfDownloadAdded(dwnld);
+        notifyListenersOfDownloadInactive(dwnld);
+      }
+      
+      public void downloadRemoved( Download download ) {
+        
+        notifyListenersOfDownloadRemoved(download);
+        
+        downloadsToLastMessages.remove(download);
+        downloadsToPeers.remove(download);
+        downloadsToRoutePeer.remove(download);        
+        downloadsToRouters.remove(download);
       }
     });
 
-    pi.getMessageManager().locateCompatiblePeers(pi,new CMMessage("",new byte[20],0,""),new MessageManagerListener() {
-        public void compatiblePeerFound(Download download,Peer peer,Message message) {        
-        	messagingPeerFound(download,peer);
-        }
+    pi.getMessageManager().locateCompatiblePeers( pi, new CMMessage("",new byte[20],0,""), new MessageManagerListener() {
+      public void compatiblePeerFound(Download download, Peer peer, Message message) {        
+        messagingPeerFound( download, peer );
+      }
       
-        public void peerRemoved(Download download, Peer peer) {
-            notifyOfPeerRemoval(download,peer);
-        }
+      public void peerRemoved(Download download, Peer peer) {
+        notifyOfPeerRemoval( download, peer );
+      }
     });
   }
   
-  @SuppressWarnings("unchecked")
-  private void messagingPeerFound(final Download download,final Peer peer) {
+  
+  
+  
+  
+  private void messagingPeerFound( final Download download, final Peer peer ) {
     
     //Add the peer to the list of peers
     List peers = (List) downloadsToPeers.get(download);
     if(peers != null) {
-        synchronized(peers) {
-          if(peers.size() == 0) {notifyListenersOfDownloadActive(download);}
-          peers.add(peer);  
+      synchronized(peers) {
+        if(peers.size() == 0) {
+          notifyListenersOfDownloadActive(download);
         }
+        peers.add(peer);  
+     }
     }    
     
     //register for incoming JPC message handling
-    peer.getConnection().getIncomingMessageQueue().registerListener(new IncomingMessageQueueListener() {
-        public boolean messageReceived( Message message ) {
+    peer.getConnection().getIncomingMessageQueue().registerListener( new IncomingMessageQueueListener() {
+      public boolean messageReceived( Message message ) {
 
-        	if( message.getID().equals( ChatMessage.ID_CHAT_MESSAGE ) ) {
-        		//System.out.println( "Received [" +message.getDescription()+ "] message from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
-        		CMMessage msg = (CMMessage)message;          
-        		processMessage(download,peer,msg);          
-        		return true;
-        	}
+        if( message.getID().equals( ChatMessage.ID_CHAT_MESSAGE ) ) {
+          //System.out.println( "Received [" +message.getDescription()+ "] message from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
+          CMMessage msg = (CMMessage)message;          
+          processMessage(download,peer,msg);          
+          return true;
+        }
         
-        	if( message.getID().equals( ChatMessage.ID_CHAT_NO_ROUTE ) ) {
-        		//System.out.println( "Received [" +message.getDescription()+ "] message from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
-        		processNoRoute(download,peer);
-        		return true;
-        	} 
+        if( message.getID().equals( ChatMessage.ID_CHAT_NO_ROUTE ) ) {
+          //System.out.println( "Received [" +message.getDescription()+ "] message from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
+          processNoRoute(download,peer);
+          return true;
+        } 
         
-        	if( message.getID().equals( ChatMessage.ID_CHAT_ROUTE ) ) {
-        		//System.out.println( "Received [" +message.getDescription()+ "] message from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
-        		//CMRoute route = (CMRoute)message;
-        		processRoute(download,peer);
-        		return true;
-        	}
-
-        	return false;
+        if( message.getID().equals( ChatMessage.ID_CHAT_ROUTE ) ) {
+          //System.out.println( "Received [" +message.getDescription()+ "] message from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
+          //CMRoute route = (CMRoute)message;
+          processRoute(download,peer);
+          return true;
         }
 
-        public void bytesReceived(int byte_count) {/*nothing*/}});
+        return false;
+      }
+
+      public void bytesReceived( int byte_count ) { /*nothing*/ }
+    });
     
     
     //Peers start as "non routing", ie none of the 2 newly connected peers should
@@ -218,7 +210,6 @@ public class PeerControllerImpl implements PeerController {
   
   
   
-  @SuppressWarnings("unchecked")
   private void notifyOfPeerRemoval( final Download download, final Peer peer ) {
     List routePeers = (List) downloadsToRoutePeer.get(download);
     if(routePeers != null) {
@@ -256,14 +247,12 @@ public class PeerControllerImpl implements PeerController {
     }
   }
   
-  @SuppressWarnings("unchecked")
-  private void processMessage(Download download,Peer peer,CMMessage message) { 
+  private  void processMessage(Download download,Peer peer,CMMessage message) { 
  
     //  1. Test if the message has already been processed
-    int messageID = message.getMessageID();    
-    List lastMessages = (List) downloadsToLastMessages.get(download);
+    int messageID = message.getMessageID();
     
-    int bridgeIndex = findBridgebyDownload(download);
+    List lastMessages = (List) downloadsToLastMessages.get(download);
     
     synchronized(lastMessages) {
       if(lastMessages.contains(new Integer(messageID))) {
@@ -275,7 +264,7 @@ public class PeerControllerImpl implements PeerController {
         if(lastMessages.size() > NB_LAST_MESSAGES) lastMessages.remove(lastMessages.size() - 1);
         
         
-        //New message
+        //New message :)
         byte[] peerID = message.getSenderID();
         String nick   = message.getSenderNick();
         
@@ -299,15 +288,11 @@ public class PeerControllerImpl implements PeerController {
         
         //Check if Nick doesn't override with our nick
         if(!compareIDs(download.getDownloadPeerId(),peerID) && nick.equals(chat_plugin.getNick())) {
-          sendMessage(download,download.getDownloadPeerId(),"System","/me : Multiple peers are using the nick " + nick);
-          if (bridgeIndex >= 0) bridge[bridgeIndex].sysMsg("Multiple peers are using the nick " + nick);
-          else System.out.println("error finding bridge by download");
+          sendMessage(download,download.getDownloadPeerId(),"System","/me : Multiple peers are using the nick " + nick);          
         }
         
-        String text = message.getText();
+        String text   = message.getText();
         notifyListenersOfMessageReceived(download,peerID,nick,text);
-        if (bridgeIndex >= 0) bridge[bridgeIndex].inMsg(text,nick);
-        else System.out.println("error finding bridge by download");
         
         //Dispatch the message
         List routePeers = (List) downloadsToRoutePeer.get(download);
@@ -337,7 +322,6 @@ public class PeerControllerImpl implements PeerController {
     }
   }
   
-  @SuppressWarnings("unchecked")
   private synchronized void processRoute(Download download,Peer peer) {
     List routePeers = (List) downloadsToRoutePeer.get(download);
     synchronized (routePeers) {
@@ -347,7 +331,6 @@ public class PeerControllerImpl implements PeerController {
     }
   }
   
-  @SuppressWarnings("unchecked")
   public void addMessageListener(MessageListener listener) {
     synchronized (listeners) {
       listeners.add(listener);
@@ -406,7 +389,7 @@ public class PeerControllerImpl implements PeerController {
   }
   
   public void sendMessage(String nick,String message) {
-	  if(downloadsToPeers == null) return;
+    if(downloadsToPeers == null) return;
     
     synchronized (downloadsToPeers) {
       Iterator iter = downloadsToPeers.keySet().iterator();
@@ -420,75 +403,48 @@ public class PeerControllerImpl implements PeerController {
   private String oldNick;
   
   public void sendMessage(Download download,byte[] peerID, String nick, String message) {
-	  sendMessage(download,peerID,nick,message,true);
+    sendMessage(download,peerID,nick,message,true);
   }
   
   public void sendMessage(Download download,byte[] peerID, String nick, String message,boolean checkForNick) {
-	  int bridgeIndex = findBridgebyDownload(download);
-	  
-      if(checkForNick && ! nick.equals("System") && oldNick != null && ! oldNick.equals(nick)) {      
-    	  sendMessage(download,peerID,"System","/me : " + oldNick + " is now known as " + nick);
-    	  if(bridgeIndex >= 0) bridge[bridgeIndex].sysMsg(oldNick + " is now known as " + nick);
-    	  else System.out.println("error finding bridge by download");
-      }
-      if(! nick.equals("System")) oldNick = nick;
+    if(checkForNick && ! nick.equals("System") && oldNick != null && ! oldNick.equals(nick)) {      
+      sendMessage(download,peerID,"System","/me : " + oldNick + " is now known as " + nick);     
+    }
+    if(! nick.equals("System")) oldNick = nick;
     
-      notifyListenersOfMessageReceived(download,download.getDownloadPeerId(),nick,message);
-      List routePeers = (List) downloadsToPeers.get(download);
-      if(routePeers != null) {
-    	  synchronized (routePeers) {
-    		  CMMessage msg = new CMMessage(nick,peerID,0,message);
-    		  for(Iterator iter = routePeers.iterator(); iter.hasNext() ;) {
-    			  Peer peerToSendMsg = (Peer) iter.next();
-    			  CMMessage msgToSend = new CMMessage(msg.getMessageID(),nick,peerID,0,message);
-    			  peerToSendMsg.getConnection().getOutgoingMessageQueue().sendMessage(msgToSend);
-    		  }
-    	  }
+    notifyListenersOfMessageReceived(download,download.getDownloadPeerId(),nick,message);
+    List routePeers = (List) downloadsToPeers.get(download);
+    if(routePeers != null) {
+      synchronized (routePeers) {
+        CMMessage msg = new CMMessage(nick,peerID,0,message);
+        for(Iterator iter = routePeers.iterator(); iter.hasNext() ;) {
+          Peer peerToSendMsg = (Peer) iter.next();
+          CMMessage msgToSend = new CMMessage(msg.getMessageID(),nick,peerID,0,message);
+          peerToSendMsg.getConnection().getOutgoingMessageQueue().sendMessage(msgToSend);
+        }
       }
+    }
   }
   
   
   private boolean compareIDs(byte[] id1, byte[] id2) {
-	  if(id1 == null) return id2 == null;
-	  if(id2 == null) return false;
-	  if(id1.length != id2.length) return false;
-	  for(int i = id1.length - 1 ; i >= 0 ; i--) {
-		  if(id1[i] != id2[i]) return false;
-	  }
-	  return true;
+    if(id1 == null) return id2 == null;
+    if(id2 == null) return false;
+    if(id1.length != id2.length) return false;
+    for(int i = id1.length - 1 ; i >= 0 ; i--) {
+      if(id1[i] != id2[i]) return false;
+    }
+    return true;
   }
   
   public boolean isDownloadActive(Download download) {
-	  List peers = (List) downloadsToPeers.get(download);
-	  if(peers == null) return false;
-	  return peers.size() > 0; 
+    List peers = (List) downloadsToPeers.get(download);
+    if(peers == null) return false;
+    return peers.size() > 0; 
   }
   
-  @SuppressWarnings("unchecked")
   public void ignore(String nick) {
-	  nickIgnores.add(nick);
+    nickIgnores.add(nick);
   }
   
-  private int findBridgebyDownload(Download download){
-	  int index = -1;
-	  for (int i=0; i<MAX_CHANNELS_NUMBER;i++){
-		  if(bridge[i]!= null){
-			  Download dwn = bridge[i].getDownload();
-			  if (dwn.equals(download)) index = i;
-		  }
-	  }
-	  return index;	  
-  }
-  
-  private int findBridgebyChannel(String name){
-	  int index = -1;
-	  for (int i=0; i<MAX_CHANNELS_NUMBER;i++){
-		  if(bridge[i]!= null){
-			  String ch = bridge[i].getChannelName();
-			  if (ch.equals(name)) index = i;
-		  }
-	  }
-	  return index;	  
-  }
 }
-
