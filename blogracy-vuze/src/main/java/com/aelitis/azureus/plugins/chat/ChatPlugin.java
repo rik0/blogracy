@@ -22,6 +22,8 @@
  */
 package com.aelitis.azureus.plugins.chat;
 
+// Blogracy: removed all references to swt and ui
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
