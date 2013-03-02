@@ -1,6 +1,7 @@
 package net.blogracy;
 
 import net.blogracy.model.users.User;
+import net.blogracy.controller.ChatController;
 import net.blogracy.controller.DistributedHashTable;
 import net.blogracy.controller.FileSharing;
 import net.blogracy.config.Configurations;
@@ -25,6 +26,12 @@ public class WebServer
  
         server.start();
         // server.join();
+
+        List<User> friends = Configurations.getUserConfig().getFriends();
+        for (User friend : friends) {
+            String hash = friend.getHash().toString();
+            ChatController.createChannel(hash);
+        }
         
         int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
         
@@ -33,7 +40,7 @@ public class WebServer
             String id = Configurations.getUserConfig().getUser().getHash().toString();
             sharing.addFeedEntry(id, "" + new java.util.Date(), null);
         
-            List<User> friends = Configurations.getUserConfig().getFriends();
+            // List<User> friends = Configurations.getUserConfig().getFriends();
             int wait = TOTAL_WAIT / friends.size();
             for (User friend : friends) {
                 DistributedHashTable.getSingleton().lookup(friend.getHash().toString());

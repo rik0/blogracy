@@ -1,5 +1,5 @@
 /*
- * Created on 28 fevr. 2005
+ * Created on 28 feb. 2005
  * Created by Olivier Chalouhi
  * 
  * Copyright (C) 2004 Aelitis SARL, All rights Reserved
@@ -20,16 +20,20 @@
  * AELITIS, SARL au capital de 30,000 euros,
  * 8 Allee Lenotre, La Grille Royale, 78600 Le Mesnil le Roi, France.
  */
+package com.aelitis.azureus.plugins.chat.messaging;
 
-package net.blogracy.chat.messaging.impl;
+import org.gudy.azureus2.plugins.download.Download;
 
-import org.gudy.azureus2.plugins.messaging.Message;
-
-public interface ChatMessage extends Message {
+public interface MessageListener {
   
-  public static final String ID_CHAT_MESSAGE      = "CHAT_MESSAGE";
-  public static final String ID_CHAT_NO_ROUTE     = "CHAT_NO_ROUTE";
-  public static final String ID_CHAT_ROUTE        = "CHAT_ROUTE";
+  public void downloadAdded(Download download);
   
-  public static final byte CHAT_DEFAULT_VERSION = (byte)2;
+  public void downloadRemoved(Download download);
+  
+  public void downloadActive(Download download);
+  
+  public void downloadInactive(Download download);
+  
+  public void messageReceived(Download download,byte[] sender,String nick,String text);
+  
 }
