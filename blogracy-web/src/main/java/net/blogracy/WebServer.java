@@ -28,10 +28,10 @@ public class WebServer
         // server.join();
 
         List<User> friends = Configurations.getUserConfig().getFriends();
-        // for (User friend : friends) {
-        //         String hash = friend.getHash().toString();
-        //         ChatController.createChannel(hash);
-        // }
+        for (User friend : friends) {
+            String hash = friend.getHash().toString();
+            ChatController.createChannel(hash);
+        }
         
         int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
         
