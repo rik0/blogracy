@@ -105,7 +105,5 @@ public class Blogracy implements Plugin {
         argList.add("--ui=console");
         org.gudy.azureus2.ui.common.Main.main(argList.toArray(args));
         //PluginManager.startAzureus(PluginManager.UI_NONE, new java.util.Properties());
-        //PluginManager.registerPlugin(new Blogracy(), "blogracy");
-        //PluginManager.registerPlugin(new ChatPlugin(), "chat");
     }
 }
