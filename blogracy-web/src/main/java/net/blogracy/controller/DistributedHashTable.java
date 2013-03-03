@@ -131,7 +131,7 @@ public class DistributedHashTable {
 						if (currentRecord == null || currentRecord.getString("version").compareTo(record.getString("version")) < 0) {
 
 							String uri = record.getString("uri");
-							FileSharing.download(uri, null, new FileSharingDownloadListener() {
+							FileSharing.download(uri, ".json", new FileSharingDownloadListener() {
 
 								@Override
 								public void onFileDownloaded(String fileFullPath) {
@@ -165,7 +165,7 @@ public class DistributedHashTable {
 			});
 
 			JSONObject record = new JSONObject();
-			record.put("key", id);
+			record.put("id", id);
 
 			TextMessage message = session.createTextMessage();
 			message.setText(record.toString());

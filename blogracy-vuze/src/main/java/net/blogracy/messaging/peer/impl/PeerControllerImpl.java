@@ -7,16 +7,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import net.blogracy.chat.messaging.MessageListener;
-import net.blogracy.chat.messaging.impl.CMMessage;
-import net.blogracy.chat.messaging.impl.CMNoRoute;
-import net.blogracy.chat.messaging.impl.CMRoute;
-import net.blogracy.chat.messaging.impl.ChatMessage;
 import net.blogracy.messaging.impl.BMNoRoute;
 import net.blogracy.messaging.impl.BMRoute;
 import net.blogracy.messaging.impl.BlogracyDataMessage;
 import net.blogracy.messaging.impl.BlogracyDataMessageBase;
-import net.blogracy.messaging.impl.BlogracyMessage;
 import net.blogracy.messaging.peer.BlogracyDataMessageListener;
 import net.blogracy.messaging.peer.PeerController;
 
@@ -499,7 +493,7 @@ public class PeerControllerImpl implements PeerController {
 		synchronized (listeners) {
 			for (Iterator<BlogracyDataMessageListener> iter = listeners
 					.iterator(); iter.hasNext();) {
-				MessageListener listener = (MessageListener) iter.next();
+				BlogracyDataMessageListener listener = iter.next();
 				listener.downloadActive(download);
 			}
 		}

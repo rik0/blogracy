@@ -2,9 +2,6 @@ package net.blogracy.messaging.impl;
 
 import java.nio.ByteBuffer;
 
-import net.blogracy.chat.messaging.impl.CMNoRoute;
-import net.blogracy.chat.messaging.impl.ChatMessage;
-
 import org.gudy.azureus2.plugins.messaging.Message;
 import org.gudy.azureus2.plugins.messaging.MessageException;
 
