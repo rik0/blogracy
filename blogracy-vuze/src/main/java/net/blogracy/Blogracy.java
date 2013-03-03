@@ -3,9 +3,12 @@
  */
 package net.blogracy;
 
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -23,6 +26,9 @@ import org.apache.activemq.broker.BrokerService;
 import org.gudy.azureus2.plugins.Plugin;
 import org.gudy.azureus2.plugins.PluginException;
 import org.gudy.azureus2.plugins.PluginInterface;
+import org.gudy.azureus2.plugins.PluginManager;
+
+import com.aelitis.azureus.plugins.chat.ChatPlugin;
 
 /**
  * @author mic
@@ -80,10 +86,24 @@ public class Blogracy implements Plugin {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        
+        try {
+        	(new java.io.File("plugins/chat")).mkdirs();
+        	Properties chatProp = new Properties();
+        	chatProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/chat/plugin.properties"));
+        	chatProp.store(new FileWriter("plugins/chat/plugin.properties"), "Chat plugin");
+        	(new java.io.File("plugins/blogracy")).mkdirs();
+        	Properties blogracyProp = new Properties();
+        	blogracyProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/plugin.properties"));
+        	blogracyProp.store(new FileWriter("plugins/blogracy/plugin.properties"), "Blogracy plugin");
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
 
         List<String> argList = new ArrayList<String>();
         argList.addAll(Arrays.asList(args));
         argList.add("--ui=console");
         org.gudy.azureus2.ui.common.Main.main(argList.toArray(args));
+        //PluginManager.startAzureus(PluginManager.UI_NONE, new java.util.Properties());
     }
 }

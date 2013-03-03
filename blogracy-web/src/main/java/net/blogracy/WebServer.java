@@ -14,11 +14,13 @@ public class WebServer
 {
     public static void main(String[] args) throws Exception
     {
+    	String webDir = WebServer.class.getClassLoader().getResource("webapp").toExternalForm();
+    	
         Server server = new Server(8080);
  
         WebAppContext context = new WebAppContext();
-        context.setDescriptor("webapp/WEB-INF/web.xml");
-        context.setResourceBase("webapp");
+        context.setResourceBase(webDir);
+        //context.setDescriptor(webDir + "/WEB-INF/web.xml");
         context.setContextPath("/");
         context.setParentLoaderPriority(true);
  
@@ -30,14 +32,15 @@ public class WebServer
         List<User> friends = Configurations.getUserConfig().getFriends();
         for (User friend : friends) {
             String hash = friend.getHash().toString();
-            ChatController.createChannel(hash);
+            ChatController.getSingleton().joinChannel(hash);
         }
+        String id = Configurations.getUserConfig().getUser().getHash().toString();
+        ChatController.getSingleton().joinChannel(id);
         
         int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
         
         while (true) {
             FileSharing sharing = FileSharing.getSingleton();
-            String id = Configurations.getUserConfig().getUser().getHash().toString();
             sharing.addFeedEntry(id, "" + new java.util.Date(), null);
         
             // List<User> friends = Configurations.getUserConfig().getFriends();

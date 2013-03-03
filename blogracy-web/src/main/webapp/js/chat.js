@@ -14,89 +14,78 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
- *
- * Modified by Andrea Vida, University of Parma (Italy).
  */
+
+// Blogracy: added channel attribute to all messages, filter on messages with different channel
+
 var amq = org.activemq.Amq;
 
 org.activemq.Chat = function() {
 	var last = '';
+
 	var user = null;
-	
+
 	var chatTopic = 'topic://CHAT.DEMO';
 
 	var chat, join, joined, phrase, members, username = null;
-	var channel, localUser, remoteUser = null;
-	var lastText = '';
 
 	var chatHandler = function(message) {
+		if (channel != message.getAttribute('channel')) return;
 		var type = message.getAttribute('type');
 		var from = message.getAttribute('from');
-		var channel2 = message.getAttribute('channel');
+	
+		switch (type) {
+			// Incoming chat message
+			case 'chat' : {
+				var text = message.childNodes[0].data;
 
-		if (channel2 == channel) {
-			switch (type) {
-				// Incoming chat message
-				case 'chat' : {
-					if (channel2 == localUser) {
-						if (from != user) parent.resizeChat2();
-					}
-					
-					var text = message.childNodes[0].data;
-
-					if (from == last) from = '...';
-					else {
-						last = from;
-						from += ':';
-					}
-					
-					if (text != lastText) {
-						if (from != user) chat.innerHTML += '<span class=\'from\'>' + from + '&nbsp;</span><span class=\'text\'>' + text + '</span><br/>';
-						lastText = text;
-						if (text == "/private") parent.privateChat2();
-					}					
-					break;
+				if (from == last) from = '...';
+				else {
+					last = from;
+					from += ':';
 				}
 
-				case 'ping' : {
-					members.innerHTML += '<span class="member">' + from + '</span><br/>';
-					break;
+				chat.innerHTML += '<span class=\'from\'>' + from + '&nbsp;</span><span class=\'text\'>' + text + '</span><br/>';
+				break;
+			}
+
+			// Incoming ping request, add the person's name to your list.
+			case 'ping' : {
+				members.innerHTML += '<span class="member">' + from + '</span><br/>';
+				break;
+			}
+
+			// someone new joined the chatroom, clear your list and
+			// broadcast your name to all users.
+			case 'join' : {
+				members.innerHTML = '';
+				if (user != null)
+					amq.sendMessage(chatTopic, '<message type="ping" from="' + user + '" channel="' + channel + '"/>');
+				chat.innerHTML += '<span class="alert"><span class="from">' + from + '&nbsp;</span><span class="text">has joined the room!</span></span><br/>';
+				break;
+			}
+
+			// Screw you guys, I'm going home...
+			// When I (and everyone else) receive a leave message, we broadcast
+			// our own names in a ping in order to update everyone's list.
+			// todo: Make this more efficient by simply removing the person's name from the list.
+			case 'leave': {
+				members.innerHTML = '';
+				chat.innerHTML += '<span class="alert"><span class="from">' + from + '&nbsp;</span><span class="text">has left the room!</span></span><br/>';
+
+				// If we are the one that is leaving...
+				if (from == user) {
+				// switch the input form
+					join.className = '';
+					joined.className = 'hidden';
+					username.focus();
+
+					user = null;
+					amq.removeListener('chat', chatTopic);
 				}
-
-				// someone new joined the chatroom, clear your list and
-				// broadcast your name to all users.
-				case 'join' : {
-					if (channel2 == localUser) {
-						if (from != user) parent.resizeChat2();
-					}
-					members.innerHTML = '';
-					if (user != null)
-						amq.sendMessage(chatTopic, '<message type="ping" from="' + user + '" channel="' + channel + '"/>');
-					
-					chat.innerHTML += '<span class="alert"><span class="from">' + from + '&nbsp;</span><span class="text">has joined the room!</span></span><br/>';
-					break;
-				}
-
-				// When I (and everyone else) receive a leave message, we broadcast
-				// our own names in a ping in order to update everyone's list.
-				case 'leave': {
-					members.innerHTML = '';
-					chat.innerHTML += '<span class="alert"><span class="from">' + from + '&nbsp;</span><span class="text">has left the room!</span></span><br/>';
-
-					// If we are the one that is leaving...
-					if (from == user) {
-					// switch the input form
-						join.className = '';
-						joined.className = 'hidden';
-						username.focus();
-
-						user = null;
-						amq.removeListener('chat', chatTopic);
-					}
-					if (user != null)
-						amq.sendMessage(chatTopic, '<message type="ping" from="' + user + '" channel="' + channel + '"/>');
-					break;
-				}
+				if (user != null)
+					amq.sendMessage(chatTopic, '<message type="ping" from="' + user + '" channel="' + channel + '"/>');
+				break;
 			}
 		}
 
@@ -121,7 +110,6 @@ org.activemq.Chat = function() {
 	};
 
 	var initEventHandlers = function() {
-	
 		addEvent(username, 'keyup', function(ev) {
 			var keyc = getKeyCode(ev);
 			if (keyc == 13 || keyc == 10) {
@@ -135,7 +123,6 @@ org.activemq.Chat = function() {
 			org.activemq.Chat.join();
 			return true;
 		});
-		
 
 		addEvent(phrase, 'keyup', function(ev) {
 			var keyc = getKeyCode(ev);
@@ -163,7 +150,6 @@ org.activemq.Chat = function() {
 
 	return {
 		join: function() {
-			
 			var name = username.value;
 			if (name == null || name.length == 0) {
 				alert('Please enter a username!');
@@ -185,25 +171,21 @@ org.activemq.Chat = function() {
 
 		chat: function(text) {
 			if (text != null && text.length > 0) {
+				// TODO more encoding?
 				text = text.replace('<', '&lt;');
 				text = text.replace('>', '&gt;');
-				
-				if (text == "/private") {
-					chat.innerHTML += 'Command not allowed on this channel';
-				}
-				else amq.sendMessage(chatTopic, '<message type="chat" from="' + user + '" channel="' + channel + '">' + text + '</message>');
+
+				amq.sendMessage(chatTopic, '<message type="chat" from="' + user + '" channel="' + channel + '">' + text + '</message>');
 			}
 		},
 
-		init: function() {			
+		init: function() {
 			join = document.getElementById('join');
 			joined = document.getElementById('joined');
 			chat = document.getElementById('chat');
 			members = document.getElementById('members');
 			username = document.getElementById('username');
 			phrase = document.getElementById('phrase');
-			channel = document.getElementById('channelName').getAttribute('title');
-			localUser = parent.document.getElementById('localUser').getAttribute('title');
 
 			if (join.className == 'hidden' && joined.className == 'hidden') {
 				join.className = '';
@@ -212,7 +194,19 @@ org.activemq.Chat = function() {
 			}
 
 			initEventHandlers();
-			org.activemq.Chat.join();
 		}
 	}
 }();
+
+
+
+
+
+
+
+
+
+
+
+
+
