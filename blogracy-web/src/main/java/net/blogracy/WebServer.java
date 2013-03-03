@@ -14,11 +14,13 @@ public class WebServer
 {
     public static void main(String[] args) throws Exception
     {
+    	String webDir = WebServer.class.getClassLoader().getResource("webapp").toExternalForm();
+    	
         Server server = new Server(8080);
  
         WebAppContext context = new WebAppContext();
-        context.setDescriptor("webapp/WEB-INF/web.xml");
-        context.setResourceBase("webapp");
+        context.setResourceBase(webDir);
+        //context.setDescriptor(webDir + "/WEB-INF/web.xml");
         context.setContextPath("/");
         context.setParentLoaderPriority(true);
  
