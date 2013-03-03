@@ -100,7 +100,7 @@
       </resource>
       <resource>
         <directory>src/main/webapp</directory>
-        <targetPath>../webapp</targetPath>
+        <targetPath>webapp</targetPath>
       </resource>
     </resources>
 

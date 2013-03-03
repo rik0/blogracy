@@ -14,73 +14,49 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
- 
-body {
-    padding: 0px;
-	background-color: #f0f0f0;
-}
-
 div#chatroom
 {
-  height: 275px;
-  width: 275px;
-  background-color: #f0f0f0;
-  border: 0px solid black; 
+  width: 81em;
+  background-color: #e0e0e0;
+  border: 1px solid black; 
 }
 
 div#chat
 {
   float: left;
-  height: 240px;
-  width: 260px;
+  width: 60em;
+  height: 40ex;
   overflow: auto; 
-  background-color: #ffffff;
-  border-right: 0px solid black; 
+  background-color: #f0f0f0;
+  padding: 4px;
+  border-right: 1px solid black; 
 }
 
 div#members
 {
   float: left;
   clear: right;
-  height: 200px;
-  width: 2px;
-  background-color: #ffffff;
+  width: 20em;
   border: 0px solid black; 
 }
 
 div#input
 {
   clear: both;
-  width: 257px;
-  padding: 1px;
-  border: 1px solid black; 
+  padding: 4px;
+  border-top: 1px solid black; 
 }
 
 input#phrase
 {
-  width:75px;
+  width:28em;
   background-color: #e0f0f0;
 }
 
 input#username
 {
-  width:60px;
+  width:14em;
   background-color: #e0f0f0;
-}
-
-p#title
-{
-  font-family: arial,verdana,helvetica,sans-serif;
-  font-size: 6px;
-  font-style: normal;
-  color: #000000;
-}
-
-div.body-content
-{
-  font-family: sans-serif;
-  font-style: normal;
-  font-size: 12px;
 }
 
 div.hidden

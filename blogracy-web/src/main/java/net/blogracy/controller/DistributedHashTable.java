@@ -207,15 +207,10 @@ public class DistributedHashTable {
         try {
             String id = record.getString("id");
             JSONObject old = records.get(id);
-            if (old != null) {
-                if (record.getString("version")
-                        .compareTo(old.getString("version")) < 0) {
-                    return;
-                }
-                String prev = old.getString("uri");
-                record.put("prev", prev);
+            if (old == null || record.getString("version")
+            		.compareTo(old.getString("version")) > 0) {
+                records.put(id, record);
             }
-            records.put(id, record);
         } catch (JSONException e1) {
             e1.printStackTrace();
         }

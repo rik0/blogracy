@@ -36,8 +36,7 @@ import java.io.*;
 import java.util.HashMap;
 
 
-public class ChatService implements MessageListener {
-
+public class ChatService implements javax.jms.MessageListener, com.aelitis.azureus.plugins.chat.messaging.MessageListener {
 	private PluginInterface vuze;
 
 	private Session session;
@@ -46,8 +45,10 @@ public class ChatService implements MessageListener {
 	private MessageConsumer consumer;
 
 	private String TOPIC_NAME = "CHAT.DEMO";
-	private String lastMessageSend = "";
+	private String lastMessageSent = "";
 	private String lastMessageReceived = "";
+
+	private String lastMsg = "";
 
 	private HashMap<String, Download> channels = new HashMap<String, Download>();
 
@@ -61,7 +62,7 @@ public class ChatService implements MessageListener {
 			consumer = session.createConsumer(topic);
 			consumer.setMessageListener(this);
 		} catch (JMSException e) {
-			System.out.println("JMS error: creating the text listener");
+			Logger.error("JMS error: creating the text listener");
 		}
 	}
 
@@ -70,32 +71,51 @@ public class ChatService implements MessageListener {
 		if (message instanceof TextMessage) {
 			try {
 				String text = ((TextMessage) message).getText();
-				if (floodControl(text)) {
-					/*System.out.println("Flooding");*/
-				} else {
-					parseXML(text);
-					lastMessageSend = text;
-					//System.out.println("Outgoing Message: " + text);
-				}
+				parseXML(text);
 			} catch (JMSException e) {
-				System.out.println("JMS error: reading messages");
+				Logger.error("JMS error: reading messages");
 			}
 		}
-		else System.out.println("This is not a TextMessage");
+		else {
+			Logger.error("This is not a TextMessage");
+		}
+	}
+
+	@Override
+	public void downloadAdded(Download download) {}
+
+	@Override
+	public void downloadRemoved(Download download) {}
+
+	@Override
+	public void downloadActive(Download download) {}
+
+	@Override
+	public void downloadInactive(Download download) {}
+
+	@Override
+	public void messageReceived(Download download, byte[] sender, String nick, String text) {
+		for (String channel : channels.keySet()) {
+			if (channels.get(channel) == download) {
+				String type = "chat";
+				if (text.equals("has left the channel")) type = "leave";
+				msgFromVuze(channel, type, nick, text);
+			}
+		}
 	}
 
 	public void msgFromVuze(String channel, String type, String nick, String text){
-		String xml = createXML(channel, type, nick, text);
-		//System.out.println("Incoming Message: " + XMLmessage);
-		lastMessageReceived = xml;
 
-		TextMessage message;
 		try {
-			message = session.createTextMessage();
-			message.setText(xml);
-			producer.send(topic, message);
+			if (floodControl(channel, type, nick, text)) {
+				String xml = createXML(channel, type, nick, text);
+				Logger.info("Incoming Message: " + xml);
+				TextMessage message = session.createTextMessage();
+				message.setText(xml);
+				producer.send(topic, message);
+			}
 		} catch (JMSException e) {
-			System.out.println("JMS error: sending messages");
+			Logger.error("JMS error: sending messages");
 		}
 	}
 
@@ -109,17 +129,23 @@ public class ChatService implements MessageListener {
 
 			NodeList nodes = doc.getElementsByTagName("message");
 			Element element = (Element) nodes.item(0);
+			String channel = element.getAttribute("channel");
 			String type = element.getAttribute("type");
 			String nick = element.getAttribute("from");
-			String channel = element.getAttribute("channel");
 			String text = element.getTextContent();
-			msgToVuze(channel, type, nick, text);
+
+			if (floodControl(channel, type, nick, text)) {
+				Logger.info("Outgoing Message: " + xml);
+				msgToVuze(channel, type, nick, text);
+			}
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
 	private String createXML(String channel, String type, String nick, String text){
+		String xml = "";
 		try {
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 			DocumentBuilder db = dbf.newDocumentBuilder();
@@ -137,12 +163,11 @@ public class ChatService implements MessageListener {
 			TransformerFactory factory = TransformerFactory.newInstance();
 			Transformer transformer = factory.newTransformer();
 			transformer.transform(source, result);
-			String str = stringWriter.getBuffer().toString();//.substring(38);
-			return str;
+			xml = stringWriter.getBuffer().toString().substring(38);
 		} catch (Exception e) {
 			e.printStackTrace();
-			return "nothing";
 		}
+		return xml;
 	}
 
 	private void msgToVuze(String channel, String type, String nick, String text) {
@@ -151,41 +176,35 @@ public class ChatService implements MessageListener {
 
 		if (type.equals("chat")) {
 			Download download = channels.get(channel);
-			plugin.sendMessage(download, text);
+			if (download != null) {
+				plugin.sendMessage(download, text);				
+			}
 		} else if (type.equals("join")) {
 			Logger.info("Joining channel: " + channel);
-			
+
 			plugin.setNick(nick);
 			Download download = plugin.addChannel(channel);
 			channels.put(channel, download);
-			plugin.addMessageListener(new com.aelitis.azureus.plugins.chat.messaging.MessageListener() {
-				public void downloadAdded(Download download) {}
-				public void downloadRemoved(Download download) {}
-				public void downloadActive(Download download) {}
-				public void downloadInactive(Download download) {}
-				public void messageReceived(Download download, byte[] sender, String nick, String text) {
-					String channel = new String(sender);
-					for (String key : channels.keySet()) {
-						if (channels.get(key) == download) channel = key;
-					}
-					String type = "chat";
-					if (text.equals("has left the channel")) type = "leave";
-					msgFromVuze(channel, type, nick, text);
-				}
-			}, download);
+			plugin.addMessageListener(this, download);
 			Logger.info("chat request: " + channel);
 
 		} else if (type.equals("leave")){
 			Download download = channels.get(channel);
-			plugin.sendMessage(download, "has left the channel");
+			if (download != null) {
+				plugin.sendMessage(download, "has left the channel");
+			}
 			if (nick.equals(plugin.getNick())) {
 				// plugin.closeBridge(channelName);
 			}
 		}
 	}
 
-	private boolean floodControl(String text){
-		return (text.equals(lastMessageReceived)
-				||text.equals(lastMessageSend));
+	private boolean floodControl(String channel, String type, String nick, String text) {
+		String msg = channel + ":" + type + ":" + nick + ":" + text;
+		if (! lastMsg.equals(msg)) {
+			lastMsg = msg;
+			return true;
+		}
+		return false;
 	}
 }

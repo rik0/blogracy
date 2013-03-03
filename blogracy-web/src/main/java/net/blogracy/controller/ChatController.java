@@ -21,17 +21,18 @@ public class ChatController {
 
 	private ConnectionFactory connectionFactory;
 	private Connection connection;
-	private static Session session;
-	private static Destination topic;
-	private static MessageProducer producer;
-	private String TOPIC_NAME = "CHAT.DEMO";
+	private Session session;
+	private Destination topic;
+	private MessageProducer producer;
+	private static final String TOPIC_NAME = "CHAT.DEMO";
 
-	private static String localUser, remoteUser;
+	private String localUser;
+	private String remoteUser;
 
-	private static final ChatController THE_INSTANCE = new ChatController();
+	private static final ChatController theInstance = new ChatController();
 
 	public static ChatController getSingleton() {
-		return THE_INSTANCE;
+		return theInstance;
 	}
 
 	public ChatController() {
@@ -39,7 +40,7 @@ public class ChatController {
 			connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
 			connection = connectionFactory.createConnection();
 			connection.start();
-			
+
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			topic = session.createTopic(TOPIC_NAME);
 			producer = session.createProducer(topic);
@@ -49,18 +50,10 @@ public class ChatController {
 		}
 	}
 
-	public static void setLocalUser(String local) {
-		if (! local.equals(localUser)) {
-			localUser = local;
-			createChannel(localUser);
-		}
-	}
-
-	public static void createChannel(String channel) {
+	public void joinChannel(String channel) {
 		System.out.println("Creating chat channel: " + channel);
-		TextMessage msg;
 		try {
-			msg = session.createTextMessage();
+			TextMessage msg = session.createTextMessage();
 			msg.setText("<message type=\"join\" from=\"" + localUser + "\" channel=\"" + channel + "\"/>");
 			producer.send(topic, msg);
 		} catch (JMSException e) {
@@ -68,30 +61,10 @@ public class ChatController {
 		}
 	}
 
-	public static void setRemoteUser(String remote) {
-		remoteUser = remote;
-		System.out.println("Remote user hash: " + remoteUser);     
-	}
-
-	public static String getRemoteUser() {
-		return remoteUser;
-	}
-
-	public static void chatting() {
-		if (! remoteUser.equals(localUser)) {
-			createChannel(remoteUser);
+	public static String getPrivateChannel(String localUser, String remoteUser) {
+		if (localUser.compareTo(remoteUser) <= 0) {
+			return localUser + remoteUser;
 		}
-	}
-
-	public static void privateChatting() {
-		if (! remoteUser.equals(localUser)) {
-			createChannel(localUser + remoteUser);
-		}
-	}
-
-	public static void privateChatting2() {
-		if (! remoteUser.equals(localUser)) {
-			createChannel(remoteUser + localUser);
-		}
+		return remoteUser + localUser;
 	}
 }
