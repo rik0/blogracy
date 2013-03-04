@@ -31,6 +31,9 @@ import java.security.PublicKey;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -67,6 +70,57 @@ import com.google.inject.name.Names;
  */
 public class DistributedHashTable {
 
+    class LookupListener implements MessageListener {
+        private String id;
+        private long start;
+
+        LookupListener(String id) {
+            this.id = id;
+            this.start = System.currentTimeMillis();
+            log.info("Lookup req: " + id);
+            log.getHandlers()[0].flush();
+        }
+
+        @Override
+        public void onMessage(Message response) {
+            try {
+                String msgText = ((TextMessage) response).getText();
+                log.info("Lookup ans: " + id + " @ "
+                        + (System.currentTimeMillis() - start));
+                log.getHandlers()[0].flush();
+                JSONObject keyValue = new JSONObject(msgText);
+                String value = keyValue.getString("value");
+                PublicKey signerKey = JsonWebSignature.getSignerKey(value);
+                final JSONObject record = new JSONObject(
+                        JsonWebSignature.verify(value, signerKey));
+                JSONObject currentRecord = getRecord(id);
+                if (currentRecord == null
+                        || currentRecord.getString("version").compareTo(
+                                record.getString("version")) < 0) {
+                    String uri = record.getString("uri");
+                    FileSharing fileSharing = FileSharing.getSingleton();
+                    String hash = fileSharing.getHashFromMagnetURI(uri);
+                    log.info("Download req: " + id + " @ "
+                            + (System.currentTimeMillis() - start));
+                    log.getHandlers()[0].flush();
+                    fileSharing.downloadByHash(hash, ".json",
+                            new MessageListener() {
+                                public void onMessage(Message response) {
+                                    log.info("Download ans: "
+                                            + id
+                                            + " @ "
+                                            + (System.currentTimeMillis() - start));
+                                    log.getHandlers()[0].flush();
+                                    putRecord(record);
+                                }
+                            });
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private ConnectionFactory connectionFactory;
     private Connection connection;
     private Session session;
@@ -80,15 +134,19 @@ public class DistributedHashTable {
             .getCachedFilesDirectoryPath();
 
     private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
+    private Logger log;
 
-    private static final DistributedHashTable THE_INSTANCE = new DistributedHashTable();
+    private static final DistributedHashTable theInstance = new DistributedHashTable();
 
     public static DistributedHashTable getSingleton() {
-        return THE_INSTANCE;
+        return theInstance;
     }
 
     public DistributedHashTable() {
         try {
+            log = Logger.getLogger("net.blogracy.controller.dht");
+            log.addHandler(new FileHandler("dht.log"));
+
             File recordsFile = new File(CACHE_FOLDER + File.separator
                     + "records.json");
             if (recordsFile.exists()) {
@@ -118,35 +176,7 @@ public class DistributedHashTable {
         try {
             Destination tempDest = session.createTemporaryQueue();
             MessageConsumer responseConsumer = session.createConsumer(tempDest);
-            responseConsumer.setMessageListener(new MessageListener() {
-                @Override
-                public void onMessage(Message response) {
-                    try {
-                        String msgText = ((TextMessage) response).getText();
-                        JSONObject keyValue = new JSONObject(msgText);
-                        String value = keyValue.getString("value");
-                        PublicKey signerKey = JsonWebSignature
-                                .getSignerKey(value);
-                        final JSONObject record = new JSONObject(JsonWebSignature
-                                .verify(value, signerKey));
-                        JSONObject currentRecord = getRecord(id);
-                        if (currentRecord == null
-                                || currentRecord.getString("version")
-                                        .compareTo(record.getString("version")) < 0) {
-                            String uri = record.getString("uri");
-                            FileSharing fileSharing = FileSharing.getSingleton();
-                            String hash = fileSharing.getHashFromMagnetURI(uri);
-                            fileSharing.downloadByHash(hash, ".json", new MessageListener() {
-                                public void onMessage(Message response) {
-                                    putRecord(record);
-                                }
-                            });
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
+            responseConsumer.setMessageListener(new LookupListener(id));
 
             JSONObject record = new JSONObject();
             record.put("id", id);
@@ -155,7 +185,6 @@ public class DistributedHashTable {
             message.setText(record.toString());
             message.setJMSReplyTo(tempDest);
             producer.send(lookupQueue, message);
-
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -207,8 +236,9 @@ public class DistributedHashTable {
         try {
             String id = record.getString("id");
             JSONObject old = records.get(id);
-            if (old == null || record.getString("version")
-            		.compareTo(old.getString("version")) > 0) {
+            if (old == null
+                    || record.getString("version").compareTo(
+                            old.getString("version")) > 0) {
                 records.put(id, record);
             }
         } catch (JSONException e1) {

@@ -23,8 +23,8 @@
 package net.blogracy.config;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.security.Key;
 import java.security.KeyPair;
@@ -62,17 +62,7 @@ public class Configurations {
     private static final String BLOGRACY_USER_FRIENDS = "blogracy.user.friends";
 
     static private Properties loadProperties(String file) throws IOException {
-        // ClassLoader loader = ClassLoader.getSystemClassLoader();
-        // InputStream is = loader.getResourceAsStream(file);
-        InputStream is = null;
-        File f = new File(file);
-        if (f.exists()) {
-            is = new FileInputStream(f);
-        } else {
-            is = Configurations.class.getClassLoader()
-                .getResourceAsStream(file);
-        }
-
+        InputStream is = getResourceAsStream(file);
         if (is != null) {
             Properties properties = new Properties();
             properties.load(is);
@@ -80,6 +70,19 @@ public class Configurations {
         } else {
             return new Properties();
         }
+    }
+
+    static private InputStream getResourceAsStream(String file)
+            throws IOException {
+        InputStream is = null;
+        File f = new File(file);
+        if (f.exists()) {
+            is = new FileInputStream(f);
+        } else {
+            is = Configurations.class.getClassLoader()
+                    .getResourceAsStream(file);
+        }
+        return is;
     }
 
     static public PathConfig getPathConfig() {
@@ -180,22 +183,23 @@ public class Configurations {
                     }
                     return friends;
                 }
-                
-                public User getFriend(final String hash){             	
-                	for (User friend : this.getFriends())
-                		if(friend.getHash().toString().equals(hash))
-                			return friend;
-                	return null;
+
+                public User getFriend(final String hash) {
+                    for (User friend : this.getFriends())
+                        if (friend.getHash().toString().equals(hash))
+                            return friend;
+                    return null;
                 }
 
                 private User loadUser(String text) {
                     String[] hashAndNick = text.split(" ", 2);
                     User user = Users
                             .newUser(Hashes.fromString(hashAndNick[0]));
-                    if (hashAndNick.length == 2)
+                    if (hashAndNick.length == 2) {
                         user.setLocalNick(hashAndNick[1]);
-                    else
+                    } else {
                         user.setLocalNick(hashAndNick[0]);
+                    }
                     return user;
                 }
 
@@ -206,8 +210,7 @@ public class Configurations {
                         String alias = getUser().getLocalNick();
                         char[] password = new char[] { 'b', 'l', 'o', 'g', 'r',
                                 'a', 'c', 'y' };
-                        InputStream is = Configurations.class.getClassLoader()
-                                .getResourceAsStream("blogracy.jks");
+                        InputStream is = getResourceAsStream("blogracy.jks");
                         KeyStore keyStore = KeyStore.getInstance(KeyStore
                                 .getDefaultType());
                         keyStore.load(is, password);
