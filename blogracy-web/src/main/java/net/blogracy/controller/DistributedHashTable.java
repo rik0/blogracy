@@ -78,7 +78,6 @@ public class DistributedHashTable {
             this.id = id;
             this.start = System.currentTimeMillis();
             log.info("Lookup req: " + id);
-            log.getHandlers()[0].flush();
         }
 
         @Override
@@ -87,7 +86,6 @@ public class DistributedHashTable {
                 String msgText = ((TextMessage) response).getText();
                 log.info("Lookup ans: " + id + " @ "
                         + (System.currentTimeMillis() - start));
-                log.getHandlers()[0].flush();
                 JSONObject keyValue = new JSONObject(msgText);
                 String value = keyValue.getString("value");
                 PublicKey signerKey = JsonWebSignature.getSignerKey(value);
@@ -102,7 +100,6 @@ public class DistributedHashTable {
                     String hash = fileSharing.getHashFromMagnetURI(uri);
                     log.info("Download req: " + id + " @ "
                             + (System.currentTimeMillis() - start));
-                    log.getHandlers()[0].flush();
                     fileSharing.downloadByHash(hash, ".json",
                             new MessageListener() {
                                 public void onMessage(Message response) {
@@ -110,7 +107,6 @@ public class DistributedHashTable {
                                             + id
                                             + " @ "
                                             + (System.currentTimeMillis() - start));
-                                    log.getHandlers()[0].flush();
                                     putRecord(record);
                                 }
                             });
