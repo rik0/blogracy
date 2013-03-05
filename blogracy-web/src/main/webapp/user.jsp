@@ -1,6 +1,7 @@
 <%@ page import="net.blogracy.model.hashes.Hashes" %>
 <%@ page import="net.blogracy.model.users.Users" %>
 <%@ page import="net.blogracy.controller.FileSharing" %>
+<%@ page import="net.blogracy.controller.ActivitiesController" %>
 <%@ page import="net.blogracy.controller.ChatController" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
@@ -22,7 +23,7 @@ pageContext.setAttribute("localUserHash",  localUserHash);
 pageContext.setAttribute("userHash", userHash);
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", Users.newUser(Hashes.fromString(userHash)));
-pageContext.setAttribute("feed", FileSharing.getFeed(userHash));
+pageContext.setAttribute("feed", ActivitiesController.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
 pageContext.setAttribute("privateChannel", channel);
