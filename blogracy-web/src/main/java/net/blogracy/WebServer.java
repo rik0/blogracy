@@ -1,6 +1,9 @@
 package net.blogracy;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.TimeZone;
 
 import net.blogracy.config.Configurations;
 import net.blogracy.controller.ActivitiesController;
@@ -14,7 +17,19 @@ import org.eclipse.jetty.webapp.WebAppContext;
 
 public class WebServer {
 
+    public static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, "
+            + "consectetur adipisicing elit, sed do eiusmod tempor "
+            + "incididunt ut labore et dolore magna aliqua.";
+    static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
+            "yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+    static final int TOTAL_WAIT = 2 * 60 * 1000; // 2 minutes
+
     public static void main(String[] args) throws Exception {
+        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+
+        int randomWait = (int) (TOTAL_WAIT * Math.random());
+        Thread.currentThread().sleep(randomWait);
 
         String webDir = WebServer.class.getClassLoader().getResource("webapp")
                 .toExternalForm();
@@ -38,12 +53,11 @@ public class WebServer {
                 .toString();
         ChatController.getSingleton().joinChannel(id);
 
-        int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
-
         while (true) {
             ActivitiesController activities = ActivitiesController
                     .getSingleton();
-            activities.addFeedEntry(id, "" + new java.util.Date(), null);
+            String now = ISO_DATE_FORMAT.format(new java.util.Date());
+            activities.addFeedEntry(id, now + " " + LOREM_IPSUM, null);
 
             // List<User> friends = Configurations.getUserConfig().getFriends();
             int wait = TOTAL_WAIT / friends.size();

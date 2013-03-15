@@ -17,7 +17,7 @@ if (userHash == null || userHash.length() == 0) {
 }
 
 String channel = ChatController.getPrivateChannel(localUserHash, userHash);
-ChatController.getSingleton().joinChannel(channel);
+//ChatController.getSingleton().joinChannel(channel);
 
 pageContext.setAttribute("localUserHash",  localUserHash);
 pageContext.setAttribute("userHash", userHash);
@@ -171,7 +171,7 @@ pageContext.setAttribute("publicChannel", userHash);
     <div class="content">
         <div class="page-header">
             <h1>${user.localNick}
-                <small>(hardcoded email)</small>
+                <small>(UserID)</small>
             </h1>
         </div>
         <div class="row">

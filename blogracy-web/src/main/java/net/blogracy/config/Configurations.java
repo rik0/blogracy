@@ -171,12 +171,16 @@ public class Configurations {
 
                 @Override
                 public List<User> getFriends() {
+                    String userRow = userProperties
+                            .getProperty(BLOGRACY_USER_USER);
                     ArrayList<User> friends = new ArrayList<User>();
                     int i = 1;
                     String friendRow = userProperties
                             .getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
                     while (friendRow != null) {
-                        friends.add(loadUser(friendRow));
+                        if (!friendRow.equals(userRow)) {
+                            friends.add(loadUser(friendRow));
+                        }
                         ++i;
                         friendRow = userProperties
                                 .getProperty(BLOGRACY_USER_FRIENDS + '.' + i);

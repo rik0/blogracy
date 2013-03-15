@@ -127,6 +127,7 @@ public class DownloadService implements MessageListener {
                 if (download != null && file != null) {
                     download.renameDownload(file.getName());
                     download.addCompletionListener(new CompletionListener((TextMessage) request));
+                	download.setForceStart(true);
                 }
                 Logger.info(magnetUri + " added to download list");
             } catch (ResourceDownloaderException e) {
