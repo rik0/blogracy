@@ -739,7 +739,7 @@ public class FileSharing {
 						try {
 							String msgText = ((TextMessage) response).getText();
 							JSONObject keyValue = new JSONObject(msgText);
-							String fileFullPath = keyValue.getString("fileFullPath");
+							String fileFullPath = keyValue.getString("file");
 
 							if (downloadCompleteListener != null)
 								downloadCompleteListener.onFileDownloaded(fileFullPath);

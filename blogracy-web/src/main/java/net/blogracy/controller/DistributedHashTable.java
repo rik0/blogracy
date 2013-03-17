@@ -31,6 +31,8 @@ import java.security.KeyPair;
 import java.security.SignatureException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -59,6 +61,78 @@ import org.json.JSONTokener;
  */
 public class DistributedHashTable {
 
+	class LookupListener implements MessageListener {
+		private String id;
+		private long start;
+
+		LookupListener(String id) {
+			this.id = id;
+			this.start = System.currentTimeMillis();
+			log.info("Lookup req: " + id);
+		}
+
+		public void onMessage(Message response) {
+			try {
+				String msgText = ((TextMessage) response).getText();
+				log.info("Lookup ans: " + id + " @ "
+                        + (System.currentTimeMillis() - start));
+				JSONObject keyValue = new JSONObject(msgText);
+				final String value = keyValue.getString("value");
+				final String id = keyValue.getString("id");
+				// The signature verification is postponed at the
+				// moment.
+				// The signature should be verified based on the key on
+				// the user's profile...
+				/*
+				 * PublicKey signerKey = JsonWebSignature .getSignerKey(value);
+				 * JSONObject record = new JSONObject(JsonWebSignature
+				 * .verify(value, signerKey));
+				 */
+				String[] split = value.split("\\.");
+				final JSONObject record = new JSONObject(new String(Base64.decodeBase64(split[1]), "UTF-8"));
+
+				JSONObject currentRecord = getRecord(id);
+				if (currentRecord == null || record.getString("version").compareTo(currentRecord.getString("version")) > 0) {
+
+					String uri = record.getString("uri");
+					log.info("Download req: " + id + " @ "
+                            + (System.currentTimeMillis() - start));
+					FileSharing.download(uri, ".json", new FileSharingDownloadListener() {
+
+						@Override
+						public void onFileDownloaded(String fileFullPath) {
+							log.info("Download ans: "
+                                    + id
+                                    + " @ "
+                                    + (System.currentTimeMillis() - start));
+							try {
+								JSONObject db = new JSONObject(new JSONTokener(new FileReader(fileFullPath)));
+
+								String pKey = null;
+								if (db.has("publicKey"))
+									pKey = db.getString("publicKey");
+
+								if (pKey != null) {
+									JSONObject userRecord = new JSONObject(JsonWebSignature.verify(value, pKey));
+									putRecord(userRecord);
+								}
+							} catch (FileNotFoundException e) {
+								e.printStackTrace();
+							} catch (JSONException e) {
+								e.printStackTrace();
+							} catch (SignatureException e) {
+								e.printStackTrace();
+							}
+
+						}
+					});
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
 	private ConnectionFactory connectionFactory;
 	private Connection connection;
 	private Session session;
@@ -71,6 +145,7 @@ public class DistributedHashTable {
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
 	private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
+	private Logger log;
 
 	private static final DistributedHashTable THE_INSTANCE = new DistributedHashTable();
 
@@ -80,6 +155,9 @@ public class DistributedHashTable {
 
 	public DistributedHashTable() {
 		try {
+			log = Logger.getLogger("net.blogracy.controller.dht");
+			log.addHandler(new FileHandler("dht.log"));
+
 			File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
 			if (recordsFile.exists()) {
 				JSONArray recordList = new JSONArray(new JSONTokener(new FileReader(recordsFile)));
@@ -106,63 +184,7 @@ public class DistributedHashTable {
 		try {
 			Destination tempDest = session.createTemporaryQueue();
 			MessageConsumer responseConsumer = session.createConsumer(tempDest);
-			responseConsumer.setMessageListener(new MessageListener() {
-				@Override
-				public void onMessage(Message response) {
-					try {
-						String msgText = ((TextMessage) response).getText();
-						JSONObject keyValue = new JSONObject(msgText);
-						final String value = keyValue.getString("value");
-
-						// The signature verification is postponed at the
-						// moment.
-						// The signature should be verified based on the key on
-						// the user's profile...
-						/*
-						 * PublicKey signerKey = JsonWebSignature
-						 * .getSignerKey(value); JSONObject record = new
-						 * JSONObject(JsonWebSignature .verify(value,
-						 * signerKey));
-						 */
-						String[] split = value.split("\\.");
-						final JSONObject record = new JSONObject(new String(Base64.decodeBase64(split[1]), "UTF-8"));
-
-						JSONObject currentRecord = getRecord(id);
-						if (currentRecord == null || currentRecord.getString("version").compareTo(record.getString("version")) < 0) {
-
-							String uri = record.getString("uri");
-							FileSharing.download(uri, ".json", new FileSharingDownloadListener() {
-
-								@Override
-								public void onFileDownloaded(String fileFullPath) {
-
-									try {
-										JSONObject db = new JSONObject(new JSONTokener(new FileReader(fileFullPath)));
-
-										String pKey = null;
-										if (db.has("publicKey"))
-											pKey = db.getString("publicKey");
-
-										if (pKey != null) {
-											JSONObject userRecord = new JSONObject(JsonWebSignature.verify(value, pKey));
-											putRecord(userRecord);
-										}
-									} catch (FileNotFoundException e) {
-										e.printStackTrace();
-									} catch (JSONException e) {
-										e.printStackTrace();
-									} catch (SignatureException e) {
-										e.printStackTrace();
-									}
-
-								}
-							});
-						}
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
-			});
+			responseConsumer.setMessageListener(new LookupListener(id));
 
 			JSONObject record = new JSONObject();
 			record.put("id", id);
@@ -171,7 +193,6 @@ public class DistributedHashTable {
 			message.setText(record.toString());
 			message.setJMSReplyTo(tempDest);
 			producer.send(lookupQueue, message);
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -210,14 +231,9 @@ public class DistributedHashTable {
 		try {
 			String id = record.getString("id");
 			JSONObject old = records.get(id);
-			if (old != null) {
-				if (record.getString("version").compareTo(old.getString("version")) < 0) {
-					return;
-				}
-				String prev = old.getString("uri");
-				record.put("prev", prev);
+			if (old == null || record.getString("version").compareTo(old.getString("version")) > 0) {
+				records.put(id, record);
 			}
-			records.put(id, record);
 		} catch (JSONException e1) {
 			e1.printStackTrace();
 		}
