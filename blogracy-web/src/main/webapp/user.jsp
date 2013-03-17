@@ -1,7 +1,8 @@
 <%@ page import="net.blogracy.model.hashes.Hashes" %>
 <%@ page import="net.blogracy.model.users.Users" %>
 <%@ page import="net.blogracy.model.users.User" %>
-<%@ page import="net.blogracy.controller.FileSharing" %>
+<%@ page import="net.blogracy.controller.ActivitiesController" %>
+<%@ page import="net.blogracy.controller.MediaController" %>
 <%@ page import="net.blogracy.controller.ChatController" %>
 <%@ page import="net.blogracy.controller.CommentsController" %>
 <%@ page import="net.blogracy.controller.DistributedHashTable" %>
@@ -37,7 +38,7 @@ else
 	}
 	
 //DistributedHashTable.getSingleton().lookup(userHash);
-List<Album> albums= FileSharing.getAlbums(userHash);
+List<Album> albums= MediaController.getAlbums(userHash);
 
 
 pageContext.setAttribute("loc",  Configurations.getUserConfig().getUser().getHash().toString());
@@ -50,11 +51,11 @@ ChatController.setRemoteUser(userHash);
 
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
 for (Album a : albums)
-	mediaItemMap.put(a.getId(), FileSharing.getMediaItemsWithCachedImages(userHash, a.getId()));
+	mediaItemMap.put(a.getId(), MediaController.getMediaItemsWithCachedImages(userHash, a.getId()));
 
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", user);
-pageContext.setAttribute("feed", FileSharing.getFeed(userHash));
+pageContext.setAttribute("feed", ActivitiesController.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
 pageContext.setAttribute("userAlbums", albums);

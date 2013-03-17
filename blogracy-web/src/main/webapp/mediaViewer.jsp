@@ -3,6 +3,7 @@
 
 <%@ page import="org.apache.shindig.social.opensocial.model.MediaItem"%>
 <%@ page import="net.blogracy.controller.FileSharing"%>
+<%@ page import="net.blogracy.controller.MediaController"%>
 <%@ page import="net.blogracy.config.Configurations"%>
 <%@ page import="net.blogracy.model.users.UserData"%>
 <%
@@ -10,7 +11,7 @@
 	String albumId = request.getParameter("aid");
 	String mediaId = request.getParameter("mid");
 
-	MediaItem media = FileSharing.getMediaItemWithCachedImage(userId,
+	MediaItem media = MediaController.getMediaItemWithCachedImage(userId,
 			albumId, mediaId);
 	UserData userData = FileSharing.getUserData(userId);
 	pageContext.setAttribute("media", media);

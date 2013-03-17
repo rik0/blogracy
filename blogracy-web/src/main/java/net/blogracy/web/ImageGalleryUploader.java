@@ -16,6 +16,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.blogracy.controller.FileSharing;
+import net.blogracy.controller.MediaController;
 
 import org.apache.commons.fileupload.FileItem;
 import org.apache.commons.fileupload.disk.DiskFileItemFactory;
@@ -42,7 +43,7 @@ public class ImageGalleryUploader extends HttpServlet {
 
 		if (userId != null && albumId != null) {
 			// Getting the media items from user's record db
-			List<MediaItem> list = FileSharing.getSingleton()
+			List<MediaItem> list = MediaController.getSingleton()
 					.getMediaItemsWithCachedImages(userId, albumId);
 			response.setContentType("application/json");
 
@@ -82,7 +83,7 @@ public class ImageGalleryUploader extends HttpServlet {
 		String userId = request.getParameter("userId");
 
 		try {
-			FileSharing.getSingleton().deletePhotoFromAlbum(userId, albumId,
+			MediaController.getSingleton().deletePhotoFromAlbum(userId, albumId,
 					mediaId);
 			response.setStatus(HttpServletResponse.SC_OK);
 		} catch (Exception e) {
@@ -128,7 +129,7 @@ public class ImageGalleryUploader extends HttpServlet {
 		}
 
 	
-		List<String> hashes = FileSharing.getSingleton().addMediaItemsToAlbum(userHash, albumId, fileAndMimeTypeMap);
+		List<String> hashes = MediaController.getSingleton().addMediaItemsToAlbum(userHash, albumId, fileAndMimeTypeMap);
 		
 		int i = 0;
 		for (Entry<FileItem, FileDTO> entry  : cachedFiles.entrySet()){
@@ -150,7 +151,7 @@ public class ImageGalleryUploader extends HttpServlet {
 
 			if (galleryName != null) {
 				// Gallery creation
-				FileSharing.getSingleton().createPhotoAlbum(user, galleryName);
+				MediaController.getSingleton().createPhotoAlbum(user, galleryName);
 
 			}
 		} catch (Exception e) {
