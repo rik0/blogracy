@@ -28,12 +28,13 @@ public class WebServer
         // server.join();
 
         List<User> friends = Configurations.getUserConfig().getFriends();
-        for (User friend : friends) {
+       /* for (User friend : friends) {
             String hash = friend.getHash().toString();
             ChatController.createChannel(hash);
         }
+        */
         
-        int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
+        int TOTAL_WAIT = 1 * 60 * 1000; // 1 minutes
         
         while (true) {
             FileSharing sharing = FileSharing.getSingleton();
