@@ -78,13 +78,16 @@ public class DistributedHashTable {
 
     class DownloadListener implements MessageListener {
         private String id;
+        private String hash;
         private String version;
         private JSONObject record;
         private long start;
         private long sent;
 
-        DownloadListener(String id, String version, JSONObject record) {
+        DownloadListener(String id, String hash, String version,
+                JSONObject record) {
             this.id = id;
+            this.hash = hash;
             this.version = version;
             this.record = record;
             this.start = System.currentTimeMillis();
@@ -93,7 +96,7 @@ public class DistributedHashTable {
             } catch (ParseException e) {
                 e.printStackTrace();
             }
-            log.info("download-req " + id + " " + version);
+            log.info("download-req " + id + " " + hash + " " + version);
         }
 
         @Override
@@ -111,8 +114,8 @@ public class DistributedHashTable {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            log.info("download-ans " + id + " " + version + " " + now + " "
-                    + delay + " " + " " + received + " " + size);
+            log.info("download-ans " + id + " " + hash + " " + version + " "
+                    + now + " " + delay + " " + received + " " + size);
             putRecord(record);
         }
     }
@@ -138,18 +141,18 @@ public class DistributedHashTable {
                 JSONObject record = new JSONObject(JsonWebSignature.verify(
                         value, signerKey));
                 String version = record.getString("version");
+                String uri = record.getString("uri");
+                FileSharing fileSharing = FileSharing.getSingleton();
+                String hash = fileSharing.getHashFromMagnetURI(uri);
                 String now = ISO_DATE_FORMAT.format(new java.util.Date());
-                log.info("lookup-ans " + id + " " + version + " " + now + " "
-                        + delay);
+                log.info("lookup-ans " + id + " " + hash + " " + version + " "
+                        + now + " " + delay);
                 JSONObject currentRecord = getRecord(id);
                 if (currentRecord == null
                         || currentRecord.getString("version")
                                 .compareTo(version) < 0) {
-                    String uri = record.getString("uri");
-                    FileSharing fileSharing = FileSharing.getSingleton();
-                    String hash = fileSharing.getHashFromMagnetURI(uri);
                     fileSharing.downloadByHash(hash, ".json",
-                            new DownloadListener(id, version, record));
+                            new DownloadListener(id, hash, version, record));
                 }
             } catch (Exception e) {
                 e.printStackTrace();

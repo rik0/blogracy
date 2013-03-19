@@ -105,8 +105,10 @@ public class SeedService implements MessageListener {
                 Download download = plugin.getDownloadManager().addDownload(
                         torrent, null, // torrentFile,
                         file.getParentFile());
-                if (download != null)
+                if (download != null) {
                     download.renameDownload(name);
+                    download.setForceStart(true);
+                }
                 entry.put("uri", torrent.getMagnetURI().toExternalForm());
 
                 if (request.getJMSReplyTo() != null) {

@@ -84,14 +84,14 @@ import com.google.inject.name.Names;
 public class FileSharing {
 
     private ConnectionFactory connectionFactory;
-    private Connection connection;
-    private Session session;
+    private Connection downloadConnection;
+    private Connection seedConnection;
+    private Session downloadSession;
     private Session seedSession;
     private Destination seedQueue;
     private Destination downloadQueue;
-    private MessageProducer producer;
+    private MessageProducer downloadProducer;
     private MessageProducer seedProducer;
-    private MessageConsumer consumer;
 
     static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -148,17 +148,22 @@ public class FileSharing {
         try {
             connectionFactory = new ActiveMQConnectionFactory(
                     ActiveMQConnection.DEFAULT_BROKER_URL);
-            connection = connectionFactory.createConnection();
-            connection.start();
-            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-            producer = session.createProducer(null);
-            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            seedSession = connection.createSession(false,
+            downloadConnection = connectionFactory.createConnection();
+            downloadConnection.start();
+            seedConnection = connectionFactory.createConnection();
+            seedConnection.start();
+
+            downloadSession = downloadConnection.createSession(false,
+                    Session.AUTO_ACKNOWLEDGE);
+            downloadProducer = downloadSession.createProducer(null);
+            downloadProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+            downloadQueue = downloadSession.createQueue("download");
+
+            seedSession = seedConnection.createSession(false,
                     Session.AUTO_ACKNOWLEDGE);
             seedProducer = seedSession.createProducer(null);
             seedProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-            seedQueue = session.createQueue("seed");
-            downloadQueue = session.createQueue("download");
+            seedQueue = seedSession.createQueue("seed");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -174,7 +179,7 @@ public class FileSharing {
             JSONObject requestObj = new JSONObject();
             requestObj.put("file", file.getAbsolutePath());
 
-            TextMessage request = session.createTextMessage();
+            TextMessage request = seedSession.createTextMessage();
             request.setText(requestObj.toString());
             request.setJMSReplyTo(tempDest);
             seedProducer.send(seedQueue, request);
@@ -218,8 +223,9 @@ public class FileSharing {
     public void downloadByHash(final String hash, final String ext,
             final MessageListener listener) {
         try {
-            Destination tempDest = session.createTemporaryQueue();
-            MessageConsumer responseConsumer = session.createConsumer(tempDest);
+            Destination tempDest = downloadSession.createTemporaryQueue();
+            MessageConsumer responseConsumer = downloadSession
+                    .createConsumer(tempDest);
             if (listener != null) {
                 responseConsumer.setMessageListener(listener);
             } else {
@@ -237,10 +243,10 @@ public class FileSharing {
             sharedFile.put("uri", "magnet:?xt=urn:btih:" + hash);
             sharedFile.put("file", file);
 
-            TextMessage message = session.createTextMessage();
+            TextMessage message = downloadSession.createTextMessage();
             message.setText(sharedFile.toString());
             message.setJMSReplyTo(tempDest);
-            producer.send(downloadQueue, message);
+            downloadProducer.send(downloadQueue, message);
         } catch (Exception e) {
             e.printStackTrace();
         }

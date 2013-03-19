@@ -74,7 +74,7 @@ public class LookupService implements MessageListener {
                     value = (String) event.getValue().getValue(String.class);
                     JSONObject record = new JSONObject(request.getText());
                     record.put("value", value);
-                    Logger.info(record.toString());
+                    Logger.info("lookup record received: " + record.getString("id"));
                     TextMessage response = session.createTextMessage();
                     response.setText(record.toString());
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
