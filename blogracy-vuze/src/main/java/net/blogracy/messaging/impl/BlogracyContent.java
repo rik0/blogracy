@@ -14,7 +14,7 @@ public class BlogracyContent extends BlogracyDataMessageBase {
 		super(senderUserId, senderID, hops, content);
 	}
 
-	public final String ID = "ID_BLOGRACYMESSAGE_BlogracyContent";
+	public static final String ID = "ID_BLOGRACYMESSAGE_BlogracyContent";
 
 
 	@Override

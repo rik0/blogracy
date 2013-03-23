@@ -16,7 +16,7 @@ public class BlogracyContentAccepted extends BlogracyDataMessageBase {
 	}
 
 	
-	public final String ID = "ID_BLOGRACYMESSAGE_BlogracyContentAccepted";
+	public static final String ID = "ID_BLOGRACYMESSAGE_BlogracyContentAccepted";
 	
 	@Override
 	public String getID() {

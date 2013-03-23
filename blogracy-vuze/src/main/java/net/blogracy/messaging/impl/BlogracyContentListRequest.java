@@ -10,7 +10,7 @@ import org.gudy.azureus2.plugins.messaging.MessageException;
 
 public class BlogracyContentListRequest extends BlogracyDataMessageBase {
 
-	public final String ID = "ID_BLOGRACYMESSAGE_BlogracyContentListRequest";
+	public final static String ID = "ID_BLOGRACYMESSAGE_BlogracyContentListRequest";
 	
 	
 	public BlogracyContentListRequest( String senderUserId,

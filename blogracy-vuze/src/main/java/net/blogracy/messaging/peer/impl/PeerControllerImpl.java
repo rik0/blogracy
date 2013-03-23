@@ -106,8 +106,7 @@ public class PeerControllerImpl implements PeerController {
 			plugin.getMessageManager().registerMessageType(new BMNoRoute());
 			plugin.getMessageManager().registerMessageType(new BMRoute());
 
-			plugin.getMessageManager().registerMessageType(
-					new BlogracyDataMessageBase("", new byte[20], -1, ""));
+			plugin.getMessageManager().registerMessageType(new BlogracyDataMessageBase("", new byte[20], -1, ""));
 			if (listOfMessageTypes != null) {
 				for (BlogracyDataMessage m : listOfMessageTypes) {
 					plugin.getMessageManager().registerMessageType(m);
@@ -151,19 +150,15 @@ public class PeerControllerImpl implements PeerController {
 			}
 		});
 
-		plugin.getMessageManager().locateCompatiblePeers(plugin,
-				new BlogracyDataMessageBase("", new byte[20], 0, ""),
-				new MessageManagerListener() {
-					public void compatiblePeerFound(Download download,
-							Peer peer, Message message) {
-						PeerControllerImpl.this.compatiblePeerFound(download,
-								peer);
-					}
+		plugin.getMessageManager().locateCompatiblePeers(plugin, new BlogracyDataMessageBase("", new byte[20], 0, ""), new MessageManagerListener() {
+			public void compatiblePeerFound(Download download, Peer peer, Message message) {
+				PeerControllerImpl.this.compatiblePeerFound(download, peer);
+			}
 
-					public void peerRemoved(Download download, Peer peer) {
-						compatiblePeerRemoved(download, peer);
-					}
-				});
+			public void peerRemoved(Download download, Peer peer) {
+				compatiblePeerRemoved(download, peer);
+			}
+		});
 	}
 
 	private void compatiblePeerFound(final Download download, final Peer peer) {
@@ -180,46 +175,43 @@ public class PeerControllerImpl implements PeerController {
 		}
 
 		// register for incoming JPC message handling
-		peer.getConnection().getIncomingMessageQueue()
-				.registerListener(new IncomingMessageQueueListener() {
-					public boolean messageReceived(Message message) {
+		peer.getConnection().getIncomingMessageQueue().registerListener(new IncomingMessageQueueListener() {
+			public boolean messageReceived(Message message) {
 
-						// Handling system messages
-						if (message.getID().equals(BMNoRoute.ID_BM_NO_ROUTE)) {
-							processNoRoute(download, peer);
-							return true;
-						}
+				// Handling system messages
+				if (message.getID().equals(BMNoRoute.ID_BM_NO_ROUTE)) {
+					processNoRoute(download, peer);
+					return true;
+				}
 
-						if (message.getID().equals(BMRoute.ID_BM_ROUTE)) {
-							processRoute(download, peer);
-							return true;
-						}
+				if (message.getID().equals(BMRoute.ID_BM_ROUTE)) {
+					processRoute(download, peer);
+					return true;
+				}
 
-						// Handling other Data messages
-						for (BlogracyDataMessage m : listOfRegisteredMessageTypes) {
-							if (message.getID().equals(m.getID())) {
+				// Handling other Data messages
+				for (BlogracyDataMessage m : listOfRegisteredMessageTypes) {
+					if (message.getID().equals(m.getID())) {
 
-								BlogracyDataMessage msg = m.getClass().cast(
-										message);
-								// BlogracyDataMessage msg =
-								// (BlogracyDataMessage)message;
+						BlogracyDataMessage msg = m.getClass().cast(message);
+						// BlogracyDataMessage msg =
+						// (BlogracyDataMessage)message;
 
-								// 1. Test if the message has already been
-								// processed
-								if (!checkIfDuplicate(download,
-										msg.getMessageID()))
-									processMessage(download, peer, msg);
+						// 1. Test if the message has already been
+						// processed
+						if (!checkIfDuplicate(download, msg.getMessageID()))
+							processMessage(download, peer, msg);
 
-								return true;
-							}
-						}
-
-						return false;
+						return true;
 					}
+				}
 
-					public void bytesReceived(int byte_count) {/* nothing */
-					}
-				});
+				return false;
+			}
+
+			public void bytesReceived(int byte_count) {/* nothing */
+			}
+		});
 
 		// Peers start as "non routing", ie none of the 2 newly connected peers
 		// should
@@ -234,15 +226,12 @@ public class PeerControllerImpl implements PeerController {
 		synchronized (routers) {
 			if (routers.size() < MAX_ROUTERS_PER_TORRENT) {
 				routers.add(peer);
-				peer.getConnection().getOutgoingMessageQueue()
-						.sendMessage(new BMRoute());
+				peer.getConnection().getOutgoingMessageQueue().sendMessage(new BMRoute());
 			} else {
-				int acceptLevel = (int) (100 * MAX_ROUTERS_PER_TORRENT / peers
-						.size());
+				int acceptLevel = (int) (100 * MAX_ROUTERS_PER_TORRENT / peers.size());
 				if (Math.random() * 100 < acceptLevel) {
 					Peer oldPeer = (Peer) routers.remove(0);
-					oldPeer.getConnection().getOutgoingMessageQueue()
-							.sendMessage(new BMNoRoute());
+					oldPeer.getConnection().getOutgoingMessageQueue().sendMessage(new BMNoRoute());
 					routers.add(peer);
 				}
 			}
@@ -281,8 +270,7 @@ public class PeerControllerImpl implements PeerController {
 				if (peersCopy.size() > 0) {
 					int random = (int) (Math.random() * peersCopy.size());
 					Peer peersToAskRoute = peersCopy.get(random);
-					peersToAskRoute.getConnection().getOutgoingMessageQueue()
-							.sendMessage(new BMRoute());
+					peersToAskRoute.getConnection().getOutgoingMessageQueue().sendMessage(new BMRoute());
 				}
 			}
 		}
@@ -314,15 +302,12 @@ public class PeerControllerImpl implements PeerController {
 		return isDuplicate;
 	}
 
-	private void processMessage(Download download, Peer peer,
-			BlogracyDataMessage message) {
-		notifyListenersOfMessageReceived(download, message.getSenderPeerID(),
-				message.getSenderUserId(), message.getContent());
+	private void processMessage(Download download, Peer peer, BlogracyDataMessage message) {
+		notifyListenersOfMessageReceived(download, message.getSenderPeerID(), message.getSenderUserId(), message);
 		dispatchMessageToRouters(download, peer, message);
 	}
 
-	private void dispatchMessageToRouters(Download download, Peer peer,
-			BlogracyDataMessage message) {
+	private void dispatchMessageToRouters(Download download, Peer peer, BlogracyDataMessage message) {
 		// New message
 		byte[] peerID = message.getSenderPeerID();
 
@@ -336,12 +321,10 @@ public class PeerControllerImpl implements PeerController {
 					Peer peerToRoute = iter.next();
 					// Don't send it to the sending peer
 					byte[] peerToRouteID = peerToRoute.getId();
-					if (peerToRoute != peer
-							&& !comparePeerIDs(peerID, peerToRouteID)) {
+					if (peerToRoute != peer && !comparePeerIDs(peerID, peerToRouteID)) {
 						BlogracyDataMessage msg = message.copy();
 						msg.setNbHops(nbHops);
-						peerToRoute.getConnection().getOutgoingMessageQueue()
-								.sendMessage(msg);
+						peerToRoute.getConnection().getOutgoingMessageQueue().sendMessage(msg);
 					}
 				}
 			}
@@ -386,20 +369,16 @@ public class PeerControllerImpl implements PeerController {
 			Iterator<Download> iter = downloadsToPeers.keySet().iterator();
 			while (iter.hasNext()) {
 				Download download = iter.next();
-				sendMessage(download, download.getDownloadPeerId(), userId,
-						message);
+				sendMessage(download, download.getDownloadPeerId(), userId, message);
 			}
 		}
 	}
 
-	public void sendMessage(Download download, byte[] peerID,
-			String senderUserId, BlogracyDataMessage message) {
+	public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message) {
 		sendMessage(download, peerID, senderUserId, message, true);
 	}
 
-	public void sendMessage(Download download, byte[] peerID,
-			String senderUserId, BlogracyDataMessage message,
-			boolean checkForNick) {
+	public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message, boolean checkForNick) {
 		// int bridgeIndex = findBridgebyDownload(download);
 
 		/*
@@ -411,17 +390,13 @@ public class PeerControllerImpl implements PeerController {
 		 * nick.equals("System")) oldNick = nick;
 		 */
 
-		notifyListenersOfMessageReceived(download,
-				download.getDownloadPeerId(), senderUserId,
-				message.getContent());
+		notifyListenersOfMessageReceived(download, download.getDownloadPeerId(), senderUserId, message);
 		List<Peer> routePeers = downloadsToPeers.get(download);
 		if (routePeers != null) {
 			synchronized (routePeers) {
-				for (Iterator<Peer> iter = routePeers.iterator(); iter
-						.hasNext();) {
+				for (Iterator<Peer> iter = routePeers.iterator(); iter.hasNext();) {
 					Peer peerToSendMsg = iter.next();
-					peerToSendMsg.getConnection().getOutgoingMessageQueue()
-							.sendMessage(message);
+					peerToSendMsg.getConnection().getOutgoingMessageQueue().sendMessage(message);
 				}
 			}
 		}
@@ -456,22 +431,18 @@ public class PeerControllerImpl implements PeerController {
 		}
 	}
 
-	private void notifyListenersOfMessageReceived(Download download,
-			byte[] peerID, String userId, String content) {
+	private void notifyListenersOfMessageReceived(Download download, byte[] peerID, String userId, BlogracyDataMessage message) {
 		synchronized (listeners) {
-			for (Iterator<BlogracyDataMessageListener> iter = listeners
-					.iterator(); iter.hasNext();) {
+			for (Iterator<BlogracyDataMessageListener> iter = listeners.iterator(); iter.hasNext();) {
 				BlogracyDataMessageListener listener = iter.next();
-				listener.blogracyDataMessageReceived(download, peerID, userId,
-						content);
+				listener.blogracyDataMessageReceived(download, peerID, userId, message);
 			}
 		}
 	}
 
 	private void notifyListenersOfDownloadAdded(Download download) {
 		synchronized (listeners) {
-			for (Iterator<BlogracyDataMessageListener> iter = listeners
-					.iterator(); iter.hasNext();) {
+			for (Iterator<BlogracyDataMessageListener> iter = listeners.iterator(); iter.hasNext();) {
 				BlogracyDataMessageListener listener = iter.next();
 				listener.downloadAdded(download);
 			}
@@ -480,8 +451,7 @@ public class PeerControllerImpl implements PeerController {
 
 	private void notifyListenersOfDownloadRemoved(Download download) {
 		synchronized (listeners) {
-			for (Iterator<BlogracyDataMessageListener> iter = listeners
-					.iterator(); iter.hasNext();) {
+			for (Iterator<BlogracyDataMessageListener> iter = listeners.iterator(); iter.hasNext();) {
 				BlogracyDataMessageListener listener = iter.next();
 				listener.downloadRemoved(download);
 			}
@@ -490,8 +460,7 @@ public class PeerControllerImpl implements PeerController {
 
 	private void notifyListenersOfDownloadActive(Download download) {
 		synchronized (listeners) {
-			for (Iterator<BlogracyDataMessageListener> iter = listeners
-					.iterator(); iter.hasNext();) {
+			for (Iterator<BlogracyDataMessageListener> iter = listeners.iterator(); iter.hasNext();) {
 				BlogracyDataMessageListener listener = iter.next();
 				listener.downloadActive(download);
 			}
@@ -500,8 +469,7 @@ public class PeerControllerImpl implements PeerController {
 
 	private void notifyListenersOfDownloadInactive(Download download) {
 		synchronized (listeners) {
-			for (Iterator<BlogracyDataMessageListener> iter = listeners
-					.iterator(); iter.hasNext();) {
+			for (Iterator<BlogracyDataMessageListener> iter = listeners.iterator(); iter.hasNext();) {
 				BlogracyDataMessageListener listener = iter.next();
 				listener.downloadInactive(download);
 			}

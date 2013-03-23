@@ -64,16 +64,11 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		peerController = new PeerControllerImpl(pluginInterface);
 		peerController.addMessageListener(this);
 		List<BlogracyDataMessage> listOfHandledMessages = new ArrayList<BlogracyDataMessage>();
-		listOfHandledMessages.add(new BlogracyContentAccepted("", new byte[20],
-				-1, ""));
-		listOfHandledMessages.add(new BlogracyContentRejected("", new byte[20],
-				-1, ""));
-		listOfHandledMessages.add(new BlogracyContentListRequest("",
-				new byte[20], -1, ""));
-		listOfHandledMessages.add(new BlogracyContentListResponse("",
-				new byte[20], -1, "", ""));
-		listOfHandledMessages.add(new BlogracyContent("",
-				new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyContentAccepted("", new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyContentRejected("", new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyContentListRequest("", new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyContentListResponse("", new byte[20], -1, "", ""));
+		listOfHandledMessages.add(new BlogracyContent("", new byte[20], -1, ""));
 		peerController.initialize(listOfHandledMessages);
 		peerController.startPeerProcessing();
 	}
@@ -90,8 +85,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		InputStream is = cl.getResourceAsStream(res);
 		if (is != null) {
 			try {
-				return pluginInterface.getTorrentManager()
-						.createFromBEncodedInputStream(is);
+				return pluginInterface.getTorrentManager().createFromBEncodedInputStream(is);
 			} catch (Exception e) {
 				Logger.info("System: The channel torrent is impossible to create!");
 				return null;
@@ -113,10 +107,8 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			info.put("name", channelName.getBytes());
 			info.put("name.utf8", channelName.getBytes("UTF-8"));
 			genericMap.put("info", info);
-			byte[] channelTorrent = pluginInterface.getUtilities()
-					.getFormatters().bEncode(genericMap);
-			Torrent result = pluginInterface.getTorrentManager()
-					.createFromBEncodedData(channelTorrent);
+			byte[] channelTorrent = pluginInterface.getUtilities().getFormatters().bEncode(genericMap);
+			Torrent result = pluginInterface.getTorrentManager().createFromBEncodedData(channelTorrent);
 			result.setComment(channelName);
 			result.setAnnounceURL(ANNOUNCE_URL);
 			return result;
@@ -141,22 +133,18 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		Torrent torrent = getSwarmTorrent(userId);
 		String savePath = pluginInterface.getPluginDirectoryName();
 		try {
-			File saveDir = new File(savePath, SWARMCHANNELS_DIR
-					+ File.separator);
+			File saveDir = new File(savePath, SWARMCHANNELS_DIR + File.separator);
 			saveDir.mkdir();
 			Download dl = null;
 			synchronized (swarmList) {
-				dl = pluginInterface.getDownloadManager().addDownload(torrent,
-						null, saveDir);
+				dl = pluginInterface.getDownloadManager().addDownload(torrent, null, saveDir);
 				dl.setForceStart(true);
 
 				swarmList.put(userId, dl);
 			}
 
-			File dest = new File(savePath, SWARMCHANNELS_DIR + File.separator
-					+ userId);
-			File src = new File(savePath, SWARMCHANNELS_DIR + File.separator
-					+ "channel");
+			File dest = new File(savePath, SWARMCHANNELS_DIR + File.separator + userId);
+			File src = new File(savePath, SWARMCHANNELS_DIR + File.separator + "channel");
 			MessagingUtils.copyFile(src, dest);
 			return dl;
 		} catch (Exception e) {
@@ -178,13 +166,11 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentAccepted message = new BlogracyContentAccepted(
-					userId, peerID, 0, jsonContent.toString());
+			BlogracyContentAccepted message = new BlogracyContentAccepted(userId, peerID, 0, jsonContent.toString());
 
 			peerController.sendMessage(userIdSwarm, peerID, userId, message);
 		} else {
-			System.out
-					.println("System: Torrent isn't running, message can't be delivered");
+			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 
 	}
@@ -202,13 +188,11 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentRejected message = new BlogracyContentRejected(
-					userId, peerID, 0, jsonContent.toString());
+			BlogracyContentRejected message = new BlogracyContentRejected(userId, peerID, 0, jsonContent.toString());
 
 			peerController.sendMessage(userIdSwarm, peerID, userId, message);
 		} else {
-			System.out
-					.println("System: Torrent isn't running, message can't be delivered");
+			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
@@ -221,19 +205,16 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		byte[] peerID = userIdSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			String content = "";
-			BlogracyContentListRequest message = new BlogracyContentListRequest(
-					userId, peerID, 0, content);
+			BlogracyContentListRequest message = new BlogracyContentListRequest(userId, peerID, 0, content);
 			peerController.sendMessage(userIdSwarm, peerID, userId, message);
 		} else {
-			System.out
-					.println("System: Torrent isn't running, message can't be delivered");
+			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 	}
-	
-	public void sendContentListResponse(String senderUserId, String queriedUserId, JSONArray contentData)
-	{
+
+	public void sendContentListResponse(String senderUserId, String queriedUserId, JSONArray contentData) {
 		Download queriedUserIdSwarm = this.getSwarm(queriedUserId);
-		
+
 		if (queriedUserIdSwarm == null)
 			return;
 
@@ -246,17 +227,14 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentListResponse message = new BlogracyContentListResponse(
-					senderUserId, peerID, 0, queriedUserId, jsonContent.toString());
+			BlogracyContentListResponse message = new BlogracyContentListResponse(senderUserId, peerID, 0, queriedUserId, jsonContent.toString());
 			peerController.sendMessage(queriedUserIdSwarm, peerID, senderUserId, message);
 		} else {
-			System.out
-					.println("System: Torrent isn't running, message can't be delivered");
+			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
-	public void sendContentMessage(String userId, String destinationUserId,
-			String contentData) {
+	public void sendContentMessage(String userId, String destinationUserId, String contentData) {
 		Download destinationSwarm = this.getSwarm(destinationUserId);
 
 		if (destinationSwarm == null)
@@ -265,13 +243,10 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			String content = contentData;
-			BlogracyContent message = new BlogracyContent(
-					userId, peerID, 0, content);
-			peerController.sendMessage(destinationSwarm, peerID, userId,
-					message);
+			BlogracyContent message = new BlogracyContent(userId, peerID, 0, content);
+			peerController.sendMessage(destinationSwarm, peerID, userId, message);
 		} else {
-			System.out
-					.println("System: Torrent isn't running, message can't be delivered");
+			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
@@ -306,9 +281,22 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	 * 
 	 *****************************************************/
 	@Override
-	public void blogracyDataMessageReceived(Download download, byte[] sender,
-			String nick, String content) {
-		// TODO Auto-generated method stub
+	public void blogracyDataMessageReceived(Download download, byte[] sender, String nick, BlogracyDataMessage message) {
+
+		synchronized (listeners) {
+			for (BlogracyContentMessageListener l : listeners) {
+				if (message.getID() == BlogracyContent.ID)
+					l.blogracyContentReceived((BlogracyContent) message);
+				else if (message.getID() == BlogracyContentAccepted.ID)
+					l.blogracyContentAcceptedReceived((BlogracyContentAccepted) message);
+				else if (message.getID() == BlogracyContentRejected.ID)
+					l.blogracyContentRejectedReceived((BlogracyContentRejected) message);
+				else if (message.getID() == BlogracyContentListRequest.ID)
+					l.blogracyContentListRequestReceived((BlogracyContentListRequest) message);
+				else if (message.getID() == BlogracyContentListResponse.ID)
+					l.blogracyContentListResponseReceived((BlogracyContentListResponse) message);
+			}
+		}
 
 	}
 

@@ -6,7 +6,7 @@ import org.gudy.azureus2.plugins.download.Download;
 
 public interface BlogracyDataMessageListener {
 	
-	  public void blogracyDataMessageReceived(Download download,byte[] sender,String nick, String content);
+	  public void blogracyDataMessageReceived(Download download,byte[] sender,String nick, BlogracyDataMessage message);
 	
 	/* are these really necessary? */
 	  public void downloadAdded(Download download);
