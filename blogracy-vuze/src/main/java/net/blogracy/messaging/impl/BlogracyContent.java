@@ -6,11 +6,14 @@ public class BlogracyContent extends BlogracyDataMessageBase {
 		super(senderUserId, senderID, hops, content);
 	}
 
-	public static final String ID = "ID_BLOGRACYMESSAGE_BlogracyContent";
-	
+	public final String ID = "ID_BLOGRACYMESSAGE_BlogracyContent";
+
+
 	@Override
 	public String getID() {
+		// TODO Auto-generated method stub
 		return ID;
 	}
 	
+
 }

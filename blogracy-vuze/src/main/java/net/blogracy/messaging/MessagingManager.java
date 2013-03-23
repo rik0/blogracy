@@ -265,7 +265,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			String content = contentData;
-			BlogracyContentListRequest message = new BlogracyContentListRequest(
+			BlogracyContent message = new BlogracyContent(
 					userId, peerID, 0, content);
 			peerController.sendMessage(destinationSwarm, peerID, userId,
 					message);
