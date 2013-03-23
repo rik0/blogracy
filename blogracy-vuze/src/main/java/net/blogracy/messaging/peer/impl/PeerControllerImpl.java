@@ -108,7 +108,6 @@ public class PeerControllerImpl implements PeerController {
 
 			plugin.getMessageManager().registerMessageType(
 					new BlogracyDataMessageBase("", new byte[20], -1, ""));
-
 			if (listOfMessageTypes != null) {
 				for (BlogracyDataMessage m : listOfMessageTypes) {
 					plugin.getMessageManager().registerMessageType(m);

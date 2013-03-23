@@ -108,7 +108,8 @@ public class BlogracyDataMessageBase implements BlogracyDataMessage {
 
 	public void destroy() {/*nothing*/}
 
-
+	protected void setMessageID(long id) { this.messageID = id; }
+	
 	public Message create(ByteBuffer data) throws MessageException {
 		if(data == null) {
 			throw new MessageException( "[" +getID() + ":" +getVersion()+ "] decode error: data == null" );
