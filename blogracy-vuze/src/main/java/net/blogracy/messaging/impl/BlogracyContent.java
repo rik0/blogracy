@@ -9,12 +9,22 @@ import org.gudy.azureus2.plugins.messaging.Message;
 import org.gudy.azureus2.plugins.messaging.MessageException;
 
 public class BlogracyContent extends BlogracyDataMessageBase {
-	public BlogracyContent(String senderUserId, byte[] senderID,
-			int hops, String content) {
-		super(senderUserId, senderID, hops, content);
+	public BlogracyContent(String senderUserId, byte[] senderID, String contentRecipientUserId, int hops, String content) {
+		super(senderUserId, senderID,  hops, content);
+		this.contentRecipientUserId = contentRecipientUserId;
 	}
 
 	public static final String ID = "ID_BLOGRACYMESSAGE_BlogracyContent";
+
+	protected String contentRecipientUserId;
+
+	/**
+	 * @return the contentRecipientUserId
+	 */
+	public String getContentRecipientUserId() {
+		return contentRecipientUserId;
+	}
+
 
 
 	@Override
@@ -23,7 +33,6 @@ public class BlogracyContent extends BlogracyDataMessageBase {
 	}
 
 
-	
 	
 	/* (non-Javadoc)
 	 * @see net.blogracy.messaging.impl.BlogracyDataMessageBase#create(java.nio.ByteBuffer)
@@ -49,8 +58,9 @@ public class BlogracyContent extends BlogracyDataMessageBase {
 			String uid = new String((byte[])mMessage.get("uid"));
 			int hops = ((Long)mMessage.get("h")).intValue();
 			String content = new String((byte[])mMessage.get("t"));
-
-			BlogracyContent message = new BlogracyContent(uid, senderID, hops, content);
+			String contentRecipientUserId = new String((byte[]) mMessage.get("cruid"));
+			
+			BlogracyContent message = new BlogracyContent(uid, senderID, contentRecipientUserId, hops, content);
 			message.setMessageID(messageID);
 			return message;
 		} 
@@ -68,7 +78,7 @@ public class BlogracyContent extends BlogracyDataMessageBase {
 	 */
 	@Override
 	public BlogracyDataMessageBase copy() {
-		BlogracyContent message = new BlogracyContent(getSenderUserId(), getSenderPeerID(), getNbHops(), getContent());
+		BlogracyContent message = new BlogracyContent(getSenderUserId(), getSenderPeerID(), getContentRecipientUserId(),  getNbHops(), getContent());
 		message.setMessageID(this.getMessageID());
 		return message;
 	}

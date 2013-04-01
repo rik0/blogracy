@@ -10,9 +10,8 @@ import org.gudy.azureus2.plugins.messaging.MessageException;
 
 public class BlogracyContentAccepted extends BlogracyDataMessageBase {
 
-	public BlogracyContentAccepted(String senderUserId, byte[] senderID,
-			int hops, String content) {
-		super(senderUserId, senderID, hops, content);
+	public BlogracyContentAccepted(String senderUserId, byte[] senderID, int hops, String content) {
+		super(senderUserId, senderID,  hops, content);
 	}
 
 	
@@ -48,8 +47,8 @@ public class BlogracyContentAccepted extends BlogracyDataMessageBase {
 			String uid = new String((byte[])mMessage.get("uid"));
 			int hops = ((Long)mMessage.get("h")).intValue();
 			String content = new String((byte[])mMessage.get("t"));
-
-			BlogracyContentAccepted message = new BlogracyContentAccepted(uid, senderID, hops, content);
+			
+			BlogracyContentAccepted message = new BlogracyContentAccepted(uid, senderID,  hops, content);
 			message.setMessageID(messageID);
 			return message;
 		} 

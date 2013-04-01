@@ -66,9 +66,9 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		List<BlogracyDataMessage> listOfHandledMessages = new ArrayList<BlogracyDataMessage>();
 		listOfHandledMessages.add(new BlogracyContentAccepted("", new byte[20], -1, ""));
 		listOfHandledMessages.add(new BlogracyContentRejected("", new byte[20], -1, ""));
-		listOfHandledMessages.add(new BlogracyContentListRequest("", new byte[20], -1, ""));
-		listOfHandledMessages.add(new BlogracyContentListResponse("", new byte[20], -1, "", ""));
-		listOfHandledMessages.add(new BlogracyContent("", new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyContentListRequest("", new byte[20], "", -1, ""));
+		listOfHandledMessages.add(new BlogracyContentListResponse("", new byte[20], "", -1, ""));
+		listOfHandledMessages.add(new BlogracyContent("", new byte[20], "", -1, ""));
 		peerController.initialize(listOfHandledMessages);
 		peerController.startPeerProcessing();
 	}
@@ -153,8 +153,8 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		return null;
 	}
 
-	public void sendContentAccepted(String userId, String contentId) {
-		Download userIdSwarm = this.getSwarm(userId);
+	public void sendContentAccepted(String senderUserId, String contentSenderUserId, String contentId) {
+		Download userIdSwarm = this.getSwarm(contentSenderUserId);
 
 		if (userIdSwarm == null)
 			return;
@@ -166,17 +166,17 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentAccepted message = new BlogracyContentAccepted(userId, peerID, 0, jsonContent.toString());
+			BlogracyContentAccepted message = new BlogracyContentAccepted(senderUserId, peerID, 0, jsonContent.toString());
 
-			peerController.sendMessage(userIdSwarm, peerID, userId, message);
+			peerController.sendMessage(userIdSwarm, peerID, contentSenderUserId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 
 	}
 
-	public void sendContentRejected(String userId, String contentId) {
-		Download userIdSwarm = this.getSwarm(userId);
+	public void sendContentRejected(String senderUserId, String contentSenderUserId, String contentId) {
+		Download userIdSwarm = this.getSwarm(contentSenderUserId);
 
 		if (userIdSwarm == null)
 			return;
@@ -188,16 +188,15 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentRejected message = new BlogracyContentRejected(userId, peerID, 0, jsonContent.toString());
-
-			peerController.sendMessage(userIdSwarm, peerID, userId, message);
+			BlogracyContentRejected message = new BlogracyContentRejected(senderUserId, peerID, 0, jsonContent.toString());
+			peerController.sendMessage(userIdSwarm, peerID, contentSenderUserId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
-	public void sendContentListRequest(String userId) {
-		Download userIdSwarm = this.getSwarm(userId);
+	public void sendContentListRequest(String senderUserId, String queriedUserId) {
+		Download userIdSwarm = this.getSwarm(queriedUserId);
 
 		if (userIdSwarm == null)
 			return;
@@ -205,8 +204,8 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		byte[] peerID = userIdSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			String content = "";
-			BlogracyContentListRequest message = new BlogracyContentListRequest(userId, peerID, 0, content);
-			peerController.sendMessage(userIdSwarm, peerID, userId, message);
+			BlogracyContentListRequest message = new BlogracyContentListRequest(senderUserId, peerID, queriedUserId, 0, content);
+			peerController.sendMessage(userIdSwarm, peerID, senderUserId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
@@ -227,7 +226,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentListResponse message = new BlogracyContentListResponse(senderUserId, peerID, 0, queriedUserId, jsonContent.toString());
+			BlogracyContentListResponse message = new BlogracyContentListResponse(senderUserId, peerID, queriedUserId, 0, jsonContent.toString());
 			peerController.sendMessage(queriedUserIdSwarm, peerID, senderUserId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");
@@ -243,7 +242,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			String content = contentData;
-			BlogracyContent message = new BlogracyContent(userId, peerID, 0, content);
+			BlogracyContent message = new BlogracyContent(userId, peerID, destinationUserId, 0, content);
 			peerController.sendMessage(destinationSwarm, peerID, userId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");

@@ -27,6 +27,20 @@ public interface UserData {
 			final String commentedObjectId, final String publishDate)
 			throws BlogracyItemNotFound;
 
+	
+	/**
+	 * Creates an ActivityEntry that represents a comment in the system 
+	 * @param commentingUser   the user who is actually commenting
+	 * @param commentText  the comment text string 
+	 * @param commentedObjectId the object which is being commented (located via the item's id) 
+	 * @param publishDate  Date / time of publication
+	 * @param commentId the comment's id (useful for faster approval / rejection)
+	 * @return
+	 */
+	ActivityEntry createComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate) throws BlogracyItemNotFound;
+	
+	
+	
 	/**
 	 * Adds a new message / attachment entry to the user ActivityStream
 	 * 

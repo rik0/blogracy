@@ -35,24 +35,25 @@ public class UserDataImpl implements UserData {
 		this.user = user;
 	}
 
-	public void addComment(final User commentingUser, final String commentText,
-			final String commentedObjectId, final String publishDate)
-			throws BlogracyItemNotFound {
-		this.addComment(commentingUser, commentText, commentedObjectId,
-				publishDate, UUID.randomUUID().toString());
+	public void addComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate) throws BlogracyItemNotFound {
+		this.addComment(commentingUser, commentText, commentedObjectId, publishDate, UUID.randomUUID().toString());
 	}
 
-	public void addComment(final User commentingUser, final String commentText,
-			final String commentedObjectId, final String publishDate,
-			final String commentId) throws BlogracyItemNotFound {
+	public void addComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate, final String commentId) throws BlogracyItemNotFound {
+		final ActivityEntry comment = this.createComment(commentingUser, commentText, commentedObjectId, publishDate, commentId);
+		this.activityStream.add(0, comment);
+	}
+
+	public ActivityEntry createComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate, final String commentId)
+			throws BlogracyItemNotFound {
+
 		List<ActivityEntry> currentUserActivities = this.getActivityStream();
 
 		// Getting the entry in the activity stream that commentingUser is
 		// actually posting a comment for...
 		ActivityEntry commentedEntry = null;
 		for (ActivityEntry entry : currentUserActivities) {
-			if (entry.getObject() != null && entry.getObject().getId() != null
-					&& entry.getObject().getId().equals(commentedObjectId)) {
+			if (entry.getObject() != null && entry.getObject().getId() != null && entry.getObject().getId().equals(commentedObjectId)) {
 				commentedEntry = entry;
 				break;
 			}
@@ -77,32 +78,14 @@ public class UserDataImpl implements UserData {
 		commentObject.setId(commentId);
 		comment.setObject(commentObject);
 		comment.setTarget(commentedEntry.getObject());
-		this.activityStream.add(0, comment);
-	}
-
-	public static  ActivityEntry createComment(final User commentingUser,
-			final String commentText, final String commentedObjectId,
-			final String publishDate)
-			throws BlogracyItemNotFound {
-
-		final ActivityEntry comment = new ActivityEntryImpl();
-		ActivityObject actor = new ActivityObjectImpl();
-		actor.setObjectType("person");
-		actor.setId(commentingUser.getHash().toString());
-		actor.setDisplayName(commentingUser.getLocalNick());
-		comment.setActor(actor);
-		comment.setVerb("post");
-		comment.setPublished(publishDate);
-		final ActivityObject commentObject = new ActivityObjectImpl();
-		commentObject.setObjectType("comment");
-		commentObject.setContent(commentText);
-		commentObject.setId(UUID.randomUUID().toString());
-		comment.setObject(commentObject);
 		return comment;
 	}
 
-	public void addFeedEntry(final String text, final String textUri,
-			final String attachmentUri, final String publishDate) {
+	public ActivityEntry createComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate) throws BlogracyItemNotFound {
+		return this.createComment(commentingUser, commentText, commentedObjectId, publishDate, UUID.randomUUID().toString());
+	}
+
+	public void addFeedEntry(final String text, final String textUri, final String attachmentUri, final String publishDate) {
 		final ActivityEntry entry = new ActivityEntryImpl();
 		ActivityObject actor = new ActivityObjectImpl();
 		actor.setObjectType("person");
@@ -121,9 +104,7 @@ public class UserDataImpl implements UserData {
 		this.activityStream.add(0, entry);
 	}
 
-	public void addMediaItemToAlbum(final String albumId,
-			final String photoUrl, final String photoUrlHash,
-			final String mimeType, final String publishedDate) {
+	public void addMediaItemToAlbum(final String albumId, final String photoUrl, final String photoUrlHash, final String mimeType, final String publishedDate) {
 		Album album = null;
 		for (Album a : this.albums) {
 			if (a.getId().equals(albumId)) {
@@ -133,9 +114,7 @@ public class UserDataImpl implements UserData {
 		}
 
 		if (album == null)
-			throw new InvalidParameterException("AlbumId " + albumId
-					+ " does not match to a valid album for the user "
-					+ this.user.getHash().toString());
+			throw new InvalidParameterException("AlbumId " + albumId + " does not match to a valid album for the user " + this.user.getHash().toString());
 
 		final ActivityEntry entry = new ActivityEntryImpl();
 		ActivityObject actor = new ActivityObjectImpl();
@@ -182,8 +161,7 @@ public class UserDataImpl implements UserData {
 		album.setMediaItemCount(album.getMediaItemCount() + 1);
 	}
 
-	public String createPhotoAlbum(final String photoAlbumTitle,
-			final String publishedDate) throws PhotoAlbumDuplicated {
+	public String createPhotoAlbum(final String photoAlbumTitle, final String publishedDate) throws PhotoAlbumDuplicated {
 		// Checks if album already present, if it is an exception is thrown
 		for (Album existingAlbum : albums)
 			if (existingAlbum.getTitle().equals(photoAlbumTitle))
@@ -191,8 +169,7 @@ public class UserDataImpl implements UserData {
 
 		String albumHash = null;
 		try {
-			albumHash = Hashes.hash(this.user.getHash().toString()
-					+ photoAlbumTitle);
+			albumHash = Hashes.hash(this.user.getHash().toString() + photoAlbumTitle);
 
 			Album album = new AlbumImpl();
 			album.setTitle(photoAlbumTitle);
@@ -241,13 +218,8 @@ public class UserDataImpl implements UserData {
 		List<ActivityEntry> comments = new ArrayList<ActivityEntry>();
 
 		for (ActivityEntry entry : this.getActivityStream()) {
-			if (entry.getTarget() != null && entry.getTarget().getId() != null
-					&& entry.getTarget().getId().equals(objectId)
-					&& entry.getObject() != null
-					&& entry.getObject().getObjectType() != null
-					&& entry.getObject().getObjectType().equals("comment")
-					&& entry.getVerb() != null
-					&& entry.getVerb().equals("post")) {
+			if (entry.getTarget() != null && entry.getTarget().getId() != null && entry.getTarget().getId().equals(objectId) && entry.getObject() != null && entry.getObject().getObjectType() != null
+					&& entry.getObject().getObjectType().equals("comment") && entry.getVerb() != null && entry.getVerb().equals("post")) {
 				comments.add(entry);
 			}
 		}
@@ -273,8 +245,7 @@ public class UserDataImpl implements UserData {
 		return this.userPublicKey;
 	}
 
-	public void removeMediaItem(final String mediaId, final String albumId,
-			final String publishedDate) {
+	public void removeMediaItem(final String mediaId, final String albumId, final String publishedDate) {
 		Album album = null;
 		for (Album a : this.albums) {
 			if (a.getId().equals(albumId)) {
@@ -284,15 +255,11 @@ public class UserDataImpl implements UserData {
 		}
 
 		if (album == null)
-			throw new InvalidParameterException("AlbumId " + albumId
-					+ " does not correspond to a valid album for the user "
-					+ this.user.getHash().toString());
+			throw new InvalidParameterException("AlbumId " + albumId + " does not correspond to a valid album for the user " + this.user.getHash().toString());
 
-		for (Iterator<MediaItem> iter = this.mediaItems.iterator(); iter
-				.hasNext();) {
+		for (Iterator<MediaItem> iter = this.mediaItems.iterator(); iter.hasNext();) {
 			MediaItem mediaItem = iter.next();
-			if (mediaId.equals(mediaItem.getId())
-					&& albumId.equals(mediaItem.getAlbumId()))
+			if (mediaId.equals(mediaItem.getId()) && albumId.equals(mediaItem.getAlbumId()))
 				iter.remove();
 		}
 

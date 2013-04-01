@@ -5,6 +5,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -28,10 +29,17 @@ import net.blogracy.model.users.Users;
 
 import org.apache.activemq.ActiveMQConnection;
 import org.apache.activemq.ActiveMQConnectionFactory;
+import org.apache.shindig.protocol.conversion.BeanConverter;
+import org.apache.shindig.protocol.conversion.BeanJsonConverter;
 import org.apache.shindig.social.opensocial.model.ActivityEntry;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import com.google.inject.Binder;
+import com.google.inject.Guice;
+import com.google.inject.Module;
+import com.google.inject.name.Names;
 
 public class CommentsController implements MessageListener {
 
@@ -39,13 +47,24 @@ public class CommentsController implements MessageListener {
 	private Connection connection;
 	private Session session;
 	private Destination salmonContentQueue;
+	private Destination salmonContentResponseQueue;
 	private MessageProducer producer;
 	private MessageConsumer consumer;
 	private Boolean isInitialized = false;
 
-	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss");
-
+	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	
+    private static BeanJsonConverter CONVERTER = new BeanJsonConverter(
+            Guice.createInjector(new Module() {
+                @Override
+                public void configure(Binder b) {
+                    b.bind(BeanConverter.class)
+                            .annotatedWith(
+                                    Names.named("shindig.bean.converter.json"))
+                            .to(BeanJsonConverter.class);
+                }
+            }));
+	
 	private static final CommentsController THE_INSTANCE = new CommentsController();
 
 	public static CommentsController getInstance() {
@@ -53,15 +72,21 @@ public class CommentsController implements MessageListener {
 	}
 
 	protected CommentsController() {
-		connectionFactory = new ActiveMQConnectionFactory(
-				ActiveMQConnection.DEFAULT_BROKER_URL);
+        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+		connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
 		try {
 			connection = connectionFactory.createConnection();
 			connection.start();
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			producer = session.createProducer(null);
-			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
 			salmonContentQueue = session.createQueue("salmonContentService");
+			salmonContentResponseQueue = session.createQueue("salmonContentResponseService");
+
+			producer = session.createProducer(salmonContentQueue);
+			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+
+			consumer = session.createConsumer(salmonContentResponseQueue);
+			consumer.setMessageListener(this);
 		} catch (JMSException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -81,40 +106,29 @@ public class CommentsController implements MessageListener {
 		}
 	}
 
-	public List<ActivityEntry> getComments(final String userId,
-			final String objectId) {
+	public List<ActivityEntry> getComments(final String userId, final String objectId) {
 		UserData data = FileSharing.getUserData(userId);
 
 		return data.getCommentsByObjectId(objectId);
 	}
 
-	public void addComment(final String commentedUserId,
-			final String commentingUserId, final String text,
-			final String objectId) throws BlogracyItemNotFound {
-		this.addComment(commentedUserId, commentingUserId, text, objectId,
-				ISO_DATE_FORMAT.format(new Date()));
+	public void addComment(final String commentedUserId, final String commentingUserId, final String text, final String objectId) throws BlogracyItemNotFound {
+		this.addComment(commentedUserId, commentingUserId, text, objectId, ISO_DATE_FORMAT.format(new Date()));
 	}
 
-	public void addComment(final String commentedUserId,
-			final String commentingUserId, final String text,
-			final String commentedObjectId, final String publishedDate)
-			throws BlogracyItemNotFound {
+	public void addComment(final String commentedUserId, final String commentingUserId, final String text, final String commentedObjectId, final String publishedDate) throws BlogracyItemNotFound {
 
 		User commentingUser = null;
 		if (commentedUserId.equals(commentingUserId)) {
 			UserData data = FileSharing.getUserData(commentedUserId);
 			commentingUser = data.getUser();
-			data.addComment(commentingUser, text, commentedObjectId,
-					publishedDate);
+			data.addComment(commentingUser, text, commentedObjectId, publishedDate);
 			try {
 				String dbUri = FileSharing.getSingleton().seedUserData(data);
-				DistributedHashTable.getSingleton().store(commentedUserId,
-						dbUri, publishedDate);
+				DistributedHashTable.getSingleton().store(commentedUserId, dbUri, publishedDate);
 			} catch (JSONException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 		} else {
@@ -123,18 +137,19 @@ public class CommentsController implements MessageListener {
 			// This shouldn't happen... anyway a new user with the requested
 			// userHash is built (maybe it should throw an exception
 			if (commentingUser == null)
-				commentingUser = Users.newUser(Hashes
-						.fromString(commentingUserId));
+				commentingUser = Users.newUser(Hashes.fromString(commentingUserId));
 
+			
+			// Getting commented user's data in order to build a comment ActivityObject
+			UserData data = FileSharing.getUserData(commentedUserId);
+			
+			
 			try {
 				JSONObject requestObj = new JSONObject();
 				requestObj.put("request", "content");
 				requestObj.put("currentUserId", commentingUserId);
 				requestObj.put("destinationUserId", commentedUserId);
-				requestObj
-						.put("contentData", UserDataImpl.createComment(
-								commentingUser, text, commentedObjectId,
-								publishedDate));
+				requestObj.put("contentData", data.createComment(commentingUser, text, commentedObjectId, publishedDate));
 
 				TextMessage request = session.createTextMessage();
 				request.setText(requestObj.toString());
@@ -206,8 +221,7 @@ public class CommentsController implements MessageListener {
 		}
 	}
 
-	public void sendContentListResponse(String queryUserId,
-			JSONObject contentData) {
+	public void sendContentListResponse(String queryUserId, JSONArray contentData) {
 		try {
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("response", "contentListQueryResponse");
@@ -250,8 +264,7 @@ public class CommentsController implements MessageListener {
 
 			String queryUserId = record.getString("queryUserId");
 
-			JSONObject content = SalmonDbController.getSingleton()
-					.getUserContent(queryUserId);
+			JSONArray content = SalmonDbController.getSingleton().getUserAllContent(queryUserId);
 
 			if (content == null)
 				return;
@@ -263,63 +276,55 @@ public class CommentsController implements MessageListener {
 
 			String contentUserId = record.getString("contentUserId");
 
-			JSONObject content = SalmonDbController.getSingleton()
-					.getUserContent(contentUserId);
+			String contentId = record.getString("contentId");
 
-			if (content == null)
-				return;
-
-			// Remove current Content id from list
-
-			JSONArray array = content.getJSONArray("contentData");
-
-			// TODO: Find a good way do remove id from content
-			SalmonDbController.getSingleton().addUserContent(contentUserId,
-					content);
+			SalmonDbController.getSingleton().removeUserContent(contentUserId, contentId);
 		} else if (requestType.equalsIgnoreCase("contentRejectedInfo")) {
 			if (!record.has("contentUserId"))
 				return;
 
 			String contentUserId = record.getString("contentUserId");
 
-			JSONObject content = SalmonDbController.getSingleton()
-					.getUserContent(contentUserId);
+			String contentId = record.getString("contentId");
 
-			if (content == null)
-				return;
-
-			// Remove current Content id from list
-
-			JSONArray array = content.getJSONArray("contentData");
-
-			// TODO: Find a good way do remove id from content
-			SalmonDbController.getSingleton().addUserContent(contentUserId,
-					content);
+			SalmonDbController.getSingleton().removeUserContent(contentUserId, contentId);
 		} else if (requestType.equalsIgnoreCase("contentReceived")) {
-			if (!record.has("currentUserId"))
+			if (!record.has("senderUserId"))
 				return;
 
-			if (!record.has("destinationUserId"))
+			if (!record.has("contentRecipientUserId"))
 				return;
 
-			String destinationUserId = record.getString("destinationUserId");
-			JSONArray newContentData = record.getJSONArray("contentData");
+			String contentRecipientUserId = record.getString("contentRecipientUserId");
+			JSONObject newContentData = record.getJSONObject("contentData");
+			String contentId = record.getString("contentId");
+			
+			// If it's for me, I should immediately decide if approve it or not
+			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
 
-			JSONObject content = SalmonDbController.getSingleton()
-					.getUserContent(destinationUserId);
-
-			if (content == null) {
-				content = new JSONObject();
-				content.put("contentData", newContentData);
+			if (currentUserId.compareToIgnoreCase(contentRecipientUserId) == 0) {
+				if (this.verifyComment(newContentData, record.getString("senderUserId"), contentRecipientUserId))
+				{
+					// Send Accepted message
+					this.acceptContent(currentUserId, contentId);
+					// add the message itself
+					ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(newContentData, ActivityEntry.class);
+				}
+				else
+				{
+					// Send Rejected message
+					this.rejectContent(currentUserId, contentId);
+				}
 			} else {
-				JSONArray array = content.getJSONArray("contentData");
-				for (int i = 0; i < newContentData.length(); ++i)
-					array.put(newContentData.get(i));
+				SalmonDbController.getSingleton().addUserContent(contentRecipientUserId, contentId, newContentData);
 			}
-
-			SalmonDbController.getSingleton().addUserContent(destinationUserId,
-					content);
 		}
+	}
+	
+
+	public boolean verifyComment(JSONObject contentData, String senderUserId, String contentRecipientUserId )
+	{
+		return true;
 	}
 
 }
