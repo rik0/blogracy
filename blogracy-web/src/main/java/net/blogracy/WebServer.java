@@ -3,6 +3,7 @@ package net.blogracy;
 import net.blogracy.model.users.User;
 import net.blogracy.controller.ActivitiesController;
 import net.blogracy.controller.ChatController;
+import net.blogracy.controller.CommentsController;
 import net.blogracy.controller.DistributedHashTable;
 import net.blogracy.controller.FileSharing;
 import net.blogracy.config.Configurations;
@@ -35,13 +36,17 @@ public class WebServer
         }
         */
         
-        int TOTAL_WAIT = 1 * 60 * 1000; // 1 minutes
+        CommentsController.getInstance().initializeConnection();
+        
+        int TOTAL_WAIT = 5 * 60 * 1000; // 1 minutes
         
         while (true) {
         	 ActivitiesController activities = ActivitiesController.getSingleton();
             String id = Configurations.getUserConfig().getUser().getHash().toString();
             activities.addFeedEntry(id, "" + new java.util.Date(), null);
         
+            CommentsController.getInstance().getContentList(id);
+            
             // List<User> friends = Configurations.getUserConfig().getFriends();
             int wait = TOTAL_WAIT / friends.size();
             for (User friend : friends) {
