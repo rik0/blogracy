@@ -138,10 +138,8 @@ public class DownloadService implements MessageListener {
 				InputStream is = rdl.download();
 				Torrent torrent = plugin.getTorrentManager()
 						.createFromBEncodedInputStream(is);
-				DownloadCompletedListener listener = new DownloadCompletedListener(
-						(TextMessage) request);
-				download = plugin.getDownloadManager().addDownload(
-						torrent, null, folder);
+				DownloadCompletedListener listener = new DownloadCompletedListener((TextMessage) request);
+				download = plugin.getDownloadManager().addDownload(torrent, null, folder);
 				download.addListener(listener);
 
 				if (download != null && file != null)
@@ -149,22 +147,20 @@ public class DownloadService implements MessageListener {
 				
 				// Force signaling completion if already completed.
 				if (download.isComplete())
-					listener.stateChanged(download, Download.ST_SEEDING,
-							Download.ST_SEEDING);
+					listener.stateChanged(download, Download.ST_SEEDING, Download.ST_SEEDING);
 
 				Logger.info(magnetUri + " added to download list");
 			} catch (ResourceDownloaderException e) {
-				Logger.error("Torrent download error: download service: "
-						+ text);
+				Logger.error("Torrent download error: download service: "+ text + " " + e.getMessage());
 			} catch (TorrentException e) {
-				Logger.error("Torrent error: download service: " + text);
+				Logger.error("Torrent error: download service: " + text + " " + e.getMessage());
 			} catch (DownloadException e) {
-				Logger.error("File download error: download service: " + text);
+				Logger.error("File download error: download service: " + text + " " + e.getMessage());
 			} catch (MalformedURLException e) {
-				Logger.error("Malformed URL error: download service: " + text);
+				Logger.error("Malformed URL error: download service: " + text + " " + e.getMessage());
 			}
 		} catch (JMSException e) {
-			Logger.error("JMS error: download service");
+			Logger.error("JMS error: download service" + " " + e.getMessage());
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}

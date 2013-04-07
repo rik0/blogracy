@@ -155,7 +155,7 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 	}
 
 	protected void sendBlogracyContent(String currentUserId, String destinationUserId, String contentData) {
-		messagingManager.sendContentMessage(destinationUserId, destinationUserId, contentData);
+		messagingManager.sendContentMessage(currentUserId, destinationUserId, contentData);
 	}
 
 	protected void sendBlogracyContentListResponse(String currentUserId, String queriedUserId, JSONArray contentsList) {
@@ -178,7 +178,7 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			
 			JSONObject content = new JSONObject(message.getContent());
 			record.put("contentData", content);
-			record.put("contentId", content.getString("contentId"));
+			record.put("contentId", content.getJSONObject("target").getString("id"));
 
 			response.setText(record.toString());
 
