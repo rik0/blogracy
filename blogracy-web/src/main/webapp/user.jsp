@@ -14,7 +14,7 @@
 <%@ page import="org.apache.shindig.social.opensocial.model.MediaItem" %>
 <%
 
-CommentsController.getInstance().initializeConnection();
+
 
 String userHash = request.getParameter("user");
 if (userHash == null || userHash.length() == 0) {

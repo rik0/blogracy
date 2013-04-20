@@ -1,5 +1,6 @@
 package net.blogracy.messaging.peer.impl;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -22,6 +23,11 @@ import org.gudy.azureus2.plugins.messaging.MessageException;
 import org.gudy.azureus2.plugins.messaging.MessageManagerListener;
 import org.gudy.azureus2.plugins.network.IncomingMessageQueueListener;
 import org.gudy.azureus2.plugins.peers.Peer;
+
+import java.util.logging.FileHandler;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+import java.util.logging.XMLFormatter;
 
 /***
  * Based on:
@@ -68,7 +74,7 @@ public class PeerControllerImpl implements PeerController {
 	/**
 	 * Max number of routing peers for each download
 	 */
-	private static final int MAX_ROUTERS_PER_TORRENT = 5;
+	private static final int MAX_ROUTERS_PER_TORRENT = 10;
 
 	/**
 	 * Repository of connected peers to route to, maps download to a list of
@@ -89,7 +95,25 @@ public class PeerControllerImpl implements PeerController {
 
 	private List<BlogracyDataMessage> listOfRegisteredMessageTypes = new ArrayList<BlogracyDataMessage>();
 
+	
+	private Logger log;
+
 	public PeerControllerImpl(PluginInterface plugin) {
+		log = Logger.getLogger("net.blogracy.messaging.PeerControllerImpl");
+		FileHandler fh;
+		try {
+			fh = new FileHandler("PeerControllerImpl.log");
+			fh.setFormatter(new SimpleFormatter());
+			log.addHandler(fh);
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+
+
+		
 		this.plugin = plugin;
 		downloadsToLastMessages = new HashMap<Download, List<Long>>();
 		downloadsToRouters = new HashMap<Download, List<Peer>>();
@@ -163,6 +187,8 @@ public class PeerControllerImpl implements PeerController {
 
 	private void compatiblePeerFound(final Download download, final Peer peer) {
 
+		log.info("Compatible peer found (client/ip/port): " + peer.getClient() + "; "+ peer.getIp() + "; " + peer.getPort());
+		
 		// Add the peer to the list of peers
 		List<Peer> peers = downloadsToPeers.get(download);
 		if (peers != null) {
@@ -178,6 +204,7 @@ public class PeerControllerImpl implements PeerController {
 		peer.getConnection().getIncomingMessageQueue().registerListener(new IncomingMessageQueueListener() {
 			public boolean messageReceived(Message message) {
 
+		        log.info( "Received [" +message.getDescription()+ "] message (id: " + message.getID() + ") from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
 				// Handling system messages
 				if (message.getID().equals(BMNoRoute.ID_BM_NO_ROUTE)) {
 					processNoRoute(download, peer);
@@ -194,9 +221,7 @@ public class PeerControllerImpl implements PeerController {
 					if (message.getID().equals(m.getID())) {
 
 						BlogracyDataMessage msg = m.getClass().cast(message);
-						// BlogracyDataMessage msg =
-						// (BlogracyDataMessage)message;
-
+						log.info( "Message recognized as BlogracyDataMessage (messageID:" + msg.getMessageID() + "; senderUserId: " + msg.getSenderUserId() + "; content:"+ msg.getContent() + ")");
 						// 1. Test if the message has already been
 						// processed
 						if (!checkIfDuplicate(download, msg.getMessageID()))
@@ -209,8 +234,7 @@ public class PeerControllerImpl implements PeerController {
 				return false;
 			}
 
-			public void bytesReceived(int byte_count) {/* nothing */
-			}
+			public void bytesReceived(int byte_count) {/* nothing */}
 		});
 
 		// Peers start as "non routing", ie none of the 2 newly connected peers
@@ -374,11 +398,11 @@ public class PeerControllerImpl implements PeerController {
 		}
 	}
 
-	public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message) {
-		sendMessage(download, peerID, senderUserId, message, true);
-	}
+	/*public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message) {
+		sendMessage(download, peerID, senderUserId, message);
+	}*/
 
-	public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message, boolean checkForNick) {
+	public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message) {
 		// int bridgeIndex = findBridgebyDownload(download);
 
 		/*
