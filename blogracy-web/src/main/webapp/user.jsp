@@ -345,19 +345,21 @@ pageContext.setAttribute("photoMap", mediaItemMap);
                 </div>
                   <div class="span10" id="user-galleries">
                    <h2>Photo Galleries</h2>
-					<form id="create-gallery">
-	                    <input type="hidden"name="user" value="${user.hash}" >
-	                    <fieldset class="form-stacked">
-	                        <div class="clearfix">
-	                            <label for="messageArea">Create a new gallery</label>
-	                            <div class="input">
-	                                <input id="galleryNameTxt" name="galleryname" class="text">
-	                                <input type="submit" value="Create Gallery" class="btn primary">&nbsp;
-	                                <button class="btn" type="reset">Cancel</button>
-	                            </div>
-	                        </div>
-	                    </fieldset>
-	                </form>
+                   	<c:if test="${localUser == user}"> 
+						<form id="create-gallery">
+		                    <input type="hidden"name="user" value="${user.hash}" >
+		                    <fieldset class="form-stacked">
+		                        <div class="clearfix">
+		                            <label for="messageArea">Create a new gallery</label>
+		                            <div class="input">
+		                                <input id="galleryNameTxt" name="galleryname" class="text">
+		                                <input type="submit" value="Create Gallery" class="btn primary">&nbsp;
+		                                <button class="btn" type="reset">Cancel</button>
+		                            </div>
+		                        </div>
+		                    </fieldset>
+		                </form>
+	                </c:if>
                   <div class="blogracyUserGalleries">
                      <c:forEach var="album" items="${userAlbums}">
 						<div class="imageRow"> 
