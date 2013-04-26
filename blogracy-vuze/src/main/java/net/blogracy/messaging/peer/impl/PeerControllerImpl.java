@@ -10,6 +10,7 @@ import java.util.Map;
 
 import net.blogracy.messaging.impl.BMNoRoute;
 import net.blogracy.messaging.impl.BMRoute;
+import net.blogracy.messaging.impl.BlogracyContent;
 import net.blogracy.messaging.impl.BlogracyDataMessage;
 import net.blogracy.messaging.impl.BlogracyDataMessageBase;
 import net.blogracy.messaging.peer.BlogracyDataMessageListener;
@@ -22,6 +23,7 @@ import org.gudy.azureus2.plugins.messaging.Message;
 import org.gudy.azureus2.plugins.messaging.MessageException;
 import org.gudy.azureus2.plugins.messaging.MessageManagerListener;
 import org.gudy.azureus2.plugins.network.IncomingMessageQueueListener;
+import org.gudy.azureus2.plugins.network.OutgoingMessageQueueListener;
 import org.gudy.azureus2.plugins.peers.Peer;
 
 import java.util.logging.FileHandler;
@@ -237,6 +239,25 @@ public class PeerControllerImpl implements PeerController {
 			public void bytesReceived(int byte_count) {/* nothing */}
 		});
 
+		// register listener to outgoing queue (for logging purposes)
+		peer.getConnection().getOutgoingMessageQueue().registerListener(new OutgoingMessageQueueListener() {
+			
+			@Override
+			public void messageSent(Message message) {
+				  log.info( "Sending [" +message.getDescription()+ "] message (id: " + message.getID() + ") completed");
+				
+			}
+			
+			@Override
+			public boolean messageAdded(Message message) {
+				  log.info( "Enqueued [" +message.getDescription()+ "] message (id: " + message.getID() + ") for sending");
+				  return true;
+			}
+			
+			@Override
+			public void bytesSent(int byte_count) { /* nothing */		}
+		});
+		
 		// Peers start as "non routing", ie none of the 2 newly connected peers
 		// should
 		// route any message to the other.
@@ -398,32 +419,23 @@ public class PeerControllerImpl implements PeerController {
 		}
 	}
 
-	/*public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message) {
-		sendMessage(download, peerID, senderUserId, message);
-	}*/
-
 	public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message) {
-		// int bridgeIndex = findBridgebyDownload(download);
-
-		/*
-		 * if(checkForNick && ! nick.equals("System") && oldNick != null && !
-		 * oldNick.equals(nick)) { sendMessage(download,peerID,"System","/me : "
-		 * + oldNick + " is now known as " + nick); if(bridgeIndex >= 0)
-		 * bridge[bridgeIndex].sysMsg(oldNick + " is now known as " + nick);
-		 * else System.out.println("error finding bridge by download"); } if(!
-		 * nick.equals("System")) oldNick = nick;
-		 */
 
 		notifyListenersOfMessageReceived(download, download.getDownloadPeerId(), senderUserId, message);
 		List<Peer> routePeers = downloadsToPeers.get(download);
+		
+
 		if (routePeers != null) {
 			synchronized (routePeers) {
 				for (Iterator<Peer> iter = routePeers.iterator(); iter.hasNext();) {
 					Peer peerToSendMsg = iter.next();
+					log.info("Sending message "+ message.getDescription()+ "  (messageID:" + message.getMessageID() + "; senderUserId: " + message.getSenderUserId() + "; content:"+ message.getContent() + ") to  peer  (client/ip/port): " + peerToSendMsg.getClient() + "; "+ peerToSendMsg.getIp() + "; " + peerToSendMsg.getPort());
 					peerToSendMsg.getConnection().getOutgoingMessageQueue().sendMessage(message);
 				}
 			}
 		}
+		else
+			log.info("No peer found for channel " + download.getName());
 	}
 
 	/*
