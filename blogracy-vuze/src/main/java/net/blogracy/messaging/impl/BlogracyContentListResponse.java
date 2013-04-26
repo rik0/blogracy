@@ -16,6 +16,7 @@ public class BlogracyContentListResponse extends BlogracyDataMessageBase {
 	public BlogracyContentListResponse(String senderUserId, byte[] senderID, String contentRecipientUserId, int hops, String content) {
 		super(senderUserId, senderID, hops, content);
 		this.contentRecipientUserId = contentRecipientUserId;
+		generateBuffer(generateMessageMap());
 	}
 
 	@Override
@@ -73,6 +74,15 @@ public class BlogracyContentListResponse extends BlogracyDataMessageBase {
 		}
 	}
 
+	@SuppressWarnings("rawtypes")
+	protected Map generateMessageMap()
+	{
+		Map mMessage = super.generateMessageMap();
+		mMessage.put("cruid", contentRecipientUserId);
+		return mMessage;
+	}
+
+	
 	/*
 	 * (non-Javadoc)
 	 * 

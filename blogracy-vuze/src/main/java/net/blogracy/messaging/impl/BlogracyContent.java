@@ -1,6 +1,7 @@
 package net.blogracy.messaging.impl;
 
 import java.nio.ByteBuffer;
+import java.util.HashMap;
 import java.util.Map;
 
 import net.blogracy.messaging.MessagingManager;
@@ -10,8 +11,9 @@ import org.gudy.azureus2.plugins.messaging.MessageException;
 
 public class BlogracyContent extends BlogracyDataMessageBase {
 	public BlogracyContent(String senderUserId, byte[] senderID, String contentRecipientUserId, int hops, String content) {
-		super(senderUserId, senderID,  hops, content);
+		super(senderUserId, senderID,  hops, content, false);
 		this.contentRecipientUserId = contentRecipientUserId;
+		generateBuffer(generateMessageMap());
 	}
 
 	public static final String ID = "ID_BLOGRACYMESSAGE_BlogracyContent";
@@ -70,7 +72,13 @@ public class BlogracyContent extends BlogracyDataMessageBase {
 		}
 	}
 
-
+	@SuppressWarnings("rawtypes")
+	protected Map generateMessageMap()
+	{
+		Map mMessage = super.generateMessageMap();
+		mMessage.put("cruid", contentRecipientUserId);
+		return mMessage;
+	}
 
 
 	/* (non-Javadoc)

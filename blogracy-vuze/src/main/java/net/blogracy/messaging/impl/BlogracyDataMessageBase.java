@@ -34,14 +34,14 @@ public class BlogracyDataMessageBase implements BlogracyDataMessage {
 	BlogracyDataMessageBase(long id, String senderUserId, byte[] senderID, int hops, String content) {
 		this(senderUserId, senderID, hops, content, false);
 		this.messageID = id;
-		generateBuffer();
+		generateBuffer(generateMessageMap());
 	}
 
 	public BlogracyDataMessageBase(String senderUserId, byte[] senderID,  int hops, String content) {
 		this(senderUserId, senderID, hops, content, true);
 	}
 
-	private BlogracyDataMessageBase(String senderUserId, byte[] senderID, int hops, String content, boolean generateBuffer) {
+	protected BlogracyDataMessageBase(String senderUserId, byte[] senderID, int hops, String content, boolean generateBuffer) {
 
 		this.senderUserId = senderUserId;
 		this.senderID = senderID;
@@ -53,20 +53,13 @@ public class BlogracyDataMessageBase implements BlogracyDataMessage {
 		this.messageID = hash.hashCode();
 
 		if (generateBuffer)
-			generateBuffer();
+			generateBuffer(generateMessageMap());
 	}
 
 	@SuppressWarnings("unchecked")
-	private void generateBuffer() {
+	protected void generateBuffer(Map mMessage) {
 
 		this.description = getID() + " from " + senderUserId + " : " + content + " (id: " + messageID + ", hops:" + hops + ")";
-		@SuppressWarnings("rawtypes")
-		Map mMessage = new HashMap();
-		mMessage.put("id", new Long(messageID));
-		mMessage.put("s", senderID);
-		mMessage.put("uid", senderUserId);
-		mMessage.put("h", new Long(hops));
-		mMessage.put("t", content);
 
 		byte[] bMessage = new byte[0];
 
@@ -80,6 +73,18 @@ public class BlogracyDataMessageBase implements BlogracyDataMessage {
 		buffer.flip();
 	}
 
+	@SuppressWarnings("rawtypes")
+	protected Map generateMessageMap()
+	{
+		Map mMessage = new HashMap();
+		mMessage.put("id", new Long(messageID));
+		mMessage.put("s", senderID);
+		mMessage.put("uid", senderUserId);
+		mMessage.put("h", new Long(hops));
+		mMessage.put("t", content);
+		return mMessage;
+	}
+	
 	public long getMessageID() {
 		return messageID;
 	}
