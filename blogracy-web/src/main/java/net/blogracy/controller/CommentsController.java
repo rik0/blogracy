@@ -309,6 +309,16 @@ public class CommentsController implements MessageListener {
 					this.acceptContent(currentUserId, contentId);
 					// add the message itself
 					ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(newContentData, ActivityEntry.class);
+					UserData userData = FileSharing.getUserData(contentRecipientUserId);
+					userData.addComment(entry);
+					try {
+						String dbUri = FileSharing.getSingleton().seedUserData(userData);
+						DistributedHashTable.getSingleton().store(currentUserId, dbUri, ISO_DATE_FORMAT.format(new Date()));
+					} catch (JSONException e) {
+						e.printStackTrace();
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
 				}
 				else
 				{

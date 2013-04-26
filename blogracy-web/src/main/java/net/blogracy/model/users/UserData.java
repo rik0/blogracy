@@ -27,6 +27,8 @@ public interface UserData {
 			final String commentedObjectId, final String publishDate)
 			throws BlogracyItemNotFound;
 
+	public void addComment(ActivityEntry entry);
+	
 	
 	/**
 	 * Creates an ActivityEntry that represents a comment in the system 
