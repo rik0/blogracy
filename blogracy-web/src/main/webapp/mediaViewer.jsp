@@ -58,8 +58,8 @@
 				</div>
 			</div>
 
-		</div>
 			</c:forEach>
+		</div>
 		<div class="inputComment">
 			<form class="span10" id="comment-send">
 				<input type="hidden" name="userId" value="${uid}" /> 

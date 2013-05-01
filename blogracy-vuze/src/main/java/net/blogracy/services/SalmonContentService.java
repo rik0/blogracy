@@ -178,7 +178,7 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			
 			JSONObject content = new JSONObject(message.getContent());
 			record.put("contentData", content);
-			record.put("contentId", content.getJSONObject("target").getString("id"));
+			record.put("contentId", content.getJSONObject("object").getString("id"));
 
 			response.setText(record.toString());
 
@@ -186,7 +186,6 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -204,10 +203,6 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			JSONObject record = new JSONObject();
 			record.put("request", "contentListQuery");
 			record.put("queryUserId", message.getSenderUserId());
-			/*
-			 * 
-			 * response.setJMSCorrelationID(request .getJMSCorrelationID());
-			 */
 
 			response.setText(record.toString());
 
@@ -215,7 +210,6 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -234,18 +228,12 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			record.put("request", "contentListReceived");
 			record.put("senderUserId", message.getSenderUserId());
 			record.put("contentData", message.getContent());
-			/*
-			 * 
-			 * response.setJMSCorrelationID(request .getJMSCorrelationID());
-			 */
-
 			response.setText(record.toString());
 
 			producer.send(outgoingQueue, response);
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -272,7 +260,6 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
@@ -292,10 +279,6 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			record.put("contentUserId", message.getSenderUserId());
 			JSONObject content = new JSONObject(message.getContent());
 			record.put("contentId", content.getString("contentId"));
-			/*
-			 * 
-			 * response.setJMSCorrelationID(request .getJMSCorrelationID());
-			 */
 
 			response.setText(record.toString());
 
@@ -303,7 +286,6 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		} catch (JMSException e) {
 			e.printStackTrace();
 		} catch (JSONException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 

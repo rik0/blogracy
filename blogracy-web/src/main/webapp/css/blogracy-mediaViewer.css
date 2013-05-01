@@ -5,10 +5,20 @@
     float: left;
 }
 
+.commentator p
+{
+	font-weight: bold;
+}
+
 .commentText
 {
     clear: both;
     text-align: justify;
+}
+
+.commentText p
+{
+	font-style: italic;
 }
 
 .commentsPane
@@ -24,6 +34,6 @@
 
 .blogracyImage
 {
-    max-height: 500px;
-    max-width: 600px;
+    max-height: 400px;
+    max-width: 500px;
 }

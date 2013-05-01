@@ -88,10 +88,8 @@ public class CommentsController implements MessageListener {
 			consumer = session.createConsumer(salmonContentResponseQueue);
 			consumer.setMessageListener(this);
 		} catch (JMSException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
 	}
 
 	public void initializeConnection() {
@@ -135,7 +133,7 @@ public class CommentsController implements MessageListener {
 			commentingUser = Configurations.getUserConfig().getUser();
 
 			// This shouldn't happen... anyway a new user with the requested
-			// userHash is built (maybe it should throw an exception
+			// userHash is built (maybe it should throw an exception)
 			if (commentingUser == null)
 				commentingUser = Users.newUser(Hashes.fromString(commentingUserId));
 

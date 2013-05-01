@@ -243,18 +243,18 @@ public class PeerControllerImpl implements PeerController {
 			
 			@Override
 			public void messageSent(Message message) {
-				  log.info( "Sending [" +message.getDescription()+ "] message (id: " + message.getID() + ") completed");
+				  log.fine( "Sending [" +message.getDescription()+ "] message (id: " + message.getID() + ") completed");
 				
 			}
 			
 			@Override
 			public boolean messageAdded(Message message) {
-				  log.info( "Enqueued [" +message.getDescription()+ "] message (id: " + message.getID() + ") for sending");
+				  log.finer( "Enqueued [" +message.getDescription()+ "] message (id: " + message.getID() + ") for sending");
 				  return true;
 			}
 			
 			@Override
-			public void bytesSent(int byte_count) { /* nothing */		}
+			public void bytesSent(int byte_count) { /* nothing */	}
 		});
 		
 		// Peers start as "non routing", ie none of the 2 newly connected peers
