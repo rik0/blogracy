@@ -219,12 +219,13 @@ public class CommentsController implements MessageListener {
 		}
 	}
 
-	public void sendContentListResponse(String queryUserId, JSONArray contentData) {
+	public void sendContentListResponse(String userId, String queryUserId, JSONArray contentData) {
 		try {
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("response", "contentListQueryResponse");
 			requestObj.put("queryUserId", queryUserId);
 			requestObj.put("contentData", contentData);
+			requestObj.put("currentUserId", userId);
 			TextMessage request = session.createTextMessage();
 			request.setText(requestObj.toString());
 			producer.send(salmonContentQueue, request);
@@ -266,8 +267,8 @@ public class CommentsController implements MessageListener {
 
 			if (content == null)
 				return;
-
-			sendContentListResponse(queryUserId, content);
+			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
+			sendContentListResponse(currentUserId, queryUserId, content);
 		} else if (requestType.equalsIgnoreCase("contentAcceptedInfo")) {
 			if (!record.has("contentUserId"))
 				return;

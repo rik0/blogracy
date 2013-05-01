@@ -67,6 +67,7 @@ public class SalmonDbController {
 					JSONObject obj = new JSONObject();
 					obj.put("contentId", entry.getKey());
 					obj.put("content", entry.getValue());
+					data.put(obj);
 				}
 				return data;
 			} else
@@ -92,12 +93,14 @@ public class SalmonDbController {
 			ex.printStackTrace();
 		}
 	}
-	
-	public void removeUserContent(String userId, String contentId){
+
+	public void removeUserContent(String userId, String contentId) {
 		if (records.containsKey(userId)) {
 			Map<String, JSONObject> contentsDataMainObject = records.get(userId);
-			if(contentsDataMainObject.containsKey(contentId))
+			if (contentsDataMainObject.containsKey(contentId)) {
 				contentsDataMainObject.remove(contentId);
+				saveRecordsToDb();
+			}
 		}
 	}
 
