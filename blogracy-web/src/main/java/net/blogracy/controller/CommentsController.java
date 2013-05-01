@@ -53,18 +53,14 @@ public class CommentsController implements MessageListener {
 	private Boolean isInitialized = false;
 
 	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-	
-    private static BeanJsonConverter CONVERTER = new BeanJsonConverter(
-            Guice.createInjector(new Module() {
-                @Override
-                public void configure(Binder b) {
-                    b.bind(BeanConverter.class)
-                            .annotatedWith(
-                                    Names.named("shindig.bean.converter.json"))
-                            .to(BeanJsonConverter.class);
-                }
-            }));
-	
+
+	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
+		@Override
+		public void configure(Binder b) {
+			b.bind(BeanConverter.class).annotatedWith(Names.named("shindig.bean.converter.json")).to(BeanJsonConverter.class);
+		}
+	}));
+
 	private static final CommentsController THE_INSTANCE = new CommentsController();
 
 	public static CommentsController getInstance() {
@@ -72,7 +68,7 @@ public class CommentsController implements MessageListener {
 	}
 
 	protected CommentsController() {
-        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 		connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
 		try {
 			connection = connectionFactory.createConnection();
@@ -137,11 +133,10 @@ public class CommentsController implements MessageListener {
 			if (commentingUser == null)
 				commentingUser = Users.newUser(Hashes.fromString(commentingUserId));
 
-			
-			// Getting commented user's data in order to build a comment ActivityObject
+			// Getting commented user's data in order to build a comment
+			// ActivityObject
 			UserData data = FileSharing.getUserData(commentedUserId);
-			
-			
+
 			try {
 				JSONObject requestObj = new JSONObject();
 				requestObj.put("request", "content");
@@ -297,42 +292,68 @@ public class CommentsController implements MessageListener {
 			String contentRecipientUserId = record.getString("contentRecipientUserId");
 			JSONObject newContentData = record.getJSONObject("contentData");
 			String contentId = record.getString("contentId");
-			
+			String senderUserId = record.getString("senderUserId");
+
 			// If it's for me, I should immediately decide if approve it or not
 			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
 
 			if (currentUserId.compareToIgnoreCase(contentRecipientUserId) == 0) {
-				if (this.verifyComment(newContentData, record.getString("senderUserId"), contentRecipientUserId))
-				{
-					// Send Accepted message
-					this.acceptContent(currentUserId, contentId);
-					// add the message itself
-					ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(newContentData, ActivityEntry.class);
-					UserData userData = FileSharing.getUserData(contentRecipientUserId);
-					userData.addComment(entry);
-					try {
-						String dbUri = FileSharing.getSingleton().seedUserData(userData);
-						DistributedHashTable.getSingleton().store(currentUserId, dbUri, ISO_DATE_FORMAT.format(new Date()));
-					} catch (JSONException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-				}
-				else
-				{
-					// Send Rejected message
-					this.rejectContent(currentUserId, contentId);
-				}
+				acceptOrRejectContent(contentRecipientUserId, newContentData, contentId, senderUserId, currentUserId);
 			} else {
 				SalmonDbController.getSingleton().addUserContent(contentRecipientUserId, contentId, newContentData);
 			}
+		} else if (requestType.equalsIgnoreCase("contentListReceived")) {
+
+			JSONObject contentData = record.optJSONObject("contentData");
+
+			if (contentData == null)
+				return;
+
+			String contentDataUserId = contentData.getString("contentUserId");
+			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
+
+			if (currentUserId.compareToIgnoreCase(contentDataUserId) == 0) {
+				JSONArray contents = contentData.optJSONArray("contents");
+
+				if (contents == null)
+					return;
+
+				for (int i = 0; i < contents.length(); ++i) {
+					JSONObject content = contents.getJSONObject(i).getJSONObject("content");
+					String contentId = content.getJSONObject("object").getString("id");
+					String contentSenderUserId = content.optJSONObject("actor") == null ? null : content.getJSONObject("actor").getString("id");
+
+					acceptOrRejectContent(contentDataUserId, content, contentId, contentSenderUserId, currentUserId);
+				}
+			}
+
+		}
+
+	}
+
+	private void acceptOrRejectContent(String contentRecipientUserId, JSONObject newContentData, String contentId, String senderUserId, String currentUserId) {
+		if (this.verifyComment(newContentData, senderUserId, contentRecipientUserId)) {
+			// Send Accepted message
+			this.acceptContent(currentUserId, contentId);
+			// add the message itself
+			ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(newContentData, ActivityEntry.class);
+			UserData userData = FileSharing.getUserData(contentRecipientUserId);
+			userData.addComment(entry);
+			try {
+				String dbUri = FileSharing.getSingleton().seedUserData(userData);
+				DistributedHashTable.getSingleton().store(currentUserId, dbUri, ISO_DATE_FORMAT.format(new Date()));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			// Send Rejected message
+			this.rejectContent(currentUserId, contentId);
 		}
 	}
-	
 
-	public boolean verifyComment(JSONObject contentData, String senderUserId, String contentRecipientUserId )
-	{
+	public boolean verifyComment(JSONObject contentData, String senderUserId, String contentRecipientUserId) {
 		return true;
 	}
 

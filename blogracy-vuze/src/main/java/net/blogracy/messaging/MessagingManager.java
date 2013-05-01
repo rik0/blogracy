@@ -222,7 +222,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			JSONObject jsonContent = new JSONObject();
 			try {
 				jsonContent.put("contentUserId", queriedUserId);
-				jsonContent.put("content", contentData);
+				jsonContent.put("contents", contentData);
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}

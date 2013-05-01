@@ -227,7 +227,9 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			JSONObject record = new JSONObject();
 			record.put("request", "contentListReceived");
 			record.put("senderUserId", message.getSenderUserId());
-			record.put("contentData", message.getContent());
+			
+			JSONObject content = new JSONObject(message.getContent());
+			record.put("contentData",content);
 			response.setText(record.toString());
 
 			producer.send(outgoingQueue, response);
