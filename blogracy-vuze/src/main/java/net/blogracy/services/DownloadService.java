@@ -23,9 +23,12 @@
 package net.blogracy.services;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -64,35 +67,59 @@ import org.json.JSONObject;
 public class DownloadService implements MessageListener {
 	class CompletionListener implements DownloadCompletionListener {
 		private TextMessage request;
+		private long cron;
+		private long started;
 
-		CompletionListener(TextMessage request) {
+		CompletionListener(TextMessage request, long cron) {
 			this.request = request;
+			this.cron = cron;
+			this.started = System.currentTimeMillis() - cron;
+			try {
+				long delay = System.currentTimeMillis() - cron;
+				log.info("download-started " + delay + " " + request.getText());
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
 		}
 
 		public void onCompletion(Download d) {
 			try {
-				JSONObject record = new JSONObject(request.getText());
+				long completed = System.currentTimeMillis() - cron;
+				log.info("download-completed " + completed + " " + started + " " + request.getText());
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+			try {
 				TextMessage response = session.createTextMessage();
-				response.setText(record.toString());
+				response.setText(request.getText());
 				response.setJMSCorrelationID(request.getJMSCorrelationID());
 				producer.send(request.getJMSReplyTo(), response);
 			} catch (JMSException e) {
 				Logger.error("JMS error: download completion");
-			} catch (JSONException e) {
-				e.printStackTrace();
 			}
 		}
 	}
 
-	private PluginInterface plugin;
+	private PluginInterface vuze;
+	private java.util.logging.Logger log;
 
 	private Session session;
 	private Destination queue;
 	private MessageProducer producer;
 	private MessageConsumer consumer;
 
-	public DownloadService(Connection connection, PluginInterface plugin) {
-		this.plugin = plugin;
+	public DownloadService(Connection connection, PluginInterface vuze) {
+        try {
+            log = java.util.logging.Logger.getLogger("net.blogracy.services.download");
+			log.addHandler(new java.util.logging.FileHandler("download.log"));
+	        log.getHandlers()[0].setFormatter(new SimpleFormatter());
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
+		this.vuze = vuze;
 		try {
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			producer = session.createProducer(null);
@@ -111,6 +138,8 @@ public class DownloadService implements MessageListener {
 			public void run() {
 				try {
 					String text = ((TextMessage) request).getText();
+					final long cron = System.currentTimeMillis();
+					log.info("download-requested " + text);
 					Logger.info("download service:" + text + ";");
 					final JSONObject entry = new JSONObject(text);
 					try {
@@ -119,16 +148,16 @@ public class DownloadService implements MessageListener {
 						File folder = file.getParentFile();
 
 						Download download = null;
-						ResourceDownloader rdl = plugin.getUtilities()
+						ResourceDownloader rdl = vuze.getUtilities()
 								.getResourceDownloaderFactory().create(magnetUri);
 						InputStream is = rdl.download();
-						Torrent torrent = plugin.getTorrentManager()
+						Torrent torrent = vuze.getTorrentManager()
 								.createFromBEncodedInputStream(is);
-						download = plugin.getDownloadManager().addDownload(torrent,
+						download = vuze.getDownloadManager().addDownload(torrent,
 								null, folder);
 						if (download != null && file != null) {
 							download.renameDownload(file.getName());
-							download.addCompletionListener(new CompletionListener((TextMessage) request));
+							download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
 							download.setForceStart(true);
 							Logger.info(magnetUri + " added to download list");
 						} else {
