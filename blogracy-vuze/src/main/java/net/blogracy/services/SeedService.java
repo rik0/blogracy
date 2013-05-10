@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.SimpleFormatter;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -39,10 +40,13 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import net.blogracy.logging.Logger;
+import net.blogracy.services.DownloadService.CompletionListener;
 
 import org.gudy.azureus2.core3.util.Base32;
+import org.gudy.azureus2.core3.util.ByteFormatter;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
+import org.gudy.azureus2.plugins.download.DownloadCompletionListener;
 import org.gudy.azureus2.plugins.download.DownloadException;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
@@ -60,16 +64,52 @@ import org.json.JSONObject;
  * ...
  */
 public class SeedService implements MessageListener {
+	class CompletionListener implements DownloadCompletionListener {
+		private TextMessage request;
+		private long cron;
+		private long started;
 
-    private PluginInterface plugin;
+		CompletionListener(TextMessage request, long cron) {
+			this.request = request;
+			this.cron = cron;
+			this.started = System.currentTimeMillis() - cron;
+			try {
+				log.info("seed-started " + started + " " + request.getText());
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+
+		public void onCompletion(Download d) {
+			try {
+				long completed = System.currentTimeMillis() - cron;
+				log.info("seed-completed " + completed + " " + started + " " + request.getText());
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+    private PluginInterface vuze;
+	private java.util.logging.Logger log;
 
     private Session session;
     private Destination queue;
     private MessageProducer producer;
     private MessageConsumer consumer;
 
-    public SeedService(Connection connection, PluginInterface plugin) {
-        this.plugin = plugin;
+    public SeedService(Connection connection, PluginInterface vuze) {
+        try {
+            log = java.util.logging.Logger.getLogger("net.blogracy.services.seed");
+			log.addHandler(new java.util.logging.FileHandler("seed.log"));
+	        log.getHandlers()[0].setFormatter(new SimpleFormatter());
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+        
+        this.vuze = vuze;
         try {
             session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
             producer = session.createProducer(null);
@@ -86,15 +126,19 @@ public class SeedService implements MessageListener {
     public void onMessage(Message request) {
         try {
             String text = ((TextMessage) request).getText();
+			final long cron = System.currentTimeMillis();
+			log.info("seed-requested " + text);
             Logger.info("seed service:" + text + ";");
             JSONObject entry = new JSONObject(text);
             try {
                 File file = new File(entry.getString("file"));
 
-                Torrent torrent = plugin.getTorrentManager()
+                /*Torrent torrent = plugin.getTorrentManager()
                         .createFromDataFile(file,
-                                new URL("udp://tracker.openbittorrent.com:80"));
-                torrent.setComplete(file.getParentFile());
+                                new URL("udp://tracker.openbittorrent.com:80"));*/
+                Torrent torrent = vuze.getTorrentManager().createFromDataFile( file, new URL("dht:"));
+    			torrent.setAnnounceURL(new URL("dht://" + ByteFormatter.encodeString(torrent.getHash()) + ".dht/announce"));
+    			torrent.setComplete(file.getParentFile());
 
                 String name = Base32.encode(torrent.getHash());
                 int index = file.getName().lastIndexOf('.');
@@ -102,11 +146,14 @@ public class SeedService implements MessageListener {
                     name = name + file.getName().substring(index);
                 }
 
-                Download download = plugin.getDownloadManager().addDownload(
+                Download download = vuze.getDownloadManager().addDownload(
                         torrent, null, // torrentFile,
                         file.getParentFile());
-                if (download != null)
+                if (download != null) {
                     download.renameDownload(name);
+					download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
+                    download.setForceStart(true);
+                }
                 entry.put("uri", torrent.getMagnetURI().toExternalForm());
 
                 if (request.getJMSReplyTo() != null) {
