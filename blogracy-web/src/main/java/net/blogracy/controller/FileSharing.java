@@ -83,19 +83,19 @@ import com.google.inject.name.Names;
 public class FileSharing {
 
 	private ConnectionFactory connectionFactory;
-	private Connection connection;
-	private Session seedSession;
+	private Connection downloadConnection;
+	private Connection seedConnection;
 	private Session downloadSession;
+	private Session seedSession;
 	private Destination seedQueue;
 	private Destination downloadQueue;
-	private MessageProducer seedProducer;
 	private MessageProducer downloadProducer;
-	private MessageConsumer consumer;
+	private MessageProducer seedProducer;
 
 	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
-	private static final FileSharing THE_INSTANCE = new FileSharing();
+	private static final FileSharing theInstance = new FileSharing();
 	private static final ActivitiesController activitiesController = ActivitiesController.getSingleton();
 
 	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
@@ -106,16 +106,13 @@ public class FileSharing {
 	}));
 
 	public static FileSharing getSingleton() {
-		return THE_INSTANCE;
+		return theInstance;
 	}
 
 	public static String hash(String text) {
 		String result = null;
-		try {
-			result = Hashes.hash(text);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
+		result = Hashes.hash(text);
+
 		return result;
 	}
 
@@ -123,8 +120,6 @@ public class FileSharing {
 		String result = null;
 		try {
 			result = Hashes.hash(file);
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -135,16 +130,21 @@ public class FileSharing {
 		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 		try {
 			connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
-			connection = connectionFactory.createConnection();
-			connection.start();
-			seedSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			downloadSession = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			seedProducer = seedSession.createProducer(null);
-			seedProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-			seedQueue = seedSession.createQueue("seed");
+			downloadConnection = connectionFactory.createConnection();
+			downloadConnection.start();
+			seedConnection = connectionFactory.createConnection();
+			seedConnection.start();
+
+			downloadSession = downloadConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			downloadProducer = downloadSession.createProducer(null);
 			downloadProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
 			downloadQueue = downloadSession.createQueue("download");
+
+			seedSession = seedConnection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+			seedProducer = seedSession.createProducer(null);
+			seedProducer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+			seedQueue = seedSession.createQueue("seed");
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -181,82 +181,7 @@ public class FileSharing {
 		return uri;
 	}
 
-	/**
-	 * Gets the user data (ActivityStream, Albums and MediaItems) from the
-	 * user's db
-	 * 
-	 * @param userId
-	 * @return
-	 */
-	public static UserData getUserData(String userId) {
-		if (userId == null)
-			throw new InvalidParameterException("userId cannot be null");
-
-		User user = null;
-
-		if (userId.equals(Configurations.getUserConfig().getUser().getHash().toString()))
-			user = Configurations.getUserConfig().getUser();
-		else {
-			// The right user should be searched in the user's friends
-			user = Configurations.getUserConfig().getFriend(userId);
-
-			// This shouldn't happen in current implementation, but anyway a new
-			// user with the requested userHash is built
-			if (user == null)
-				user = Users.newUser(Hashes.fromString(userId));
-		}
-
-		UserDataImpl userData = new UserDataImpl(user);
-		userData.setActivityStream(activitiesController.getFeed(userId));
-		userData.setAlbums(MediaController.getAlbums(userId));
-		userData.setMediaItems(MediaController.getMediaItems(userId));
-		userData.setUserPublicKey(getPublicKey(userId));
-		return userData;
-	}
-
-	
-
-	public String seedUserData(final UserData userData) throws JSONException, IOException {
-		final File feedFile = new File(CACHE_FOLDER + File.separator + userData.getUser().getHash().toString() + ".json");
-
-		List<ActivityEntry> feed = userData.getActivityStream();
-
-		JSONArray items = new JSONArray();
-		for (int i = 0; i < feed.size(); ++i) {
-			JSONObject item = new JSONObject(feed.get(i));
-			items.put(item);
-		}
-
-		List<Album> albums = userData.getAlbums();
-		JSONArray albumsData = new JSONArray();
-		for (int i = 0; i < albums.size(); ++i) {
-			JSONObject item = new JSONObject(CONVERTER.convertToString(albums.get(i)));
-			albumsData.put(item);
-		}
-
-		List<MediaItem> mediaItems = userData.getMediaItems();
-		JSONArray mediaItemsData = new JSONArray();
-		for (int i = 0; i < mediaItems.size(); ++i) {
-			JSONObject item = new JSONObject(CONVERTER.convertToString(mediaItems.get(i)));
-			mediaItemsData.put(item);
-		}
-
-		JSONObject db = new JSONObject();
-
-		db.put("albums", albumsData);
-		db.put("mediaItems", mediaItemsData);
-		db.put("items", items);
-		db.put("publicKey", userData.getUserPublicKey());
-
-		FileWriter writer = new FileWriter(feedFile);
-		db.write(writer);
-		writer.close();
-
-		String feedUri = seed(feedFile);
-		return feedUri;
-	}
-
-	static String getHashFromMagnetURI(String uri) {
+	public static String getHashFromMagnetURI(String uri) {
 		String hash = null;
 		int btih = uri.indexOf("xt=urn:btih:");
 		if (btih >= 0) {
@@ -275,8 +200,9 @@ public class FileSharing {
 	 * @param uri
 	 *            the file's magnet-uri
 	 */
-	public static void download(final String uri) {
-		download(uri, null, null);
+	public  void download(final String uri) {
+		String hash = getHashFromMagnetURI(uri);
+		downloadByHash(hash, null, null);
 	}
 
 	public void download(final String uri, final String ext) {
@@ -295,9 +221,9 @@ public class FileSharing {
 	 * @param donwloadCompleteListener
 	 *            a listener for the completion event of this download
 	 */
-	public static void download(final String uri, final String ext, final FileSharingDownloadListener downloadCompleteListener) {
+	public void download(final String uri, final String ext, final FileSharingDownloadListener downloadCompleteListener) {
 		String hash = getHashFromMagnetURI(uri);
-		THE_INSTANCE.downloadByHash(hash, ext, downloadCompleteListener);
+		downloadByHash(hash, ext, downloadCompleteListener);
 	}
 
 	/***
@@ -307,7 +233,7 @@ public class FileSharing {
 	 * @param hash
 	 *            the file hash
 	 */
-	public void downloadByHash(final String hash) {
+	public  void downloadByHash(final String hash) {
 		downloadByHash(hash, null, null);
 	}
 
@@ -368,7 +294,78 @@ public class FileSharing {
 
 	}
 
-	
+	/**
+	 * Gets the user data (ActivityStream, Albums and MediaItems) from the
+	 * user's db
+	 * 
+	 * @param userId
+	 * @return
+	 */
+	public static UserData getUserData(String userId) {
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		User user = null;
+
+		if (userId.equals(Configurations.getUserConfig().getUser().getHash().toString()))
+			user = Configurations.getUserConfig().getUser();
+		else {
+			// The right user should be searched in the user's friends
+			user = Configurations.getUserConfig().getFriend(userId);
+
+			// This shouldn't happen in current implementation, but anyway a new
+			// user with the requested userHash is built
+			if (user == null)
+				user = Users.newUser(Hashes.fromString(userId));
+		}
+
+		UserDataImpl userData = new UserDataImpl(user);
+		userData.setActivityStream(ActivitiesController.getFeed(userId));
+		userData.setAlbums(MediaController.getAlbums(userId));
+		userData.setMediaItems(MediaController.getMediaItems(userId));
+		userData.setUserPublicKey(getPublicKey(userId));
+		return userData;
+	}
+
+	public String seedUserData(final UserData userData) throws JSONException, IOException {
+		final File feedFile = new File(CACHE_FOLDER + File.separator + userData.getUser().getHash().toString() + ".json");
+
+		List<ActivityEntry> feed = userData.getActivityStream();
+
+		JSONArray items = new JSONArray();
+		for (int i = 0; i < feed.size(); ++i) {
+			JSONObject item = new JSONObject(feed.get(i));
+			items.put(item);
+		}
+
+		List<Album> albums = userData.getAlbums();
+		JSONArray albumsData = new JSONArray();
+		for (int i = 0; i < albums.size(); ++i) {
+			JSONObject item = new JSONObject(CONVERTER.convertToString(albums.get(i)));
+			albumsData.put(item);
+		}
+
+		List<MediaItem> mediaItems = userData.getMediaItems();
+		JSONArray mediaItemsData = new JSONArray();
+		for (int i = 0; i < mediaItems.size(); ++i) {
+			JSONObject item = new JSONObject(CONVERTER.convertToString(mediaItems.get(i)));
+			mediaItemsData.put(item);
+		}
+
+		JSONObject db = new JSONObject();
+
+		db.put("albums", albumsData);
+		db.put("mediaItems", mediaItemsData);
+		db.put("items", items);
+		db.put("publicKey", userData.getUserPublicKey());
+
+		FileWriter writer = new FileWriter(feedFile);
+		db.write(writer);
+		writer.close();
+
+		String feedUri = seed(feedFile);
+		return feedUri;
+	}
 
 	public static String getPublicKey(String userId) {
 		if (userId == null)

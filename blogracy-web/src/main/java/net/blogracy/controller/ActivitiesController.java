@@ -119,7 +119,7 @@ public class ActivitiesController {
 	static public List<ActivityEntry> getFeed(String user) {
 		List<ActivityEntry> result = new ArrayList<ActivityEntry>();
 		System.out.println("Getting feed: " + user);
-		JSONObject record = DistributedHashTable.getSingleton().getRecord(user);
+		JSONObject record = dht.getRecord(user);
 		if (record != null) {
 			try {
 				String latestHash = FileSharing.getHashFromMagnetURI(record.getString("uri"));
@@ -186,4 +186,28 @@ public class ActivitiesController {
 		}
 	}
     
+	/*
+	 *  public String seedActivityStream(String userId,
+            final List<ActivityEntry> feed) throws JSONException, IOException {
+        final File feedFile = new File(CACHE_FOLDER + File.separator + userId
+                + ".json");
+
+        JSONArray items = new JSONArray();
+        for (int i = 0; i < feed.size(); ++i) {
+            JSONObject item = new JSONObject(feed.get(i));
+            items.put(item);
+        }
+        JSONObject db = new JSONObject();
+
+        db.put("items", items);
+
+        FileWriter writer = new FileWriter(feedFile);
+        db.write(writer);
+        writer.close();
+
+        String feedUri = sharing.seed(feedFile);
+        return feedUri;
+    }
+    */
+
 }

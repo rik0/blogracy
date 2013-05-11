@@ -29,10 +29,15 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.security.KeyPair;
 import java.security.SignatureException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.TimeZone;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
@@ -61,6 +66,49 @@ import org.json.JSONTokener;
  */
 public class DistributedHashTable {
 
+	 class DownloadListener implements FileSharingDownloadListener {
+	        private String id;
+	        private String hash;
+	        private String version;
+	        private JSONObject record;
+	        private long start;
+	        private long sent;
+
+	        DownloadListener(String id, String hash, String version,
+	                JSONObject record) {
+	            this.id = id;
+	            this.hash = hash;
+	            this.version = version;
+	            this.record = record;
+	            this.start = System.currentTimeMillis();
+	            try {
+	                this.sent = ISO_DATE_FORMAT.parse(version).getTime();
+	            } catch (ParseException e) {
+	                e.printStackTrace();
+	            }
+	            log.info("download-req " + id + " " + hash + " " + version);
+	        }
+
+			@Override
+			public void onFileDownloaded(String fileFullPath) {
+				String now = ISO_DATE_FORMAT.format(new java.util.Date());
+	            long delay = System.currentTimeMillis() - start;
+	            long size = -1;
+	            long received = -1;
+	            try {
+	                received = ISO_DATE_FORMAT.parse(now).getTime() - sent;
+	                File file = new File(fileFullPath);
+	                size = file.length();
+	            } catch (Exception e) {
+	                e.printStackTrace();
+	            }
+	            log.info("download-ans " + id + " " + hash + " " + version + " "
+	                    + now + " " + delay + " " + received + " " + size);
+	            putRecord(record);
+	        }
+	    }
+
+	
 	class LookupListener implements MessageListener {
 		private String id;
 		private long start;
@@ -68,14 +116,15 @@ public class DistributedHashTable {
 		LookupListener(String id) {
 			this.id = id;
 			this.start = System.currentTimeMillis();
-			log.info("Lookup req: " + id);
+			log.info("lookup-req " + id);
 		}
 
+		@Override
 		public void onMessage(Message response) {
 			try {
+				long delay = System.currentTimeMillis() - start; 
 				String msgText = ((TextMessage) response).getText();
-				log.info("Lookup ans: " + id + " @ "
-                        + (System.currentTimeMillis() - start));
+				
 				JSONObject keyValue = new JSONObject(msgText);
 				final String value = keyValue.getString("value");
 				final String id = keyValue.getString("id");
@@ -91,20 +140,25 @@ public class DistributedHashTable {
 				String[] split = value.split("\\.");
 				final JSONObject record = new JSONObject(new String(Base64.decodeBase64(split[1]), "UTF-8"));
 
-				JSONObject currentRecord = getRecord(id);
-				if (currentRecord == null || record.getString("version").compareTo(currentRecord.getString("version")) > 0) {
+				String version = record.getString("version");
+                String uri = record.getString("uri");
+                String hash = FileSharing.getHashFromMagnetURI(uri);
+                String now = ISO_DATE_FORMAT.format(new java.util.Date());
+                log.info("lookup-ans " + id + " " + hash + " " + version + " " + now + " " + delay);
 
-					String uri = record.getString("uri");
-					log.info("Download req: " + id + " @ "
-                            + (System.currentTimeMillis() - start));
-					FileSharing.download(uri, ".json", new FileSharingDownloadListener() {
+				
+				JSONObject currentRecord = getRecord(id);
+				if (currentRecord == null || currentRecord.getString("version").compareTo(version) < 0) {
+					log.info("Download req: " + id + " @ " + (System.currentTimeMillis() - start));
+					
+					 FileSharing.getSingleton().downloadByHash(hash, ".json",
+	                            new DownloadListener(id, hash, version, record));
+
+					/*FileSharing.download(uri, ".json", new FileSharingDownloadListener() {
 
 						@Override
 						public void onFileDownloaded(String fileFullPath) {
-							log.info("Download ans: "
-                                    + id
-                                    + " @ "
-                                    + (System.currentTimeMillis() - start));
+							log.info("Download ans: " + id + " @ " + (System.currentTimeMillis() - start));
 							try {
 								JSONObject db = new JSONObject(new JSONTokener(new FileReader(fileFullPath)));
 
@@ -125,7 +179,7 @@ public class DistributedHashTable {
 							}
 
 						}
-					});
+					}); */
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -142,6 +196,9 @@ public class DistributedHashTable {
 	private MessageProducer producer;
 	private MessageConsumer consumer;
 
+	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+			 
+	
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
 	private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
@@ -154,10 +211,12 @@ public class DistributedHashTable {
 	}
 
 	public DistributedHashTable() {
+		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 		try {
 			log = Logger.getLogger("net.blogracy.controller.dht");
 			log.addHandler(new FileHandler("dht.log"));
-
+			log.getHandlers()[0].setFormatter(new SimpleFormatter()); 
+			
 			File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
 			if (recordsFile.exists()) {
 				JSONArray recordList = new JSONArray(new JSONTokener(new FileReader(recordsFile)));

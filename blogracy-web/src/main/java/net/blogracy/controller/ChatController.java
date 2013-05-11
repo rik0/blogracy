@@ -19,79 +19,66 @@ import org.apache.activemq.ActiveMQConnectionFactory;
 
 public class ChatController {
 
-	private ConnectionFactory connectionFactory;
-	private Connection connection;
-	private static Session session;
-	private static Destination topic;
-	private static MessageProducer producer;
-	private String TOPIC_NAME = "CHAT.DEMO";
+    private ConnectionFactory connectionFactory;
+    private Connection connection;
+    private Session session;
+    private Destination topic;
+    private MessageProducer producer;
+    private static final String TOPIC_NAME = "CHAT.DEMO";
 
-	private static String localUser, remoteUser;
+    private String localUser;
+    private String remoteUser;
 
-	private static final ChatController THE_INSTANCE = new ChatController();
+    private static final ChatController theInstance = new ChatController();
 
-	public static ChatController getSingleton() {
-		return THE_INSTANCE;
-	}
+    public static ChatController getSingleton() {
+        return theInstance;
+    }
 
-	public ChatController() {
-		try {
-			connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
-			connection = connectionFactory.createConnection();
-			connection.start();
-			
-			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
-			topic = session.createTopic(TOPIC_NAME);
-			producer = session.createProducer(topic);
-			producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
-		} catch (Exception e) {
-			System.out.println("JMS error: creating the text listener");
-		}
-	}
+    public ChatController() {
+        try {
+            connectionFactory = new ActiveMQConnectionFactory(
+                    ActiveMQConnection.DEFAULT_BROKER_URL);
+            connection = connectionFactory.createConnection();
+            connection.start();
 
-	public static void setLocalUser(String local) {
-		if (! local.equals(localUser)) {
-			localUser = local;
-			createChannel(localUser);
-		}
-	}
+            session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
+            topic = session.createTopic(TOPIC_NAME);
+            producer = session.createProducer(topic);
+            producer.setDeliveryMode(DeliveryMode.NON_PERSISTENT);
+        } catch (Exception e) {
+            System.out.println("JMS error: creating the text listener");
+        }
+    }
 
-	public static void createChannel(String channel) {
-		System.out.println("Creating chat channel: " + channel);
-		TextMessage msg;
-		try {
-			msg = session.createTextMessage();
-			msg.setText("<message type=\"join\" from=\"" + localUser + "\" channel=\"" + channel + "\"/>");
-			producer.send(topic, msg);
-		} catch (JMSException e) {
-			System.out.println("JMS error: sending messages");
-		}
-	}
+    public void joinChannel(String channel) {
+        System.out.println("Creating chat channel: " + channel);
+        try {
+            TextMessage msg = session.createTextMessage();
+            msg.setText("<message type=\"join\" from=\"" + localUser
+                    + "\" channel=\"" + channel + "\"/>");
+            producer.send(topic, msg);
+        } catch (JMSException e) {
+            System.out.println("JMS error: join channel");
+        }
+    }
 
-	public static void setRemoteUser(String remote) {
-		remoteUser = remote;
-		System.out.println("Remote user hash: " + remoteUser);     
-	}
+    public void sendMessage(String channel, String text) {
+        System.out.println("Creating chat channel: " + channel);
+        try {
+            TextMessage msg = session.createTextMessage();
+            msg.setText("<message type=\"chat\" from=\"" + localUser
+                    + "\" channel=\"" + channel + "\">" + text + "</message>");
+            producer.send(topic, msg);
+        } catch (JMSException e) {
+            System.out.println("JMS error: send message");
+        }
+    }
 
-	public static String getRemoteUser() {
-		return remoteUser;
-	}
-
-	public static void chatting() {
-		if (! remoteUser.equals(localUser)) {
-			createChannel(remoteUser);
-		}
-	}
-
-	public static void privateChatting() {
-		if (! remoteUser.equals(localUser)) {
-			createChannel(localUser + remoteUser);
-		}
-	}
-
-	public static void privateChatting2() {
-		if (! remoteUser.equals(localUser)) {
-			createChannel(remoteUser + localUser);
-		}
-	}
+    public static String getPrivateChannel(String localUser, String remoteUser) {
+        if (localUser.compareTo(remoteUser) <= 0) {
+            return localUser + remoteUser;
+        }
+        return remoteUser + localUser;
+    }
 }

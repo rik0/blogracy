@@ -23,9 +23,12 @@
 package net.blogracy.services;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
 
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
@@ -44,7 +47,6 @@ import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadCompletionListener;
 import org.gudy.azureus2.plugins.download.DownloadException;
-import org.gudy.azureus2.plugins.download.DownloadListener;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
@@ -63,52 +65,62 @@ import org.json.JSONObject;
  * ...
  */
 public class DownloadService implements MessageListener {
-	class DownloadCompletedListener implements DownloadListener {
+
+	class CompletionListener implements DownloadCompletionListener {
 		private TextMessage request;
+		private long cron;
+		private long started;
 
-		DownloadCompletedListener(TextMessage request) {
+		CompletionListener(TextMessage request, long cron) {
 			this.request = request;
-		}
-
-		@Override
-		public void positionChanged(Download download, int oldPosition,
-				int newPosition) {
-			// Don't care much about this event at the moment...
-		}
-
-		@Override
-		public void stateChanged(Download download, int old_state, int new_state) {
-			// if the download is seeding, it has been completed
-			if (download.isComplete()) {
-				try {
-					if (request.getJMSReplyTo() != null) {
-						JSONObject record = new JSONObject(request.getText());
-						TextMessage response = session.createTextMessage();
-						response.setText(record.toString());
-						response.setJMSCorrelationID(request
-								.getJMSCorrelationID());
-						producer.send(request.getJMSReplyTo(), response);
-					}
-				} catch (JSONException e) {
-					e.printStackTrace();
-				} catch (JMSException e) {
-					e.printStackTrace();
-				}
+			this.cron = cron;
+			this.started = System.currentTimeMillis() - cron;
+			try {
+				long delay = System.currentTimeMillis() - cron;
+				log.info("download-started " + delay + " " + request.getText());
+			} catch (JMSException e) {
+				e.printStackTrace();
 			}
-
 		}
 
+		public void onCompletion(Download d) {
+			try {
+				long completed = System.currentTimeMillis() - cron;
+				log.info("download-completed " + completed + " " + started + " " + request.getText());
+			} catch (JMSException e) {
+				e.printStackTrace();
+			}
+			try {
+				TextMessage response = session.createTextMessage();
+				response.setText(request.getText());
+				response.setJMSCorrelationID(request.getJMSCorrelationID());
+				producer.send(request.getJMSReplyTo(), response);
+			} catch (JMSException e) {
+				Logger.error("JMS error: download completion");
+			}
+		}
 	}
 
-	private PluginInterface plugin;
+	private PluginInterface vuze;
+	private java.util.logging.Logger log;
 
 	private Session session;
 	private Destination queue;
 	private MessageProducer producer;
 	private MessageConsumer consumer;
 
-	public DownloadService(Connection connection, PluginInterface plugin) {
-		this.plugin = plugin;
+	public DownloadService(Connection connection, PluginInterface vuze) {
+		try {
+			log = java.util.logging.Logger.getLogger("net.blogracy.services.download");
+			log.addHandler(new java.util.logging.FileHandler("download.log"));
+			log.getHandlers()[0].setFormatter(new SimpleFormatter());
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		this.vuze = vuze;
 		try {
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
 			producer = session.createProducer(null);
@@ -119,51 +131,55 @@ public class DownloadService implements MessageListener {
 		} catch (JMSException e) {
 			Logger.error("JMS error: creating download service");
 		}
+
 	}
 
 	@Override
-	public void onMessage(Message request) {
-		try {
-			String text = ((TextMessage) request).getText();
-			Logger.info("download service:" + text + ";");
-			JSONObject entry = new JSONObject(text);
-			try {
-				URL magnetUri = new URL(entry.getString("uri"));
-				File file = new File(entry.getString("file"));
-				File folder = file.getParentFile();
+	public void onMessage(final Message request) {
+		(new Thread() {
+			public void run() {
+				try {
+					String text = ((TextMessage) request).getText();
+					final long cron = System.currentTimeMillis();
+					log.info("download-requested " + text);
+					Logger.info("download service:" + text + ";");
+					final JSONObject entry = new JSONObject(text);
+					try {
+						URL magnetUri = new URL(entry.getString("uri"));
+						File file = new File(entry.getString("file"));
+						File folder = file.getParentFile();
 
-				Download download = null;
-				ResourceDownloader rdl = plugin.getUtilities()
-						.getResourceDownloaderFactory().create(magnetUri);
-				InputStream is = rdl.download();
-				Torrent torrent = plugin.getTorrentManager()
-						.createFromBEncodedInputStream(is);
-				DownloadCompletedListener listener = new DownloadCompletedListener((TextMessage) request);
-				download = plugin.getDownloadManager().addDownload(torrent, null, folder);
-				download.addListener(listener);
+						Download download = null;
+						ResourceDownloader rdl = vuze.getUtilities().getResourceDownloaderFactory().create(magnetUri);
+						InputStream is = rdl.download();
+						Torrent torrent = vuze.getTorrentManager().createFromBEncodedInputStream(is);
 
-				if (download != null && file != null)
-					download.renameDownload(file.getName());
-				
-				// Force signaling completion if already completed.
-				if (download.isComplete())
-					listener.stateChanged(download, Download.ST_SEEDING, Download.ST_SEEDING);
+						download = vuze.getDownloadManager().addDownload(torrent, null, folder);
 
-				Logger.info(magnetUri + " added to download list");
-			} catch (ResourceDownloaderException e) {
-				Logger.error("Torrent download error: download service: "+ text + " " + e.getMessage());
-			} catch (TorrentException e) {
-				Logger.error("Torrent error: download service: " + text + " " + e.getMessage());
-			} catch (DownloadException e) {
-				Logger.error("File download error: download service: " + text + " " + e.getMessage());
-			} catch (MalformedURLException e) {
-				Logger.error("Malformed URL error: download service: " + text + " " + e.getMessage());
+						if (download != null && file != null) {
+							download.renameDownload(file.getName());
+							download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
+							download.setForceStart(true);
+							Logger.info(magnetUri + " added to download list");
+						} else {
+							Logger.info(magnetUri + " *not* added to download list");
+						}
+					} catch (ResourceDownloaderException e) {
+						Logger.error("Torrent download error: download service: " + text + " " + e.getMessage());
+					} catch (TorrentException e) {
+						Logger.error("Torrent error: download service: " + text + " " + e.getMessage());
+					} catch (DownloadException e) {
+						Logger.error("File download error: download service: " + text + " " + e.getMessage());
+					} catch (MalformedURLException e) {
+						Logger.error("Malformed URL error: download service: " + text + " " + e.getMessage());
+					}
+				} catch (JMSException e) {
+					Logger.error("JMS error: download service" + " " + e.getMessage());
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}
 			}
-		} catch (JMSException e) {
-			Logger.error("JMS error: download service" + " " + e.getMessage());
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
+		}).start();
 	}
 
 }

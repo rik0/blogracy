@@ -97,8 +97,7 @@ public class StoreService implements MessageListener {
                     }
                 }, key, new DistributedDatabaseValue[] { value });
             } catch (DistributedDatabaseException e) {
-                Logger.error("DDB error: store service: " + text);
-                Logger.error(e.getMessage());
+                Logger.error("DDB error: store service: " + text + " Error: " + e.getMessage());
             } catch (Exception e) {
                 e.printStackTrace();
             }

@@ -44,14 +44,14 @@ public class UserDataImpl implements UserData {
 		this.activityStream.add(0, comment);
 	}
 
-	public void addComment(ActivityEntry entry)
-	{
+	public void addComment(ActivityEntry entry) {
 		// The should be some validation in order to check if:
 		// it is actually a comment
 		// it has all the data a comment needs
-		
-		this.activityStream.add(0,entry);
+
+		this.activityStream.add(0, entry);
 	}
+
 	public ActivityEntry createComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate, final String commentId)
 			throws BlogracyItemNotFound {
 
@@ -176,41 +176,37 @@ public class UserDataImpl implements UserData {
 				throw new PhotoAlbumDuplicated(photoAlbumTitle);
 
 		String albumHash = null;
-		try {
-			albumHash = Hashes.hash(this.user.getHash().toString() + photoAlbumTitle);
+		albumHash = Hashes.hash(this.user.getHash().toString() + photoAlbumTitle);
 
-			Album album = new AlbumImpl();
-			album.setTitle(photoAlbumTitle);
-			album.setId(albumHash);
-			album.setOwnerId(this.user.getHash().toString());
-			List<Type> types = new ArrayList<Type>();
-			types.add(Type.IMAGE);
-			album.setMediaType(types);
-			// Album is empty when created
-			album.setMediaItemCount(0);
+		Album album = new AlbumImpl();
+		album.setTitle(photoAlbumTitle);
+		album.setId(albumHash);
+		album.setOwnerId(this.user.getHash().toString());
+		List<Type> types = new ArrayList<Type>();
+		types.add(Type.IMAGE);
+		album.setMediaType(types);
+		// Album is empty when created
+		album.setMediaItemCount(0);
 
-			// Append another album into the user's 'mediaUri' file
-			this.albums.add(album);
+		// Append another album into the user's 'mediaUri' file
+		this.albums.add(album);
 
-			final ActivityEntry entry = new ActivityEntryImpl();
-			ActivityObject actor = new ActivityObjectImpl();
-			actor.setObjectType("person");
-			actor.setId(this.user.getHash().toString());
-			actor.setDisplayName(this.user.getLocalNick());
-			entry.setActor(actor);
-			entry.setVerb("create");
-			ActivityObject mediaAlbumObject = new ActivityObjectImpl();
-			mediaAlbumObject.setObjectType("collection");
-			mediaAlbumObject.setContent(photoAlbumTitle);
-			mediaAlbumObject.setId(albumHash);
-			entry.setObject(mediaAlbumObject);
-			entry.setPublished(publishedDate);
-			entry.setContent(photoAlbumTitle);
-			this.activityStream.add(0, entry);
+		final ActivityEntry entry = new ActivityEntryImpl();
+		ActivityObject actor = new ActivityObjectImpl();
+		actor.setObjectType("person");
+		actor.setId(this.user.getHash().toString());
+		actor.setDisplayName(this.user.getLocalNick());
+		entry.setActor(actor);
+		entry.setVerb("create");
+		ActivityObject mediaAlbumObject = new ActivityObjectImpl();
+		mediaAlbumObject.setObjectType("collection");
+		mediaAlbumObject.setContent(photoAlbumTitle);
+		mediaAlbumObject.setId(albumHash);
+		entry.setObject(mediaAlbumObject);
+		entry.setPublished(publishedDate);
+		entry.setContent(photoAlbumTitle);
+		this.activityStream.add(0, entry);
 
-		} catch (NoSuchAlgorithmException e) {
-			e.printStackTrace();
-		}
 		return albumHash;
 	}
 

@@ -1,11 +1,7 @@
 <%@ page import="net.blogracy.model.hashes.Hashes" %>
 <%@ page import="net.blogracy.model.users.Users" %>
-<%@ page import="net.blogracy.model.users.User" %>
-<%@ page import="net.blogracy.controller.ActivitiesController" %>
-<%@ page import="net.blogracy.controller.MediaController" %>
+<%@ page import="net.blogracy.controller.FileSharing" %>
 <%@ page import="net.blogracy.controller.ChatController" %>
-<%@ page import="net.blogracy.controller.CommentsController" %>
-<%@ page import="net.blogracy.controller.DistributedHashTable" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
@@ -13,61 +9,38 @@
 <%@ page import="org.apache.shindig.social.opensocial.model.Album" %>
 <%@ page import="org.apache.shindig.social.opensocial.model.MediaItem" %>
 <%
-String localUserHash = Configurations.getUserConfig().getUser().getHash().toString();
-
-
 String userHash = request.getParameter("user");
 if (userHash == null || userHash.length() == 0) {
     userHash = Configurations.getUserConfig().getUser().getHash().toString();
 } else if (userHash.length() != 32) {
 	userHash = Hashes.hash(userHash); // TODO: remove
 }
-
-
-String channel = ChatController.getPrivateChannel(localUserHash, userHash); 
-//ChatController.getSingleton().joinChannel(channel); 
-
-pageContext.setAttribute("localUserHash",  localUserHash);
-pageContext.setAttribute("userHash", userHash);
-
-
-User user = null;
-
-if (userHash.equals(Configurations.getUserConfig().getUser().getHash().toString()))
-	user = Configurations.getUserConfig().getUser();
-else 
-	{
-	// The right user should be searched in the user's friends
-	user =Configurations.getUserConfig().getFriend(userHash);
-	
-	//This shouldn't happen in current implementation, but anyway a new user with the requested userHash is built
-	if (user == null)
-		user = Users.newUser(Hashes.fromString(userHash));
-	}
-	
-//DistributedHashTable.getSingleton().lookup(userHash);
-List<Album> albums= MediaController.getAlbums(userHash);
-
-
 pageContext.setAttribute("loc",  Configurations.getUserConfig().getUser().getHash().toString());
 pageContext.setAttribute("rem", userHash);
 
 String loc = Configurations.getUserConfig().getUser().getHash().toString();
+ChatController.setLocalUser(loc);
+ChatController.setRemoteUser(userHash);
+if (! loc.equals(userHash)) {
+  ChatController.privateChatting();
+  String channel = ChatController.getPrivateChannel();
+  pageContext.setAttribute("channel", channel);
+}
 
+List<Album> albums= FileSharing.getSingleton().getAlbums(userHash);
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
 for (Album a : albums)
-	mediaItemMap.put(a.getId(), MediaController.getMediaItemsWithCachedImages(userHash, a.getId()));
+{
+	mediaItemMap.put(a.getId(), FileSharing.getSingleton().getMediaItemsWithCachedImages(userHash, a.getId()));
+}
 
 pageContext.setAttribute("application", "Blogracy");
-pageContext.setAttribute("user", user);
-pageContext.setAttribute("feed", ActivitiesController.getFeed(userHash));
+pageContext.setAttribute("user", Users.newUser(Hashes.fromString(userHash)));
+pageContext.setAttribute("feed", FileSharing.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
 pageContext.setAttribute("userAlbums", albums);
 pageContext.setAttribute("photoMap", mediaItemMap);
-pageContext.setAttribute("privateChannel", channel);
-pageContext.setAttribute("publicChannel", userHash);
-
 %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -85,17 +58,26 @@ pageContext.setAttribute("publicChannel", userHash);
     <![endif]-->
 
     <!-- Le styles -->
-    <link type="text/css" href="/css/bootstrap.css" rel="stylesheet"/>
-   <!--  <link type="text/css" href="/css/lightbox.css" rel="stylesheet" /> -->
+    <link href="/css/bootstrap.css" rel="stylesheet"/>
     <link type="text/css" href="/css/smoothness/jquery-ui-1.9.0.custom.min.css" rel="stylesheet" />
-    
     
     <script type="text/javascript" src="/scripts/jquery-1.8.2.js"></script>
     <script type="text/javascript" src="/scripts/jquery.form.js"></script>
     <script type="text/javascript" src="/scripts/jquery-ui-1.9.0.custom.min.js"></script>
     <script type="text/javascript" src="/scripts/bootstrap-alerts.js"></script>
     <script type="text/javascript" src="/scripts/fancybox/jquery.fancybox.js?v=2.1.2"></script>
-    <link type="text/css" href="/css/jquery.fancybox.css" rel="stylesheet" />
+    <script type="text/javascript" src="js/amq_jquery_adapter.js"></script>
+    <script type="text/javascript" src="js/amq.js"></script>
+    <script type="text/javascript" src="js/chat.js"></script>
+    <script type="text/javascript">
+        channel = "${channel}"
+        jQuery(function() {
+            org.activemq.Amq.init({ uri: 'amq', logging: true, timeout: 45, clientId:(new Date()).getTime().toString() });
+            org.activemq.Chat.init();
+        });
+    </script>
+
+    
     <script type="text/javascript">
         // wait for the DOM to be loaded
         jQuery(function() {
@@ -118,12 +100,11 @@ pageContext.setAttribute("publicChannel", userHash);
                 
             });
         });
-
+    
     </script>
-
-    <script type="text/javascript" src="/scripts/blogracy-userGalleryHelper.js"></script>
-    <script type="text/javascript" src="/scripts/blogracy-mediaThumbnailViewer.js"></script>
 	
+	<script type="text/javascript" src="/scripts/blogracy-userGalleryHelper.js"></script>
+    <script type="text/javascript" src="/scripts/blogracy-mediaThumbnailViewer.js"></script>
 	
     <style type="text/css">
             /* Override some defaults */
@@ -244,25 +225,19 @@ pageContext.setAttribute("publicChannel", userHash);
     <div class="content">
         <div class="page-header">
             <h1>${user.localNick}
-                <small>(UserID)</small>
+                <small>(hardcoded email)</small>
             </h1>
         </div>
         <div class="row">
-            <div id="errorPlace"></div>
+            <div id="errorPlace">
+
+            </div>
         </div>
         <div class="row">
 
             <div class="span10">
                 <h2>Messages</h2>
-                  <div class="span10" id="user-feed">
-	        		 <ul>
-	                    <c:forEach var="entry" items="${feed}">
-	                    <li>${entry.content}</li>
-	                    </c:forEach>
-	                </ul>
-                </div>
-					
-                <h2>New message</h2>
+
                 <form class="span10" id="message-send">
                     <input type="hidden" name="user" value="${user.hash}" />
                     <fieldset class="form-stacked">
@@ -288,7 +263,15 @@ pageContext.setAttribute("publicChannel", userHash);
                         </div>
                     </fieldset>
                 </form>
-                  <div class="span10" id="user-galleries">
+                <div class="span10" id="user-feed">
+                <h2>User Feed</h2>
+                    <ul>
+					<c:forEach var="entry" items="${feed}">
+						<li>${entry.content}</li>
+					</c:forEach>
+					</ul>
+                </div>
+                    <div class="span10" id="user-galleries">
                    <h2>Photo Galleries</h2>
                    	<c:if test="${localUser == user}"> 
 						<form id="create-gallery">
@@ -329,6 +312,27 @@ pageContext.setAttribute("publicChannel", userHash);
                     
                   </div>
                 </div>
+                
+<div id="chatroom">
+    <div id="chat"></div>
+
+    <div id="members"></div>
+
+    <div id="input">
+        <div id="join" class="hidden">
+            Username:&nbsp;
+            <input id="username" type="text"/>
+            <button id="joinB">Join</button>
+        </div>
+        <div id="joined" class="hidden">
+            Chat:&nbsp;
+            <input id="phrase" type="text" />
+            <button id="sendB">Send</button>
+            <button id="leaveB">Leave</button>
+        </div>
+    </div>
+</div>
+
             </div>
             <div class="span4">
                 <h3>Local user</h3>
@@ -347,13 +351,7 @@ pageContext.setAttribute("publicChannel", userHash);
                 <h3>Tags</h3>
 <br/>
 				<h3>Chat</h3>
-				 <ul>
-				   <li><a target="_blank" href="chat.jsp?channel=${publicChannel}&nick=${localUser.localNick}">Public chat</a></li>
-				   <c:if test="${localUser.hash != user.hash}">
-				     <li><a target="_blank" href="chat.jsp?channel=${privateChannel}&nick=${localUser.localNick}">Private chat</a></li>
-				   </c:if>
-				</ul>
-
+				<a href='#self' id='openlink' onclick='openChat()' style='font-size: 10px;'>Chat with ${user.localNick}</a>
             </div>
         </div>
       
@@ -367,7 +365,16 @@ pageContext.setAttribute("publicChannel", userHash);
 
 </div>
 <!-- /container -->
+<div class="span10" id="chatframe" style="width:310px; position:fixed; bottom:0; left:0;">	
+	<div id="chathead" style="text-align: left;"> 
+		<a href='#self' id="chatlink" onclick='closeChat()'> </a>
+	</div>
+	<div id="chatbody"> </div>
+</div>
 
+<div id="localUser" title="${loc}"></div>
+<div id="remoteUser" title="${rem}"></div>
+<div id="localNick" title="${localUser.localNick}"></div>
 
 </body>
 </html>

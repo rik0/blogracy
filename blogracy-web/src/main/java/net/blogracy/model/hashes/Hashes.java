@@ -39,18 +39,27 @@ public class Hashes {
 
 	private static Base32 base32 = new Base32();
 
-	public static String hash(String text) throws NoSuchAlgorithmException {
-		MessageDigest digester = MessageDigest.getInstance("SHA-1");
-		byte[] digest = digester.digest(text.getBytes());
-		String result = base32.encodeAsString(digest);
+	public static String hash(String text) {
+		String result = null;
+		try {
+			MessageDigest digester = MessageDigest.getInstance("SHA-1");
+			byte[] digest = digester.digest(text.getBytes());
+			result = base32.encodeAsString(digest);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
 		return result;
 	}
 
-	public static String hash(File file) throws NoSuchAlgorithmException,
-			IOException {
-		MessageDigest digester = MessageDigest.getInstance("SHA-1");
-		byte[] digest = digester.digest(FileUtils.getBytesFromFile(file));
-		String result = base32.encodeAsString(digest);
+	public static String hash(File file) throws IOException {
+		String result = null;
+		try {
+			MessageDigest digester = MessageDigest.getInstance("SHA-1");
+			byte[] digest = digester.digest(FileUtils.getBytesFromFile(file));
+			result = base32.encodeAsString(digest);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
 		return result;
 	}
 
@@ -181,4 +190,11 @@ public class Hashes {
 	private Hashes() {
 		/* no instances, thanks */
 	}
+	
+	public static void main(String[] args) {
+        for (String arg : args) {
+            System.out.println(hash(arg) + " " + arg);
+        }
+    }
+
 }
