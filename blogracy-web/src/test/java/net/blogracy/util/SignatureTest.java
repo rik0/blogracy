@@ -28,7 +28,7 @@ public class SignatureTest {
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
 		KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("RSA");
-		keyPairGenerator.initialize(1024);
+		keyPairGenerator.initialize(512);
 		keyPair = keyPairGenerator.genKeyPair();
 		content = "Guybrush Treepwood";
 	}
@@ -69,7 +69,7 @@ public class SignatureTest {
 		}
 	}
 
-	private static String myBlogracyContent = "[{\"id\":\"7PAEA2BZXQYZHXXHXWMUSCOVGCT46SLA\",\"uri\":\"magnet:?xt=urn:btih:QY3WSKVBGDZXMSR6DAS3ES4IIPDS6MCJ\",\"version\":\"2012-10-22T22:56:45\"}]";
+	private static String myBlogracyContent = "[{\"id\":\"7PAEA2BZXQYZHXXHXWMUSCOVGCT46SLA\",\"uri\":\"magnet:?xt=urn:btih:QY3WSKVBGDZXMSR6DAS3ES4IIPDS6MCJ\",\"version\":\"2012-10-22T22:56:45Z\"}]";
 
 	@Test
 	public void testSignatureSize() {
@@ -78,10 +78,10 @@ public class SignatureTest {
 					.getBytes("UTF-8"));
 
 			byte[] encodedKey = keyPair.getPublic().getEncoded();
-			//String kid = Base64.encodeBase64URLSafeString(encodedKey);
+			String kid = Base64.encodeBase64URLSafeString(encodedKey);
 			JSONObject headerObj = new JSONObject().put("typ", "JWT")
-					.put("alg", "RS256");
-			//.put("kid", kid);
+					.put("alg", "RS256")
+			.put("kid", kid);
 
 			String header = Base64.encodeBase64URLSafeString(headerObj
 					.toString().getBytes("UTF-8"));
