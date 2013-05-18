@@ -1,24 +1,24 @@
 /*
-* Copyright (c) 2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in
-* all copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-* THE SOFTWARE.
-*/
+ * Copyright (c) 2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
 
 package net.blogracy.controller;
 
@@ -81,36 +81,29 @@ import com.google.inject.name.Names;
 
 public class ActivitiesController {
 
-	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss'Z'");
-    static final String CACHE_FOLDER = Configurations.getPathConfig()
-            .getCachedFilesDirectoryPath();
+	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
-    private static final FileSharing sharing = FileSharing.getSingleton();
-    private static final DistributedHashTable dht = DistributedHashTable
-            .getSingleton();
-    private static final ActivitiesController theInstance = new ActivitiesController();
+	private static final FileSharing sharing = FileSharing.getSingleton();
+	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
+	private static final ActivitiesController theInstance = new ActivitiesController();
 
-    private static BeanJsonConverter CONVERTER = new BeanJsonConverter(
-            Guice.createInjector(new Module() {
-                @Override
-                public void configure(Binder b) {
-                    b.bind(BeanConverter.class)
-                            .annotatedWith(
-                                    Names.named("shindig.bean.converter.json"))
-                            .to(BeanJsonConverter.class);
-                }
-            }));
+	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
+		@Override
+		public void configure(Binder b) {
+			b.bind(BeanConverter.class).annotatedWith(Names.named("shindig.bean.converter.json")).to(BeanJsonConverter.class);
+		}
+	}));
 
-    public static ActivitiesController getSingleton() {
-        return theInstance;
-    }
+	public static ActivitiesController getSingleton() {
+		return theInstance;
+	}
 
-    private ActivitiesController() {
-        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
-    
-    /**
+	private ActivitiesController() {
+		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
+
+	/**
 	 * Fetched the user ActivityStream from the User's DB
 	 * 
 	 * @param user
@@ -149,7 +142,7 @@ public class ActivitiesController {
 		}
 		return result;
 	}
-	
+
 	/**
 	 * Adds a new message / attachment to the user's ActivityStream (verb
 	 * "POST")
@@ -180,34 +173,27 @@ public class ActivitiesController {
 
 			String dbUri = this.sharing.seedUserData(userData);
 
-			DistributedHashTable.getSingleton().store(userId, dbUri, publishDate);
+			DistributedHashTable.getSingleton().store(userId, userId, dbUri, publishDate);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
-    
+
 	/*
-	 *  public String seedActivityStream(String userId,
-            final List<ActivityEntry> feed) throws JSONException, IOException {
-        final File feedFile = new File(CACHE_FOLDER + File.separator + userId
-                + ".json");
-
-        JSONArray items = new JSONArray();
-        for (int i = 0; i < feed.size(); ++i) {
-            JSONObject item = new JSONObject(feed.get(i));
-            items.put(item);
-        }
-        JSONObject db = new JSONObject();
-
-        db.put("items", items);
-
-        FileWriter writer = new FileWriter(feedFile);
-        db.write(writer);
-        writer.close();
-
-        String feedUri = sharing.seed(feedFile);
-        return feedUri;
-    }
-    */
+	 * public String seedActivityStream(String userId, final List<ActivityEntry>
+	 * feed) throws JSONException, IOException { final File feedFile = new
+	 * File(CACHE_FOLDER + File.separator + userId + ".json");
+	 * 
+	 * JSONArray items = new JSONArray(); for (int i = 0; i < feed.size(); ++i)
+	 * { JSONObject item = new JSONObject(feed.get(i)); items.put(item); }
+	 * JSONObject db = new JSONObject();
+	 * 
+	 * db.put("items", items);
+	 * 
+	 * FileWriter writer = new FileWriter(feedFile); db.write(writer);
+	 * writer.close();
+	 * 
+	 * String feedUri = sharing.seed(feedFile); return feedUri; }
+	 */
 
 }

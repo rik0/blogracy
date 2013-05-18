@@ -68,16 +68,16 @@ import org.json.JSONTokener;
 public class DistributedHashTable {
 
 	 class DownloadListener implements FileSharingDownloadListener {
-	        private String id;
+	        private String ddbKey;
 	        private String hash;
 	        private String version;
 	        private JSONObject record;
 	        private long start;
 	        private long sent;
 
-	        DownloadListener(String id, String hash, String version,
+	        DownloadListener(String ddbKey, String hash, String version,
 	                JSONObject record) {
-	            this.id = id;
+	            this.ddbKey = ddbKey;
 	            this.hash = hash;
 	            this.version = version;
 	            this.record = record;
@@ -87,7 +87,7 @@ public class DistributedHashTable {
 	            } catch (ParseException e) {
 	                e.printStackTrace();
 	            }
-	            log.info("download-req " + id + " " + hash + " " + version);
+	            log.info("download-req " + ddbKey + " " + hash + " " + version);
 	        }
 
 			@Override
@@ -103,21 +103,21 @@ public class DistributedHashTable {
 	            } catch (Exception e) {
 	                e.printStackTrace();
 	            }
-	            log.info("download-ans " + id + " " + hash + " " + version + " "
+	            log.info("download-ans " + ddbKey + " " + hash + " " + version + " "
 	                    + now + " " + delay + " " + received + " " + size);
-	            putRecord(record);
+	            putRecord(ddbKey, record);
 	        }
 	    }
 
 	
 	class LookupListener implements MessageListener {
-		private String id;
+		private String ddbKey;
 		private long start;
 
-		LookupListener(String id) {
-			this.id = id;
+		LookupListener(String ddbKey) {
+			this.ddbKey = ddbKey;
 			this.start = System.currentTimeMillis();
-			log.info("lookup-req " + id);
+			log.info("lookup-req " + ddbKey);
 		}
 
 		@Override
@@ -127,7 +127,7 @@ public class DistributedHashTable {
 				String msgText = ((TextMessage) response).getText();
 				JSONObject keyValue = new JSONObject(msgText);
 				final String value = keyValue.getString("value");
-				final String id = keyValue.getString("id");
+				final String ddbKey = keyValue.getString("ddbKey");
 				PublicKey signerKey = JsonWebSignature.getSignerKey(value);
                 final JSONObject record = new JSONObject(JsonWebSignature.verify(
                         value, signerKey));
@@ -136,13 +136,13 @@ public class DistributedHashTable {
                 String uri = record.getString("uri");
                 String hash = FileSharing.getHashFromMagnetURI(uri);
                 String now = ISO_DATE_FORMAT.format(new java.util.Date());
-                log.info("lookup-ans " + id + " " + hash + " " + version + " " + now + " " + delay);
+                log.info("lookup-ans " + ddbKey + " " + hash + " " + version + " " + now + " " + delay);
 
 				
-				JSONObject currentRecord = getRecord(id);
+				JSONObject currentRecord = getRecord(ddbKey);
 				if (currentRecord == null || currentRecord.getString("version").compareTo(version) < 0) {		
 					 FileSharing.getSingleton().downloadByHash(hash, ".json",
-	                            new DownloadListener(id, hash, version, record));
+	                            new DownloadListener(ddbKey, hash, version, record));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -204,14 +204,14 @@ public class DistributedHashTable {
 		}
 	}
 
-	public void lookup(final String id) {
+	public void lookup(final String ddbKey) {
 		try {
 			Destination tempDest = session.createTemporaryQueue();
 			MessageConsumer responseConsumer = session.createConsumer(tempDest);
-			responseConsumer.setMessageListener(new LookupListener(id));
+			responseConsumer.setMessageListener(new LookupListener(ddbKey));
 
 			JSONObject record = new JSONObject();
-			record.put("id", id);
+			record.put("ddbKey", ddbKey);
 
 			TextMessage message = session.createTextMessage();
 			message.setText(record.toString());
@@ -222,10 +222,11 @@ public class DistributedHashTable {
 		}
 	}
 
-	public void store(final String id, final String uri, final String version) {
+	public void store(final String userId, final String ddbKey, final String uri, final String version) {
 		try {
+	
 			JSONObject record = new JSONObject();
-			record.put("id", id);
+			record.put("id", userId);
 			record.put("uri", uri);
 			record.put("version", version);
 			// put "magic" public-key; e.g.
@@ -236,27 +237,27 @@ public class DistributedHashTable {
 			String value = JsonWebSignature.sign(record.toString(), keyPair);
 
 			JSONObject keyValue = new JSONObject();
-			keyValue.put("key", id);
+			keyValue.put("key", ddbKey);
 			keyValue.put("value", value);
 			TextMessage message = session.createTextMessage();
 			message.setText(keyValue.toString());
 			producer.send(storeQueue, message);
-			putRecord(record);
+			putRecord(ddbKey, record);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	public JSONObject getRecord(final String user) {
-		return records.get(user);
+	public JSONObject getRecord(final String ddbKey) {
+		return records.get(ddbKey);
 	}
 
-	public void putRecord(JSONObject record) {
+	public void putRecord(String ddbKey, JSONObject record) {
 		try {
-			String id = record.getString("id");
-			JSONObject old = records.get(id);
+			// String id = record.getString("id");
+			JSONObject old = records.get(ddbKey);
 			if (old == null || record.getString("version").compareTo(old.getString("version")) > 0) {
-				records.put(id, record);
+				records.put(ddbKey, record);
 			}
 		} catch (JSONException e1) {
 			e1.printStackTrace();

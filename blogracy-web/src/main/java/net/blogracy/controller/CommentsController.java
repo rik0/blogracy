@@ -3,6 +3,7 @@ package net.blogracy.controller;
 import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
@@ -23,6 +24,7 @@ import net.blogracy.config.Configurations;
 import net.blogracy.errors.BlogracyItemNotFound;
 import net.blogracy.model.hashes.Hashes;
 import net.blogracy.model.users.User;
+import net.blogracy.model.users.UserAddendumData;
 import net.blogracy.model.users.UserData;
 import net.blogracy.model.users.UserDataImpl;
 import net.blogracy.model.users.Users;
@@ -62,7 +64,9 @@ public class CommentsController implements MessageListener {
 	}));
 
 	private static final CommentsController THE_INSTANCE = new CommentsController();
-
+    private static final FileSharing sharing = FileSharing.getSingleton();
+	AddendumController addendumController = AddendumController.getSingleton();
+	
 	public static CommentsController getInstance() {
 		return THE_INSTANCE;
 	}
@@ -101,9 +105,12 @@ public class CommentsController implements MessageListener {
 	}
 
 	public List<ActivityEntry> getComments(final String userId, final String objectId) {
-		UserData data = FileSharing.getUserData(userId);
-
-		return data.getCommentsByObjectId(objectId);
+		List<ActivityEntry> comments = new ArrayList<ActivityEntry>();
+		UserData data = sharing.getUserData(userId);
+		comments.addAll(data.getCommentsByObjectId(objectId));
+		UserAddendumData addendumData = sharing.getUserAddendumData(userId);	
+		comments.addAll(addendumData.getCommentsByObjectId(objectId));
+		return comments;
 	}
 
 	public void addComment(final String commentedUserId, final String commentingUserId, final String text, final String objectId) throws BlogracyItemNotFound {
@@ -114,12 +121,12 @@ public class CommentsController implements MessageListener {
 
 		User commentingUser = null;
 		if (commentedUserId.equals(commentingUserId)) {
-			UserData data = FileSharing.getUserData(commentedUserId);
+			UserData data = sharing.getUserData(commentedUserId);
 			commentingUser = data.getUser();
 			data.addComment(commentingUser, text, commentedObjectId, publishedDate);
 			try {
-				String dbUri = FileSharing.getSingleton().seedUserData(data);
-				DistributedHashTable.getSingleton().store(commentedUserId, dbUri, publishedDate);
+				String dbUri = sharing.seedUserData(data);
+				DistributedHashTable.getSingleton().store(commentedUserId, commentedUserId, dbUri, publishedDate);
 			} catch (JSONException e) {
 				e.printStackTrace();
 			} catch (IOException e) {
@@ -135,7 +142,7 @@ public class CommentsController implements MessageListener {
 
 			// Getting commented user's data in order to build a comment
 			// ActivityObject
-			UserData data = FileSharing.getUserData(commentedUserId);
+			UserData data = sharing.getUserData(commentedUserId);
 
 			try {
 				JSONObject requestObj = new JSONObject();
@@ -336,17 +343,9 @@ public class CommentsController implements MessageListener {
 			// Send Accepted message
 			this.acceptContent(currentUserId, contentId);
 			// add the message itself
+
 			ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(newContentData, ActivityEntry.class);
-			UserData userData = FileSharing.getUserData(contentRecipientUserId);
-			userData.addComment(entry);
-			try {
-				String dbUri = FileSharing.getSingleton().seedUserData(userData);
-				DistributedHashTable.getSingleton().store(currentUserId, dbUri, ISO_DATE_FORMAT.format(new Date()));
-			} catch (JSONException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			addendumController.addAddendumEntry(contentRecipientUserId, entry);
 		} else {
 			// Send Rejected message
 			this.rejectContent(currentUserId, contentId);

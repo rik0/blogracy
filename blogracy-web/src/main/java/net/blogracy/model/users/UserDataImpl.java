@@ -44,13 +44,6 @@ public class UserDataImpl implements UserData {
 		this.activityStream.add(0, comment);
 	}
 
-	public void addComment(ActivityEntry entry) {
-		// The should be some validation in order to check if:
-		// it is actually a comment
-		// it has all the data a comment needs
-
-		this.activityStream.add(0, entry);
-	}
 
 	public ActivityEntry createComment(final User commentingUser, final String commentText, final String commentedObjectId, final String publishDate, final String commentId)
 			throws BlogracyItemNotFound {

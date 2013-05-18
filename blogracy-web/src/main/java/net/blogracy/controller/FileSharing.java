@@ -53,6 +53,8 @@ import net.blogracy.config.Configurations;
 import net.blogracy.errors.PhotoAlbumDuplicated;
 import net.blogracy.model.hashes.Hashes;
 import net.blogracy.model.users.User;
+import net.blogracy.model.users.UserAddendumData;
+import net.blogracy.model.users.UserAddendumDataImpl;
 import net.blogracy.model.users.UserData;
 import net.blogracy.model.users.UserDataImpl;
 import net.blogracy.model.users.Users;
@@ -97,7 +99,8 @@ public class FileSharing {
 
 	private static final FileSharing theInstance = new FileSharing();
 	private static final ActivitiesController activitiesController = ActivitiesController.getSingleton();
-
+	private static final AddendumController addendumController = AddendumController.getSingleton();
+	
 	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
 		@Override
 		public void configure(Binder b) {
@@ -301,7 +304,7 @@ public class FileSharing {
 	 * @param userId
 	 * @return
 	 */
-	public static UserData getUserData(String userId) {
+	public  UserData getUserData(String userId) {
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
 
@@ -326,6 +329,30 @@ public class FileSharing {
 		return userData;
 	}
 
+	public UserAddendumData getUserAddendumData(String userId) {
+		if (userId == null)
+			throw new InvalidParameterException("userId cannot be null");
+
+		User user = null;
+
+		if (userId.equals(Configurations.getUserConfig().getUser().getHash().toString()))
+			user = Configurations.getUserConfig().getUser();
+		else {
+			// The right user should be searched in the user's friends
+			user = Configurations.getUserConfig().getFriend(userId);
+
+			// This shouldn't happen in current implementation, but anyway a new
+			// user with the requested userHash is built
+			if (user == null)
+				user = Users.newUser(Hashes.fromString(userId));
+		}
+
+		UserAddendumDataImpl userData = new UserAddendumDataImpl(user);
+		userData.setActivityStream(addendumController.getFeed(userId));
+		return userData;
+	}
+
+	
 	public String seedUserData(final UserData userData) throws JSONException, IOException {
 		final File feedFile = new File(CACHE_FOLDER + File.separator + userData.getUser().getHash().toString() + ".json");
 
@@ -365,6 +392,29 @@ public class FileSharing {
 		return feedUri;
 	}
 
+	public String seedUserAddendumData(final UserAddendumData userData) throws JSONException, IOException {
+		final File feedFile = new File(CACHE_FOLDER + File.separator + userData.getUser().getHash().toString() + "-addendum.json");
+
+		List<ActivityEntry> addendumFeed = userData.getActivityStream();
+
+		JSONArray addendumItems = new JSONArray();
+		for (int i = 0; i < addendumFeed.size(); ++i) {
+			JSONObject item = new JSONObject(addendumFeed.get(i));
+			addendumItems.put(item);
+		}
+
+
+		JSONObject db = new JSONObject();
+		db.put("addendumItems", addendumItems);
+
+		FileWriter writer = new FileWriter(feedFile);
+		db.write(writer);
+		writer.close();
+
+		String feedUri = seed(feedFile);
+		return feedUri;
+	}
+	
 	/*
 	public static String getPublicKey(String userId) {
 		if (userId == null)

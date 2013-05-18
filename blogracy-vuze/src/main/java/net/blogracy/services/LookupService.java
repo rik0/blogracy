@@ -74,15 +74,15 @@ public class LookupService implements MessageListener {
                     value = (String) event.getValue().getValue(String.class);
                     JSONObject record = new JSONObject(request.getText());
                     record.put("value", value);
-                    Logger.info("lookup record received: " + record.getString("id"));
+                    Logger.info("lookup record received: " + record.getString("ddbKey"));
                     TextMessage response = session.createTextMessage();
                     response.setText(record.toString());
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
                     producer.send(request.getJMSReplyTo(), response);
                 } catch (JMSException e) {
-                    Logger.error("JMS error: lookup " + value);
+                    Logger.error("JMS error: lookup " + value + " Exception: " + e.getMessage());
                 } catch (DistributedDatabaseException e) {
-                    Logger.error("DDB error: lookup " + value);
+                    Logger.error("DDB error: lookup " + value+ " Exception: " + e.getMessage());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -123,7 +123,7 @@ public class LookupService implements MessageListener {
             final long TIMEOUT = 5 * 60 * 1000; // 5 mins
             DistributedDatabase ddb = plugin.getDistributedDatabase();
             ddb.read(new DhtListener(textRequest),
-                    ddb.createKey(record.getString("id")), TIMEOUT,
+                    ddb.createKey(record.getString("ddbKey")), TIMEOUT,
                     DistributedDatabase.OP_EXHAUSTIVE_READ);
         } catch (DistributedDatabaseException e) {
             Logger.error("DDB error: lookup service: " + text);

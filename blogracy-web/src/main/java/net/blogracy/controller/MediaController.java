@@ -134,7 +134,7 @@ public class MediaController {
 			albumHash = userData.createPhotoAlbum(photoAlbumTitle, publishedDate);
 			String dbUri = sharing.seedUserData(userData);
 
-			DistributedHashTable.getSingleton().store(userId, dbUri, publishedDate);
+			DistributedHashTable.getSingleton().store(userId,userId, dbUri, publishedDate);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -366,7 +366,7 @@ public class MediaController {
 
 			String dbUri = sharing.seedUserData(userData);
 
-			DistributedHashTable.getSingleton().store(userId, dbUri, publishedDate);
+			DistributedHashTable.getSingleton().store(userId, userId,dbUri, publishedDate);
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -431,7 +431,7 @@ public class MediaController {
 			userData.removeMediaItem(mediaId, albumId, publishedDate);
 			String dbUri = sharing.seedUserData(userData);
 
-			DistributedHashTable.getSingleton().store(userId, dbUri, publishedDate);
+			DistributedHashTable.getSingleton().store(userId, userId, dbUri, publishedDate);
 
 		} catch (Exception e) {
 			e.printStackTrace();
