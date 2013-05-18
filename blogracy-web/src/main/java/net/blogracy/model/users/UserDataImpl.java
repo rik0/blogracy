@@ -29,7 +29,7 @@ public class UserDataImpl implements UserData {
 	private List<ActivityEntry> activityStream;
 	private List<Album> albums;
 	private List<MediaItem> mediaItems;
-	private String userPublicKey;
+	
 
 	public UserDataImpl(User user) {
 		this.user = user;
@@ -245,9 +245,6 @@ public class UserDataImpl implements UserData {
 		return this.user;
 	}
 
-	public String getUserPublicKey() {
-		return this.userPublicKey;
-	}
 
 	public void removeMediaItem(final String mediaId, final String albumId, final String publishedDate) {
 		Album album = null;
@@ -306,8 +303,5 @@ public class UserDataImpl implements UserData {
 		this.mediaItems = new ArrayList<MediaItem>(mediaItems);
 	}
 
-	public void setUserPublicKey(String pKey) {
-		this.userPublicKey = pKey;
-	}
 
 }

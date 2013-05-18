@@ -113,10 +113,6 @@ public interface UserData {
 	public void removeMediaItem(final String mediaId, final String albumId,
 			final String publishedDate);
 
-	/***
-	 * Retrieves the Base64-encoded public key
-	 * @return
-	 */
-	public String getUserPublicKey();
+
 	
 }

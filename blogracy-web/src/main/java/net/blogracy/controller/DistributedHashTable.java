@@ -28,6 +28,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.security.SignatureException;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -124,22 +125,13 @@ public class DistributedHashTable {
 			try {
 				long delay = System.currentTimeMillis() - start; 
 				String msgText = ((TextMessage) response).getText();
-				
 				JSONObject keyValue = new JSONObject(msgText);
 				final String value = keyValue.getString("value");
 				final String id = keyValue.getString("id");
-				// The signature verification is postponed at the
-				// moment.
-				// The signature should be verified based on the key on
-				// the user's profile...
-				/*
-				 * PublicKey signerKey = JsonWebSignature .getSignerKey(value);
-				 * JSONObject record = new JSONObject(JsonWebSignature
-				 * .verify(value, signerKey));
-				 */
-				String[] split = value.split("\\.");
-				final JSONObject record = new JSONObject(new String(Base64.decodeBase64(split[1]), "UTF-8"));
-
+				PublicKey signerKey = JsonWebSignature.getSignerKey(value);
+                final JSONObject record = new JSONObject(JsonWebSignature.verify(
+                        value, signerKey));
+				
 				String version = record.getString("version");
                 String uri = record.getString("uri");
                 String hash = FileSharing.getHashFromMagnetURI(uri);
@@ -148,38 +140,9 @@ public class DistributedHashTable {
 
 				
 				JSONObject currentRecord = getRecord(id);
-				if (currentRecord == null || currentRecord.getString("version").compareTo(version) < 0) {
-					log.info("Download req: " + id + " @ " + (System.currentTimeMillis() - start));
-					
+				if (currentRecord == null || currentRecord.getString("version").compareTo(version) < 0) {		
 					 FileSharing.getSingleton().downloadByHash(hash, ".json",
 	                            new DownloadListener(id, hash, version, record));
-
-					/*FileSharing.download(uri, ".json", new FileSharingDownloadListener() {
-
-						@Override
-						public void onFileDownloaded(String fileFullPath) {
-							log.info("Download ans: " + id + " @ " + (System.currentTimeMillis() - start));
-							try {
-								JSONObject db = new JSONObject(new JSONTokener(new FileReader(fileFullPath)));
-
-								String pKey = null;
-								if (db.has("publicKey"))
-									pKey = db.getString("publicKey");
-
-								if (pKey != null) {
-									JSONObject userRecord = new JSONObject(JsonWebSignature.verify(value, pKey));
-									putRecord(userRecord);
-								}
-							} catch (FileNotFoundException e) {
-								e.printStackTrace();
-							} catch (JSONException e) {
-								e.printStackTrace();
-							} catch (SignatureException e) {
-								e.printStackTrace();
-							}
-
-						}
-					}); */
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -210,6 +173,8 @@ public class DistributedHashTable {
 		return THE_INSTANCE;
 	}
 
+	public static File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
+	
 	public DistributedHashTable() {
 		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 		try {
@@ -217,7 +182,7 @@ public class DistributedHashTable {
 			log.addHandler(new FileHandler("dht.log"));
 			log.getHandlers()[0].setFormatter(new SimpleFormatter()); 
 			
-			File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
+
 			if (recordsFile.exists()) {
 				JSONArray recordList = new JSONArray(new JSONTokener(new FileReader(recordsFile)));
 				for (int i = 0; i < recordList.length(); ++i) {
@@ -282,7 +247,7 @@ public class DistributedHashTable {
 		}
 	}
 
-	public JSONObject getRecord(String user) {
+	public JSONObject getRecord(final String user) {
 		return records.get(user);
 	}
 
@@ -302,7 +267,7 @@ public class DistributedHashTable {
 			JSONObject entry = entries.next();
 			recordList.put(entry);
 		}
-		File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
+		
 		try {
 			FileWriter writer = new FileWriter(recordsFile);
 			recordList.write(writer);

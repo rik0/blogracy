@@ -35,19 +35,11 @@ public class JsonWebSignature {
 			String payload = Base64.encodeBase64URLSafeString(content
 					.getBytes("UTF-8"));
 
-			// kid is not valorized any longer: the key is in the user's
-			// profile....
-			/*
-			 * String kid = null; if (publicKeyMagnetUri == null) { byte[]
-			 * encodedKey = keyPair.getPublic().getEncoded(); kid =
-			 * Base64.encodeBase64URLSafeString(encodedKey); } else kid =
-			 * publicKeyMagnetUri;
-			 * 
-			 * JSONObject headerObj = new JSONObject().put("typ", "JWT")
-			 * .put("alg", "RS256").put("kid", kid);
-			 */
+			byte[] encodedKey = keyPair.getPublic().getEncoded();
+	            String kid = Base64.encodeBase64URLSafeString(encodedKey);
+			
 			JSONObject headerObj = new JSONObject().put("typ", "JWT").put(
-					"alg", "RS256");
+					"alg", "RS256").put("kid", kid);
 			String header = Base64.encodeBase64URLSafeString(headerObj
 					.toString().getBytes("UTF-8"));
 
@@ -73,14 +65,7 @@ public class JsonWebSignature {
 		return result;
 	}
 
-	/***
-	 * The key is now in the user's json db... JsonWebSignature can't do much
-	 * about it....
-	 * 
-	 * @param signed
-	 * @return
-	 */
-/*	@Deprecated
+
 	public static PublicKey getSignerKey(String signed) {
 		PublicKey signerKey = null;
 		try {
@@ -104,7 +89,7 @@ public class JsonWebSignature {
 			e.printStackTrace();
 		}
 		return signerKey;
-	}**/
+	}
 
 	public static String getPublicKeyString(PublicKey pKey) {
 		if(pKey == null)

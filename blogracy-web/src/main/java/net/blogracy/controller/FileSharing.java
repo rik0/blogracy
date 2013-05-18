@@ -323,7 +323,6 @@ public class FileSharing {
 		userData.setActivityStream(ActivitiesController.getFeed(userId));
 		userData.setAlbums(MediaController.getAlbums(userId));
 		userData.setMediaItems(MediaController.getMediaItems(userId));
-		userData.setUserPublicKey(getPublicKey(userId));
 		return userData;
 	}
 
@@ -357,7 +356,6 @@ public class FileSharing {
 		db.put("albums", albumsData);
 		db.put("mediaItems", mediaItemsData);
 		db.put("items", items);
-		db.put("publicKey", userData.getUserPublicKey());
 
 		FileWriter writer = new FileWriter(feedFile);
 		db.write(writer);
@@ -367,6 +365,7 @@ public class FileSharing {
 		return feedUri;
 	}
 
+	/*
 	public static String getPublicKey(String userId) {
 		if (userId == null)
 			throw new InvalidParameterException("userId cannot be null");
@@ -401,6 +400,6 @@ public class FileSharing {
 		}
 		return pKey;
 
-	}
+	} */
 
 }
