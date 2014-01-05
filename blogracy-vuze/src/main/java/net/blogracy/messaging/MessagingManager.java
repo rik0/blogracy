@@ -3,6 +3,7 @@ package net.blogracy.messaging;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -11,6 +12,9 @@ import java.util.List;
 import java.util.Map;
 
 import net.blogracy.logging.Logger;
+import net.blogracy.messaging.impl.BlogracyBullyAnswerMessage;
+import net.blogracy.messaging.impl.BlogracyBullyCoordinatorMessage;
+import net.blogracy.messaging.impl.BlogracyBullyElectionMessage;
 import net.blogracy.messaging.impl.BlogracyContent;
 import net.blogracy.messaging.impl.BlogracyContentAccepted;
 import net.blogracy.messaging.impl.BlogracyContentListRequest;
@@ -69,6 +73,9 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		listOfHandledMessages.add(new BlogracyContentListRequest("", new byte[20], "", -1, ""));
 		listOfHandledMessages.add(new BlogracyContentListResponse("", new byte[20], "", -1, ""));
 		listOfHandledMessages.add(new BlogracyContent("", new byte[20], "", -1, ""));
+		listOfHandledMessages.add(new BlogracyBullyAnswerMessage("", new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyBullyCoordinatorMessage("", new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyBullyElectionMessage("", new byte[20], -1, ""));
 		peerController.initialize(listOfHandledMessages);
 		peerController.startPeerProcessing();
 	}
@@ -249,6 +256,51 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		}
 	}
 
+	public void sendBullyCoordinatorMessage(String channelUserId, String senderUserId) {
+		Download destinationSwarm = this.getSwarm(channelUserId);
+
+		if (destinationSwarm == null)
+			return;
+
+		byte[] peerID = destinationSwarm.getDownloadPeerId();
+		if (peerID != null) {
+			BlogracyBullyCoordinatorMessage message = new BlogracyBullyCoordinatorMessage(senderUserId, peerID,  0, null);
+			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
+		} else {
+			System.out.println("System: Torrent isn't running, message can't be delivered");
+		}
+	}
+
+	public void sendBullyAnswerMessage(String channelUserId, String senderUserId) {
+		Download destinationSwarm = this.getSwarm(channelUserId);
+
+		if (destinationSwarm == null)
+			return;
+
+		byte[] peerID = destinationSwarm.getDownloadPeerId();
+		if (peerID != null) {
+			BlogracyBullyAnswerMessage message = new BlogracyBullyAnswerMessage(senderUserId, peerID,  0, null);
+			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
+		} else {
+			System.out.println("System: Torrent isn't running, message can't be delivered");
+		}
+	}
+
+	public void sendBullyElectionMessage(String channelUserId, String senderUserId) {
+		Download destinationSwarm = this.getSwarm(channelUserId);
+
+		if (destinationSwarm == null)
+			return;
+
+		byte[] peerID = destinationSwarm.getDownloadPeerId();
+		if (peerID != null) {
+			BlogracyBullyElectionMessage message = new BlogracyBullyElectionMessage(senderUserId, peerID,  0, null);
+			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
+		} else {
+			System.out.println("System: Torrent isn't running, message can't be delivered");
+		}
+	}
+	
 	public static byte[] bEncode(Map map) {
 		if (formatters == null) {
 			return new byte[0];
@@ -276,11 +328,22 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	/*****************************************************
 	 * 
 	 * BlogracyDataMessageListener members
+	 * @throws UnsupportedEncodingException 
 	 * 
 	 * 
 	 *****************************************************/
 	@Override
 	public void blogracyDataMessageReceived(Download download, byte[] sender, String nick, BlogracyDataMessage message) {
+		Map downloadMap = download.getTorrent().getMapProperty("info");
+		String channelUserId = "";
+		try 
+		{
+			channelUserId = new String( (byte[])downloadMap.get("name"), "UTF-8");
+			if(channelUserId != null)
+				channelUserId = channelUserId.replace("-BLOGRACY-FRIENDSWARM", "");
+		} catch (UnsupportedEncodingException e) {
+			e.printStackTrace();
+		}
 
 		synchronized (listeners) {
 			for (BlogracyContentMessageListener l : listeners) {
@@ -294,6 +357,12 @@ public class MessagingManager implements BlogracyDataMessageListener {
 					l.blogracyContentListRequestReceived((BlogracyContentListRequest) message);
 				else if (message.getID() == BlogracyContentListResponse.ID)
 					l.blogracyContentListResponseReceived((BlogracyContentListResponse) message);
+				else if (message.getID() == BlogracyBullyAnswerMessage.ID)
+					l.blogracyBullyAnswerReceived(channelUserId, (BlogracyBullyAnswerMessage) message);
+				else if (message.getID() == BlogracyBullyCoordinatorMessage.ID)
+					l.blogracyBullyCoordinatorReceived(channelUserId,(BlogracyBullyCoordinatorMessage) message);
+				else if (message.getID() == BlogracyBullyElectionMessage.ID)
+					l.blogracyBullyElectionReceived(channelUserId,(BlogracyBullyElectionMessage) message);
 			}
 		}
 
@@ -315,5 +384,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	@Override
 	public void downloadInactive(Download download) {
 	}
+
+	
 
 }

@@ -29,7 +29,7 @@ public class UserDataImpl implements UserData {
 	private List<ActivityEntry> activityStream;
 	private List<Album> albums;
 	private List<MediaItem> mediaItems;
-	
+	private List<User> delegates;
 
 	public UserDataImpl(User user) {
 		this.user = user;
@@ -297,4 +297,11 @@ public class UserDataImpl implements UserData {
 	}
 
 
+	public List<User> getDelegates()	{
+		return delegates;
+	}
+	
+	public void setDelegates(List<User> delegates) {
+		this.delegates = new ArrayList<User>(delegates);
+	}
 }

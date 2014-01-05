@@ -14,6 +14,9 @@ import javax.jms.TextMessage;
 import net.blogracy.logging.Logger;
 import net.blogracy.messaging.BlogracyContentMessageListener;
 import net.blogracy.messaging.MessagingManager;
+import net.blogracy.messaging.impl.BlogracyBullyAnswerMessage;
+import net.blogracy.messaging.impl.BlogracyBullyCoordinatorMessage;
+import net.blogracy.messaging.impl.BlogracyBullyElectionMessage;
 import net.blogracy.messaging.impl.BlogracyContent;
 import net.blogracy.messaging.impl.BlogracyContentAccepted;
 import net.blogracy.messaging.impl.BlogracyContentListRequest;
@@ -71,6 +74,8 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 				handleRequest(record);
 			else if (record.has("response"))
 				handleResponse(record);
+			else if (record.has("bullyMessageType") && record.has("action") && record.getString("action").equalsIgnoreCase("send"))
+				handleBullyMessageType(record);
 		} catch (JMSException e1) {
 			e1.printStackTrace();
 		} catch (JSONException e) {
@@ -79,6 +84,24 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 
 	}
 
+	protected void handleBullyMessageType(JSONObject record) throws JSONException{
+		if (!record.has("bullyMessageType") || !record.has("action") || !record.getString("action").equalsIgnoreCase("send") )
+			return;
+
+		String bullyMessageType = record.getString("bullyMessageType");
+		String channelUserId = record.getString("channelUserId");
+		String senderUserId = record.getString("senderUserId");
+		
+		if (bullyMessageType.equalsIgnoreCase("election")) {
+			sendBlogracyBullyElectionMessage(channelUserId, senderUserId);
+		} else if (bullyMessageType.equalsIgnoreCase("answer")) {
+			sendBlogracyBullyAnswerMessage(channelUserId, senderUserId);
+		} else if (bullyMessageType.equalsIgnoreCase("coordinator")) {
+			sendBlogracyBullyCoordinatorMessage(channelUserId, senderUserId);
+		}
+	}
+
+	
 	protected void handleResponse(JSONObject record) throws JSONException {
 		if (!record.has("response"))
 			return;
@@ -162,6 +185,20 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		messagingManager.sendContentListResponse(currentUserId, queriedUserId, contentsList);
 	}
 
+	
+	protected void sendBlogracyBullyCoordinatorMessage(String channelUserId, String senderUserId) {
+		messagingManager.sendBullyCoordinatorMessage(channelUserId, senderUserId);
+	}
+
+	protected void sendBlogracyBullyAnswerMessage(String channelUserId, String senderUserId) {
+		messagingManager.sendBullyAnswerMessage(channelUserId, senderUserId);
+	}
+
+	protected void sendBlogracyBullyElectionMessage(String channelUserId, String senderUserId) {
+		messagingManager.sendBullyElectionMessage(channelUserId, senderUserId);
+	}
+
+	
 	@Override
 	public void blogracyContentReceived(BlogracyContent message) {
 		if (message == null)
@@ -175,7 +212,7 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			record.put("request", "contentReceived");
 			record.put("senderUserId", message.getSenderUserId());
 			record.put("contentRecipientUserId", message.getContentRecipientUserId());
-			
+
 			JSONObject content = new JSONObject(message.getContent());
 			record.put("contentData", content);
 			record.put("contentId", content.getJSONObject("object").getString("id"));
@@ -227,9 +264,9 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			JSONObject record = new JSONObject();
 			record.put("request", "contentListReceived");
 			record.put("senderUserId", message.getSenderUserId());
-			
+
 			JSONObject content = new JSONObject(message.getContent());
-			record.put("contentData",content);
+			record.put("contentData", content);
 			response.setText(record.toString());
 
 			producer.send(outgoingQueue, response);
@@ -255,7 +292,7 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			record.put("contentUserId", message.getSenderUserId());
 			JSONObject content = new JSONObject(message.getContent());
 			record.put("contentId", content.getString("contentId"));
-	
+
 			response.setText(record.toString());
 
 			producer.send(outgoingQueue, response);
@@ -291,5 +328,77 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			e.printStackTrace();
 		}
 
+	}
+
+	@Override
+	public void blogracyBullyAnswerReceived(String channelUserId, BlogracyBullyAnswerMessage message) {
+		if (message == null)
+			return;
+
+		TextMessage response;
+		try {
+			response = session.createTextMessage();
+
+			JSONObject record = new JSONObject();
+			record.put("bullyMessageType", "answer");
+			record.put("action", "received");
+			record.put("senderUserId", message.getSenderUserId());
+			record.put("channelUserId",channelUserId);
+			response.setText(record.toString());
+
+			producer.send(outgoingQueue, response);
+		} catch (JMSException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void blogracyBullyCoordinatorReceived(String channelUserId, BlogracyBullyCoordinatorMessage message) {
+		if (message == null)
+			return;
+
+		TextMessage response;
+		try {
+			response = session.createTextMessage();
+
+			JSONObject record = new JSONObject();
+			record.put("bullyMessageType", "coordinator");
+			record.put("action", "received");
+			record.put("senderUserId", message.getSenderUserId());
+			record.put("channelUserId",channelUserId);
+			response.setText(record.toString());
+
+			producer.send(outgoingQueue, response);
+		} catch (JMSException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
+	}
+
+	@Override
+	public void blogracyBullyElectionReceived(String channelUserId, BlogracyBullyElectionMessage message) {
+		if (message == null)
+			return;
+
+		TextMessage response;
+		try {
+			response = session.createTextMessage();
+
+			JSONObject record = new JSONObject();
+			record.put("bullyMessageType", "election");
+			record.put("action", "received");
+			record.put("senderUserId", message.getSenderUserId());
+			record.put("channelUserId",channelUserId);
+			response.setText(record.toString());
+
+			producer.send(outgoingQueue, response);
+		} catch (JMSException e) {
+			e.printStackTrace();
+		} catch (JSONException e) {
+			e.printStackTrace();
+		}
 	}
 }

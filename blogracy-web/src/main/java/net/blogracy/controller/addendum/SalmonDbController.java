@@ -1,4 +1,4 @@
-package net.blogracy.controller;
+package net.blogracy.controller.addendum;
 
 import java.io.File;
 import java.io.FileReader;
@@ -15,7 +15,7 @@ import org.json.JSONTokener;
 
 import net.blogracy.config.Configurations;
 
-public class SalmonDbController {
+class SalmonDbController {
 
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 

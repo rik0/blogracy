@@ -87,7 +87,7 @@ public class MediaController {
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
 	private static final MediaController theInstance = new MediaController();
-	private static final FileSharing sharing = FileSharing.getSingleton();
+	private static final FileSharingImpl sharing = FileSharingImpl.getSingleton();
 	private static final ActivitiesController activities = ActivitiesController.getSingleton();
 	private static final DistributedHashTable dht = new DistributedHashTable();
 
@@ -157,7 +157,7 @@ public class MediaController {
 			if (recordDb == null)
 				return albums;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb.getString("uri"));
+			String latestHash = FileSharingImpl.getHashFromMagnetURI(recordDb.getString("uri"));
 
 			if (latestHash == null)
 				return albums;
@@ -205,7 +205,7 @@ public class MediaController {
 			if (recordDb == null)
 				return mediaItems;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb.getString("uri"));
+			String latestHash = FileSharingImpl.getHashFromMagnetURI(recordDb.getString("uri"));
 
 			if (latestHash == null)
 				return mediaItems;
@@ -458,7 +458,7 @@ public class MediaController {
 			if (recordDb == null)
 				return mediaItems;
 
-			String latestHash = FileSharing.getHashFromMagnetURI(recordDb.getString("uri"));
+			String latestHash = FileSharingImpl.getHashFromMagnetURI(recordDb.getString("uri"));
 
 			if (latestHash == null)
 				return mediaItems;

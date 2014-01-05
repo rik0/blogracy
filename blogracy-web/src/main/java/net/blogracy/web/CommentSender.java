@@ -8,7 +8,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.blogracy.config.Configurations;
-import net.blogracy.controller.CommentsController;
+import net.blogracy.controller.CommentsControllerImpl;
 import net.blogracy.errors.BlogracyItemNotFound;
 
 public class CommentSender extends HttpServlet {
@@ -25,7 +25,7 @@ public class CommentSender extends HttpServlet {
 		
 
 		try {
-			CommentsController.getInstance().addComment(destinationUserId, Configurations.getUserConfig().getUser().getHash().toString(), commentText, mediaId);
+			CommentsControllerImpl.getInstance().addComment(destinationUserId, Configurations.getUserConfig().getUser().getHash().toString(), commentText, mediaId);
 		} catch (BlogracyItemNotFound e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

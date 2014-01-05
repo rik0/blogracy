@@ -2,7 +2,7 @@
 	pageEncoding="ISO-8859-1"%>
 
 <%@ page import="org.apache.shindig.social.opensocial.model.MediaItem"%>
-<%@ page import="net.blogracy.controller.FileSharing"%>
+<%@ page import="net.blogracy.controller.FileSharingImpl"%>
 <%@ page import="net.blogracy.controller.MediaController"%>
 <%@ page import="net.blogracy.config.Configurations"%>
 <%@ page import="net.blogracy.model.users.UserData"%>
@@ -12,15 +12,14 @@
 	String mediaId = request.getParameter("mid");
 
 	MediaItem media = MediaController.getMediaItemWithCachedImage(userId,
-			albumId, mediaId);
-	UserData userData = FileSharing.getUserData(userId);
+	albumId, mediaId);
+	UserData userData = FileSharingImpl.getUserData(userId);
 	pageContext.setAttribute("media", media);
 	pageContext.setAttribute("uid", userId);
 	pageContext.setAttribute("aid", albumId);
 	pageContext.setAttribute("localUser", Configurations
-			.getUserConfig().getUser());
+	.getUserConfig().getUser());
 	pageContext.setAttribute("comments", userData.getCommentsByObjectId(mediaId));
-	
 %>
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>

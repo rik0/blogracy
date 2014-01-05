@@ -134,14 +134,14 @@ public class DistributedHashTable {
 				
 				String version = record.getString("version");
                 String uri = record.getString("uri");
-                String hash = FileSharing.getHashFromMagnetURI(uri);
+                String hash = FileSharingImpl.getHashFromMagnetURI(uri);
                 String now = ISO_DATE_FORMAT.format(new java.util.Date());
                 log.info("lookup-ans " + ddbKey + " " + hash + " " + version + " " + now + " " + delay);
 
 				
 				JSONObject currentRecord = getRecord(ddbKey);
 				if (currentRecord == null || currentRecord.getString("version").compareTo(version) < 0) {		
-					 FileSharing.getSingleton().downloadByHash(hash, ".json",
+					 FileSharingImpl.getSingleton().downloadByHash(hash, ".json",
 	                            new DownloadListener(ddbKey, hash, version, record));
 				}
 			} catch (Exception e) {

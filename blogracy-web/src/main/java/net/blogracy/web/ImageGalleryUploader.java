@@ -15,7 +15,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.blogracy.controller.FileSharing;
+import net.blogracy.controller.FileSharingImpl;
 import net.blogracy.controller.MediaController;
 
 import org.apache.commons.fileupload.FileItem;

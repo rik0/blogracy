@@ -43,4 +43,11 @@ public interface UserConfig {
      * @return the user with the correspondent hash, null if not found
      */
     public User getFriend(final String hash);
+    
+    /***
+     * Get's this user's delegates list. The delegates are users that can publish other users' addendum ActivityStream.
+     * @return
+     */
+    public List<User> getDelegates();
+    
 }

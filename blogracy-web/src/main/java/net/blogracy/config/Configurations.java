@@ -60,7 +60,8 @@ public class Configurations {
 	private static final String USER_FILE = "blogracyUser.properties";
 	private static final String BLOGRACY_USER_USER = "blogracy.user.user";
 	private static final String BLOGRACY_USER_FRIENDS = "blogracy.user.friends";
-
+	private static final String BLOGRACY_USER_DELEGATES = "blogracy.user.delegates";
+	
 	static private Properties loadProperties(String file) throws IOException {
 		 InputStream is = getResourceAsStream(file);
 		if (is != null) {
@@ -172,7 +173,6 @@ public class Configurations {
 					int i = 1;
 					String friendRow = userProperties.getProperty(BLOGRACY_USER_FRIENDS + '.' + i);
 					while (friendRow != null) {
-						friends.add(loadUser(friendRow));
 						if (!friendRow.equals(userRow)) {
 							friends.add(loadUser(friendRow));
 						}
@@ -182,6 +182,22 @@ public class Configurations {
 					return friends;
 				}
 
+				@Override
+				public List<User> getDelegates() {
+					String userRow = userProperties.getProperty(BLOGRACY_USER_USER);
+					ArrayList<User> delegates = new ArrayList<User>();
+					int i = 1;
+					String delegateRow = userProperties.getProperty(BLOGRACY_USER_DELEGATES + '.' + i);
+					while (delegateRow != null) {
+						if (!delegateRow.equals(userRow)) {
+							delegates.add(loadUser(delegateRow));
+						}
+						++i;
+						delegateRow = userProperties.getProperty(BLOGRACY_USER_DELEGATES + '.' + i);
+					}
+					return delegates;
+				}
+				
 				public User getFriend(final String hash) {
 					for (User friend : this.getFriends())
 						if (friend.getHash().toString().equals(hash))

@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.blogracy.config.Configurations;
 import net.blogracy.controller.ActivitiesController;
-import net.blogracy.controller.FileSharing;
+import net.blogracy.controller.FileSharingImpl;
 
 public class FileUpload extends HttpServlet {
 

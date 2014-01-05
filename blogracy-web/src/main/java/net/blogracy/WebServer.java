@@ -3,9 +3,9 @@ package net.blogracy;
 import net.blogracy.model.users.User;
 import net.blogracy.controller.ActivitiesController;
 import net.blogracy.controller.ChatController;
-import net.blogracy.controller.CommentsController;
+import net.blogracy.controller.CommentsControllerImpl;
 import net.blogracy.controller.DistributedHashTable;
-import net.blogracy.controller.FileSharing;
+import net.blogracy.controller.FileSharingImpl;
 import net.blogracy.config.Configurations;
 
 import java.text.DateFormat;
@@ -56,13 +56,13 @@ public class WebServer {
         ChatController.getSingleton().joinChannel(id);
 
 
-		CommentsController.getInstance().initializeConnection();
+		CommentsControllerImpl.getInstance().initializeConnection();
 
 		while (true) {
 			ActivitiesController activities = ActivitiesController.getSingleton();
 			String now = ISO_DATE_FORMAT.format(new java.util.Date());
 			activities.addFeedEntry(id, now + " " + LOREM_IPSUM, null);
-			CommentsController.getInstance().getContentList(id);
+			CommentsControllerImpl.getInstance().getContentList(id);
 
 			// List<User> friends = Configurations.getUserConfig().getFriends();
 			randomWait = (int) (TOTAL_WAIT * (0.8 + 0.4 * Math.random()));

@@ -1,6 +1,6 @@
 <%@ page import="net.blogracy.model.hashes.Hashes" %>
 <%@ page import="net.blogracy.model.users.Users" %>
-<%@ page import="net.blogracy.controller.FileSharing" %>
+<%@ page import="net.blogracy.controller.FileSharingImpl" %>
 <%@ page import="net.blogracy.controller.ChatController" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
@@ -9,7 +9,7 @@
 <%@ page import="org.apache.shindig.social.opensocial.model.Album" %>
 <%@ page import="org.apache.shindig.social.opensocial.model.MediaItem" %>
 <%
-String userHash = request.getParameter("user");
+	String userHash = request.getParameter("user");
 if (userHash == null || userHash.length() == 0) {
     userHash = Configurations.getUserConfig().getUser().getHash().toString();
 } else if (userHash.length() != 32) {
@@ -27,16 +27,16 @@ if (! loc.equals(userHash)) {
   pageContext.setAttribute("channel", channel);
 }
 
-List<Album> albums= FileSharing.getSingleton().getAlbums(userHash);
+List<Album> albums= FileSharingImpl.getSingleton().getAlbums(userHash);
 Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>();
 for (Album a : albums)
 {
-	mediaItemMap.put(a.getId(), FileSharing.getSingleton().getMediaItemsWithCachedImages(userHash, a.getId()));
+	mediaItemMap.put(a.getId(), FileSharingImpl.getSingleton().getMediaItemsWithCachedImages(userHash, a.getId()));
 }
 
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", Users.newUser(Hashes.fromString(userHash)));
-pageContext.setAttribute("feed", FileSharing.getFeed(userHash));
+pageContext.setAttribute("feed", FileSharingImpl.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
 pageContext.setAttribute("userAlbums", albums);

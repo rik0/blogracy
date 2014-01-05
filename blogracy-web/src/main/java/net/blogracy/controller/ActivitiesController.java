@@ -84,7 +84,7 @@ public class ActivitiesController {
 	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
-	private static final FileSharing sharing = FileSharing.getSingleton();
+	private static final FileSharingImpl sharing = FileSharingImpl.getSingleton();
 	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
 	private static final ActivitiesController theInstance = new ActivitiesController();
 
@@ -115,11 +115,11 @@ public class ActivitiesController {
 		JSONObject record = dht.getRecord(user);
 		if (record != null) {
 			try {
-				String latestHash = FileSharing.getHashFromMagnetURI(record.getString("uri"));
+				String latestHash = FileSharingImpl.getHashFromMagnetURI(record.getString("uri"));
 
 				File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
 				if (!dbFile.exists() && record.has("prev")) {
-					latestHash = FileSharing.getHashFromMagnetURI(record.getString("prev"));
+					latestHash = FileSharingImpl.getHashFromMagnetURI(record.getString("prev"));
 					dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
 				}
 				if (dbFile.exists()) {

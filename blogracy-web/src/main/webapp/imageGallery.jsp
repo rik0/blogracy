@@ -1,6 +1,6 @@
 <%@ page import="net.blogracy.model.hashes.Hashes"%>
 <%@ page import="net.blogracy.model.users.Users"%>
-<%@ page import="net.blogracy.controller.FileSharing"%>
+<%@ page import="net.blogracy.controller.FileSharingImpl"%>
 <%@ page import="net.blogracy.config.Configurations"%>
 <%
 	String userHash = request.getParameter("user");

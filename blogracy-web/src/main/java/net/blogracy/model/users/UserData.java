@@ -113,4 +113,5 @@ public interface UserData {
 
 
 	
+	public List<User> getDelegates();
 }
