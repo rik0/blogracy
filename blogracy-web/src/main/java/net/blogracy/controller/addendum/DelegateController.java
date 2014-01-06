@@ -73,7 +73,7 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 		List<User> userFriends = this.sharing.getDelegates(this.currentUser.getHash().toString());
 		this.listOfUsers.addAll(userFriends);
 
-		log.info("listOfFriends populated #:" + listOfUsers.size() + " "  + " currentState:" + this.currentState);
+		log.info("listOfFriends channel:" + currentUser.getHash().toString() + " populated friends #:" + listOfUsers.size() + " "  + " currentState:" + this.currentState);
 	}
 
 	/**

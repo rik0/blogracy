@@ -13,7 +13,7 @@
 
 	MediaItem media = MediaController.getMediaItemWithCachedImage(userId,
 	albumId, mediaId);
-	UserData userData = FileSharingImpl.getUserData(userId);
+	UserData userData = FileSharingImpl.getSingleton().getUserData(userId);
 	pageContext.setAttribute("media", media);
 	pageContext.setAttribute("uid", userId);
 	pageContext.setAttribute("aid", albumId);

@@ -377,7 +377,7 @@ public class FileSharingImpl implements FileSharing {
 		db.put("albums", albumsData);
 		db.put("mediaItems", mediaItemsData);
 		db.put("items", items);
-		db.put("delegates", items);
+		db.put("delegates", delegatesData);
 
 		FileWriter writer = new FileWriter(feedFile);
 		db.write(writer);

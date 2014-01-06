@@ -167,15 +167,15 @@ public class DistributedHashTable {
 	private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
 	private Logger log;
 
+	public static File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
+	
 	private static final DistributedHashTable THE_INSTANCE = new DistributedHashTable();
 
 	public static DistributedHashTable getSingleton() {
 		return THE_INSTANCE;
 	}
-
-	public static File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
 	
-	public DistributedHashTable() {
+	private DistributedHashTable() {
 		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 		try {
 			log = Logger.getLogger("net.blogracy.controller.dht");

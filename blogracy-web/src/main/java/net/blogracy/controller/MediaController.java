@@ -89,7 +89,7 @@ public class MediaController {
 	private static final MediaController theInstance = new MediaController();
 	private static final FileSharingImpl sharing = FileSharingImpl.getSingleton();
 	private static final ActivitiesController activities = ActivitiesController.getSingleton();
-	private static final DistributedHashTable dht = new DistributedHashTable();
+	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
 
 	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
 		@Override
