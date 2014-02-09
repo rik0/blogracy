@@ -368,7 +368,7 @@ public class FileSharingImpl implements FileSharing {
 		List<User> delegates = userData.getDelegates();
 		JSONArray delegatesData = new JSONArray();
 		for (int i = 0; i < delegates.size(); ++i) {
-			String item = delegates.get(i).getHash().getStringValue();
+			String item = delegates.get(i).getHash().toString();
 			delegatesData.put(item);
 		}
 

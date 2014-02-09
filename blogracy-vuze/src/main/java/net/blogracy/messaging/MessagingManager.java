@@ -29,6 +29,7 @@ import net.blogracy.messaging.peer.impl.PeerControllerImpl;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.torrent.Torrent;
+import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.Formatters;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -334,15 +335,18 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	 *****************************************************/
 	@Override
 	public void blogracyDataMessageReceived(Download download, byte[] sender, String nick, BlogracyDataMessage message) {
-		Map downloadMap = download.getTorrent().getMapProperty("info");
 		String channelUserId = "";
 		try 
 		{
-			channelUserId = new String( (byte[])downloadMap.get("name"), "UTF-8");
+			Map genericMap = download.getTorrent().writeToMap();
+			Map downloadMap = (Map) genericMap.get("info");
+			channelUserId = new String( (byte[])downloadMap.get("name.utf8"), "UTF-8");
 			if(channelUserId != null)
 				channelUserId = channelUserId.replace("-BLOGRACY-FRIENDSWARM", "");
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
+		}catch (TorrentException e1) {
+			e1.printStackTrace();
 		}
 
 		synchronized (listeners) {

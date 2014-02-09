@@ -26,6 +26,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.URI;
 import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -258,7 +259,7 @@ public class MediaController {
 			String extension = FileExtensionConverter.toDefaultExtension(item.getMimeType());
 			if (extension != null && !extension.isEmpty())
 				extension = "." + extension;
-			File f = new File("cache/" + sharing.getHashFromMagnetURI(itemMagneUri) + extension);
+			File f = new File(CACHE_FOLDER + File.separator +sharing.getHashFromMagnetURI(itemMagneUri) + extension);
 			if (f.exists())
 				item.setUrl("cache/" + sharing.getHashFromMagnetURI(itemMagneUri) + extension);
 			else
@@ -295,7 +296,7 @@ public class MediaController {
 				String extension = FileExtensionConverter.toDefaultExtension(item.getMimeType());
 				if (extension != null && !extension.isEmpty())
 					extension = "." + extension;
-				File f = new File("cache/" + sharing.getHashFromMagnetURI(itemMagneUri) + extension);
+				File f = new File(CACHE_FOLDER + File.separator +sharing.getHashFromMagnetURI(itemMagneUri) + extension);
 				if (f.exists())
 					item.setUrl("cache/" + sharing.getHashFromMagnetURI(itemMagneUri) + extension);
 				else
