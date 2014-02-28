@@ -62,7 +62,7 @@ mvn exec:exec
 
 Alternatively, you can deploy the webapp into any Java web container.
 
-Blogracy web interface is available at: htpp://localhost:8080/
+Blogracy web interface is available at: http://localhost:8181/
 
 ### Executing Blogracy inside the IDE ###
 
