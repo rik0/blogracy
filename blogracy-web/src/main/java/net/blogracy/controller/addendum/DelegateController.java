@@ -1,6 +1,8 @@
 package net.blogracy.controller.addendum;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -19,7 +21,7 @@ import net.blogracy.model.hashes.Hashes;
 import net.blogracy.model.users.User;
 import net.blogracy.model.users.Users;
 
-class DelegateController implements DelegateApprovableMessageListener, DelegateDecisionalMessageListener {
+class DelegateController implements DelegateApprovableMessageListener, DelegateDecisionalMessageListener, UserDelegatesChangedListener {
 
 	/**
 	 * Represents the user to which the communication channel belongs to
@@ -50,22 +52,18 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 	private ScheduledFuture<?> contentTimerHandle;
 	private ScheduledFuture<?> answersTimerHandle;
 	private ScheduledFuture<?> coordinatorTimerHandle;
-	private Logger log;
+	private static final Logger log = Logger.getLogger("net.blogracy.controller.DelegateController");
 
-	public DelegateController(User user) {
-		this(user, FileSharingImpl.getSingleton(), CommentsControllerImpl.getInstance());
-	}
-
-	// Used mainly for testing purposes
-	public DelegateController(User user, FileSharing sharing, CommentsController commentsController) {
+	private DelegateController(User user, FileSharing sharing, CommentsController commentsController) {
 		this.currentUser = user;
 		this.sharing = sharing;
 		this.commentsController = commentsController;
 
 		try {
-			log = Logger.getLogger("net.blogracy.controller.DelegateController");
-			log.addHandler(new FileHandler("delegateController.log"));
-			log.getHandlers()[0].setFormatter(new SimpleFormatter());
+			if (log.getHandlers().length <= 0) {
+				log.addHandler(new FileHandler("delegateController.log"));
+				log.getHandlers()[0].setFormatter(new SimpleFormatter());
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -73,7 +71,21 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 		List<User> userFriends = this.sharing.getDelegates(this.currentUser.getHash().toString());
 		this.listOfUsers.addAll(userFriends);
 
-		log.info("listOfFriends channel:" + currentUser.getHash().toString() + " populated friends #:" + listOfUsers.size() + " "  + " currentState:" + this.currentState);
+		log.info("listOfUsers channel:" + currentUser.getHash().toString() + " populated friends #:" + listOfUsers.size() + " " + " currentState:" + this.currentState + " ["
+				+ writeAllUsers(listOfUsers) + "]");
+	}
+
+	public static DelegateController Create(User user) {
+		FileSharing sharing = FileSharingImpl.getSingleton();
+		CommentsController commentsController = CommentsControllerImpl.getInstance();
+		return Create(user, sharing, commentsController);
+	}
+
+	// Used mainly for testing purposes
+	public static DelegateController Create(User user, FileSharing sharing, CommentsController commentsController) {
+		DelegateController c = new DelegateController(user, sharing, commentsController);
+		sharing.addUserDelegatesChangedListener(c);
+		return c;
 	}
 
 	/**
@@ -164,15 +176,14 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 
 		int myScore = getDelegateScore(Configurations.getUserConfig().getUser().getHash().toString());
 
-		// Check if the delegate has a score (at least) bigger than mine
-		if (getDelegateScore(messageSenderUserId) > myScore)
-			startBullyElection();
-		else if (Configurations.getUserConfig().getUser().getHash().toString().compareToIgnoreCase(messageSenderUserId) == 0) {
+		if (Configurations.getUserConfig().getUser().getHash().toString().compareToIgnoreCase(messageSenderUserId) == 0) {
 			// I am the new delegate
 			commentsController.getContentList(this.currentUser.getHash().toString());
 		}
+		// Check if the delegate has a score (at least) bigger than mine
+		else if (getDelegateScore(messageSenderUserId) > myScore)
+			startBullyElection();
 	}
-
 
 	public synchronized void delegateApprovableMessageReceived(String contentId) {
 		if (contentId == null)
@@ -275,6 +286,7 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 			// I'm the delegate!
 			this.sendCoordinatorMessage();
 			this.currentDelegate = Configurations.getUserConfig().getUser();
+			this.currentState = BullyAlgorithmState.IDLE;
 		} else {
 			// waits another T-time for coordination messages
 			this.currentState = BullyAlgorithmState.WAITING_FOR_COORDINATOR;
@@ -353,5 +365,40 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 
 	public enum BullyAlgorithmState {
 		IDLE, WAITING_FOR_ANSWERS, WAITING_FOR_COORDINATOR
+	}
+
+	@Override
+	public void onUserDelegatesChanged(String userId, List<User> newDelegates) {
+		if (userId.equalsIgnoreCase(this.currentUser.getHash().toString())) {
+			boolean delegatesChanged = false;
+			if (this.listOfUsers.size() != newDelegates.size())
+				delegatesChanged = true;
+
+			if (!delegatesChanged) {
+				for (int i = 0; i < this.listOfUsers.size(); ++i) {
+					if (!this.listOfUsers.get(i).getHash().toString().equalsIgnoreCase(newDelegates.get(i).getHash().toString())) {
+						delegatesChanged = true;
+						break;
+					}
+				}
+			}
+
+			if (delegatesChanged) {
+				this.listOfUsers.clear();
+				this.listOfUsers.addAll(newDelegates);
+
+				log.info("listOfUsers changed. Channel:" + currentUser.getHash().toString() + " populated friends #:" + listOfUsers.size() + " " + " currentState:" + this.currentState + " ["
+						+ writeAllUsers(listOfUsers) + "]");
+			}
+		}
+
+	}
+
+	private String writeAllUsers(List<User> list) {
+		String s = new String();
+		for (User u : list) {
+			s += u.getHash().toString() + ", ";
+		}
+		return s;
 	}
 }

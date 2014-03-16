@@ -1,3 +1,4 @@
+<%@page import="java.util.Collection"%>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
 	pageEncoding="ISO-8859-1"%>
 
@@ -6,20 +7,51 @@
 <%@ page import="net.blogracy.controller.MediaController"%>
 <%@ page import="net.blogracy.config.Configurations"%>
 <%@ page import="net.blogracy.model.users.UserData"%>
+<%@ page import="net.blogracy.model.users.UserAddendumData"%>
+<%@ page import="org.apache.shindig.social.opensocial.model.ActivityEntry"%>
+<%@ page import="java.util.*"%>
+<%@ page import="java.text.*"%>
 <%
 	String userId = request.getParameter("uid");
 	String albumId = request.getParameter("aid");
 	String mediaId = request.getParameter("mid");
 
-	MediaItem media = MediaController.getMediaItemWithCachedImage(userId,
-	albumId, mediaId);
+	MediaItem media = MediaController.getMediaItemWithCachedImage(userId, albumId, mediaId);
 	UserData userData = FileSharingImpl.getSingleton().getUserData(userId);
+	UserAddendumData userAddendumData = FileSharingImpl.getSingleton().getUserAddendumData(userId);
 	pageContext.setAttribute("media", media);
 	pageContext.setAttribute("uid", userId);
 	pageContext.setAttribute("aid", albumId);
 	pageContext.setAttribute("localUser", Configurations
 	.getUserConfig().getUser());
-	pageContext.setAttribute("comments", userData.getCommentsByObjectId(mediaId));
+	ArrayList<ActivityEntry> allComments = new ArrayList<ActivityEntry>();
+	allComments.addAll(userData.getCommentsByObjectId(mediaId));
+	allComments.addAll(userAddendumData.getCommentsByObjectId(mediaId));
+	Collections.sort(allComments, new Comparator<ActivityEntry>() {
+		public int compare(ActivityEntry a, ActivityEntry b) {
+	        if (a.getPublished() == null && b.getPublished() == null)
+	        	return 0;
+	        
+	        if (a.getPublished() == null && b.getPublished() != null)
+	        	return 1;
+	        
+	        if (a.getPublished() != null && b.getPublished() == null)
+	        	return -1;
+	        
+	        final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	        
+	        try
+	        {
+	        Date dateA  = ISO_DATE_FORMAT.parse(a.getPublished());
+	        Date dateB  = ISO_DATE_FORMAT.parse(b.getPublished());
+	        
+	        return dateA.compareTo(dateB);
+	        
+	        }
+	        catch (Exception ex) { return 0; }
+	    }
+	});
+	pageContext.setAttribute("comments", allComments);
 %>
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>

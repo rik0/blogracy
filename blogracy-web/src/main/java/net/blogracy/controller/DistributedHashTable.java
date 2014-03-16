@@ -33,8 +33,10 @@ import java.security.SignatureException;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TimeZone;
 import java.util.logging.FileHandler;
 import java.util.logging.Logger;
@@ -67,49 +69,46 @@ import org.json.JSONTokener;
  */
 public class DistributedHashTable {
 
-	 class DownloadListener implements FileSharingDownloadListener {
-	        private String ddbKey;
-	        private String hash;
-	        private String version;
-	        private JSONObject record;
-	        private long start;
-	        private long sent;
+	class DownloadListener implements FileSharingDownloadListener {
+		private String ddbKey;
+		private String hash;
+		private String version;
+		private JSONObject record;
+		private long start;
+		private long sent;
 
-	        DownloadListener(String ddbKey, String hash, String version,
-	                JSONObject record) {
-	            this.ddbKey = ddbKey;
-	            this.hash = hash;
-	            this.version = version;
-	            this.record = record;
-	            this.start = System.currentTimeMillis();
-	            try {
-	                this.sent = ISO_DATE_FORMAT.parse(version).getTime();
-	            } catch (ParseException e) {
-	                e.printStackTrace();
-	            }
-	            log.info("download-req " + ddbKey + " " + hash + " " + version);
-	        }
+		DownloadListener(String ddbKey, String hash, String version, JSONObject record) {
+			this.ddbKey = ddbKey;
+			this.hash = hash;
+			this.version = version;
+			this.record = record;
+			this.start = System.currentTimeMillis();
+			try {
+				this.sent = ISO_DATE_FORMAT.parse(version).getTime();
+			} catch (ParseException e) {
+				e.printStackTrace();
+			}
+			log.info("download-req " + ddbKey + " " + hash + " " + version);
+		}
 
-			@Override
-			public void onFileDownloaded(String fileFullPath) {
-				String now = ISO_DATE_FORMAT.format(new java.util.Date());
-	            long delay = System.currentTimeMillis() - start;
-	            long size = -1;
-	            long received = -1;
-	            try {
-	                received = ISO_DATE_FORMAT.parse(now).getTime() - sent;
-	                File file = new File(fileFullPath);
-	                size = file.length();
-	            } catch (Exception e) {
-	                e.printStackTrace();
-	            }
-	            log.info("download-ans " + ddbKey + " " + hash + " " + version + " "
-	                    + now + " " + delay + " " + received + " " + size);
-	            putRecord(ddbKey, record);
-	        }
-	    }
+		@Override
+		public void onFileDownloaded(String fileFullPath) {
+			String now = ISO_DATE_FORMAT.format(new java.util.Date());
+			long delay = System.currentTimeMillis() - start;
+			long size = -1;
+			long received = -1;
+			try {
+				received = ISO_DATE_FORMAT.parse(now).getTime() - sent;
+				File file = new File(fileFullPath);
+				size = file.length();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			log.info("download-ans " + ddbKey + " " + hash + " " + version + " " + now + " " + delay + " " + received + " " + size);
+			putRecord(ddbKey, record);
+		}
+	}
 
-	
 	class LookupListener implements MessageListener {
 		private String ddbKey;
 		private long start;
@@ -123,26 +122,23 @@ public class DistributedHashTable {
 		@Override
 		public void onMessage(Message response) {
 			try {
-				long delay = System.currentTimeMillis() - start; 
+				long delay = System.currentTimeMillis() - start;
 				String msgText = ((TextMessage) response).getText();
 				JSONObject keyValue = new JSONObject(msgText);
 				final String value = keyValue.getString("value");
 				final String ddbKey = keyValue.getString("ddbKey");
 				PublicKey signerKey = JsonWebSignature.getSignerKey(value);
-                final JSONObject record = new JSONObject(JsonWebSignature.verify(
-                        value, signerKey));
-				
-				String version = record.getString("version");
-                String uri = record.getString("uri");
-                String hash = FileSharingImpl.getHashFromMagnetURI(uri);
-                String now = ISO_DATE_FORMAT.format(new java.util.Date());
-                log.info("lookup-ans " + ddbKey + " " + hash + " " + version + " " + now + " " + delay);
+				final JSONObject record = new JSONObject(JsonWebSignature.verify(value, signerKey));
 
-				
+				String version = record.getString("version");
+				String uri = record.getString("uri");
+				String hash = FileSharingImpl.getHashFromMagnetURI(uri);
+				String now = ISO_DATE_FORMAT.format(new java.util.Date());
+				log.info("lookup-ans " + ddbKey + " " + hash + " " + version + " " + now + " " + delay);
+
 				JSONObject currentRecord = getRecord(ddbKey);
-				if (currentRecord == null || currentRecord.getString("version").compareTo(version) < 0) {		
-					 FileSharingImpl.getSingleton().downloadByHash(hash, ".json",
-	                            new DownloadListener(ddbKey, hash, version, record));
+				if (currentRecord == null || currentRecord.getString("version").compareTo(version) < 0) {
+					FileSharingImpl.getSingleton().downloadByHash(hash, ".json", new DownloadListener(ddbKey, hash, version, record));
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -160,28 +156,28 @@ public class DistributedHashTable {
 	private MessageConsumer consumer;
 
 	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
-			 
-	
+
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
 	private HashMap<String, JSONObject> records = new HashMap<String, JSONObject>();
 	private Logger log;
 
 	public static File recordsFile = new File(CACHE_FOLDER + File.separator + "records.json");
-	
+
 	private static final DistributedHashTable THE_INSTANCE = new DistributedHashTable();
 
 	public static DistributedHashTable getSingleton() {
 		return THE_INSTANCE;
 	}
-	
+
+	private List<DistributedHashTableRecordChangedListener> distributedHashTableRecordChangedListeners = new ArrayList<DistributedHashTableRecordChangedListener>();
+
 	private DistributedHashTable() {
 		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 		try {
 			log = Logger.getLogger("net.blogracy.controller.dht");
 			log.addHandler(new FileHandler("dht.log"));
-			log.getHandlers()[0].setFormatter(new SimpleFormatter()); 
-			
+			log.getHandlers()[0].setFormatter(new SimpleFormatter());
 
 			if (recordsFile.exists()) {
 				JSONArray recordList = new JSONArray(new JSONTokener(new FileReader(recordsFile)));
@@ -224,7 +220,7 @@ public class DistributedHashTable {
 
 	public void store(final String userId, final String ddbKey, final String uri, final String version) {
 		try {
-	
+
 			JSONObject record = new JSONObject();
 			record.put("id", userId);
 			record.put("uri", uri);
@@ -253,30 +249,56 @@ public class DistributedHashTable {
 	}
 
 	public void putRecord(String ddbKey, JSONObject record) {
+		boolean recordChanged = false;
 		try {
 			// String id = record.getString("id");
 			JSONObject old = records.get(ddbKey);
 			if (old == null || record.getString("version").compareTo(old.getString("version")) > 0) {
 				records.put(ddbKey, record);
+				recordChanged = true;
 			}
 		} catch (JSONException e1) {
 			e1.printStackTrace();
 		}
-		JSONArray recordList = new JSONArray();
-		Iterator<JSONObject> entries = records.values().iterator();
-		while (entries.hasNext()) {
-			JSONObject entry = entries.next();
-			recordList.put(entry);
+		if (recordChanged) {
+			// records file serialization
+			JSONArray recordList = new JSONArray();
+
+			Iterator<JSONObject> entries = records.values().iterator();
+			while (entries.hasNext()) {
+				JSONObject entry = entries.next();
+				recordList.put(entry);
+			}
+
+			try {
+				FileWriter writer = new FileWriter(recordsFile);
+				recordList.write(writer);
+				writer.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
 		}
-		
-		try {
-			FileWriter writer = new FileWriter(recordsFile);
-			recordList.write(writer);
-			writer.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (JSONException e) {
-			e.printStackTrace();
+		if (recordChanged) {
+			try {
+				notifyDistributedHashTableRecordChangedListeners(record.getString("id"));
+			} catch (JSONException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public void addDistributedHashTableRecordChangedListener(DistributedHashTableRecordChangedListener l) {
+		if (!distributedHashTableRecordChangedListeners.contains(l))
+			distributedHashTableRecordChangedListeners.add(l);
+
+	}
+
+	private void notifyDistributedHashTableRecordChangedListeners(String id) {
+		if (distributedHashTableRecordChangedListeners != null && id != null) {
+			for (DistributedHashTableRecordChangedListener l : distributedHashTableRecordChangedListeners)
+				l.distributedHashTableRecordChanged(id);
 		}
 	}
 }

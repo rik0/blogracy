@@ -53,7 +53,7 @@ public class DelegateControllerTest {
 	public void setUp() throws Exception {
 		MockitoAnnotations.initMocks(this);
 		Mockito.when(fileSharing.getDelegates(currentChannelUser.getHash().toString())).thenReturn(currentChannelDelegates);
-		delegateController = new DelegateController(currentChannelUser, fileSharing, commentsController);
+		delegateController = DelegateController.Create(currentChannelUser, fileSharing, commentsController);
 	}
 
 	@After

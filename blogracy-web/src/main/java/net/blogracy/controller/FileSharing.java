@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 
+import net.blogracy.controller.addendum.UserDelegatesChangedListener;
 import net.blogracy.model.users.User;
 import net.blogracy.model.users.UserAddendumData;
 import net.blogracy.model.users.UserData;
@@ -83,5 +84,7 @@ public interface FileSharing {
 	public String seedUserAddendumData(UserAddendumData userData) throws JSONException, IOException;
 	
 	public List<User> getDelegates(final String userId);
+	
+	public void addUserDelegatesChangedListener(UserDelegatesChangedListener l);
 
 }

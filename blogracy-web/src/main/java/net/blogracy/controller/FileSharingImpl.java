@@ -51,6 +51,7 @@ import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
 import net.blogracy.controller.addendum.AddendumController;
+import net.blogracy.controller.addendum.UserDelegatesChangedListener;
 import net.blogracy.errors.PhotoAlbumDuplicated;
 import net.blogracy.model.hashes.Hashes;
 import net.blogracy.model.users.User;
@@ -83,7 +84,7 @@ import com.google.inject.name.Names;
 /**
  * Generic functions to manipulate feeds are defined in this class.
  */
-public class FileSharingImpl implements FileSharing {
+public class FileSharingImpl implements FileSharing, DistributedHashTableRecordChangedListener {
 
 	private ConnectionFactory connectionFactory;
 	private Connection downloadConnection;
@@ -98,7 +99,7 @@ public class FileSharingImpl implements FileSharing {
 	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
-	private static final FileSharingImpl theInstance = new FileSharingImpl();
+	private static FileSharingImpl theInstance = Create();
 	private static final ActivitiesController activitiesController = ActivitiesController.getSingleton();
 	private static final AddendumController addendumController = AddendumController.getSingleton();
 
@@ -108,6 +109,8 @@ public class FileSharingImpl implements FileSharing {
 			b.bind(BeanConverter.class).annotatedWith(Names.named("shindig.bean.converter.json")).to(BeanJsonConverter.class);
 		}
 	}));
+
+	private List<UserDelegatesChangedListener> userDelegatesChangedListeners = new ArrayList<UserDelegatesChangedListener>();
 
 	public static FileSharingImpl getSingleton() {
 		return theInstance;
@@ -128,6 +131,12 @@ public class FileSharingImpl implements FileSharing {
 			e.printStackTrace();
 		}
 		return result;
+	}
+
+	private static FileSharingImpl Create() {
+		FileSharingImpl f = new FileSharingImpl();
+		DistributedHashTable.getSingleton().addDistributedHashTableRecordChangedListener(f);
+		return f;
 	}
 
 	private FileSharingImpl() {
@@ -154,7 +163,9 @@ public class FileSharingImpl implements FileSharing {
 		}
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see net.blogracy.controller.FileSharing#seed(java.io.File)
 	 */
 	@Override
@@ -194,7 +205,9 @@ public class FileSharingImpl implements FileSharing {
 		return hash;
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see net.blogracy.controller.FileSharing#download(java.lang.String)
 	 */
 	@Override
@@ -203,8 +216,11 @@ public class FileSharingImpl implements FileSharing {
 		downloadByHash(hash, null, null);
 	}
 
-	/* (non-Javadoc)
-	 * @see net.blogracy.controller.FileSharing#download(java.lang.String, java.lang.String)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.blogracy.controller.FileSharing#download(java.lang.String,
+	 * java.lang.String)
 	 */
 	@Override
 	public void download(final String uri, final String ext) {
@@ -212,8 +228,11 @@ public class FileSharingImpl implements FileSharing {
 		downloadByHash(hash, ext, null);
 	}
 
-	/* (non-Javadoc)
-	 * @see net.blogracy.controller.FileSharing#download(java.lang.String, java.lang.String, net.blogracy.controller.FileSharingDownloadListener)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.blogracy.controller.FileSharing#download(java.lang.String,
+	 * java.lang.String, net.blogracy.controller.FileSharingDownloadListener)
 	 */
 	@Override
 	public void download(final String uri, final String ext, final FileSharingDownloadListener downloadCompleteListener) {
@@ -221,7 +240,9 @@ public class FileSharingImpl implements FileSharing {
 		downloadByHash(hash, ext, downloadCompleteListener);
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see net.blogracy.controller.FileSharing#downloadByHash(java.lang.String)
 	 */
 	@Override
@@ -229,8 +250,11 @@ public class FileSharingImpl implements FileSharing {
 		downloadByHash(hash, null, null);
 	}
 
-	/* (non-Javadoc)
-	 * @see net.blogracy.controller.FileSharing#downloadByHash(java.lang.String, java.lang.String, net.blogracy.controller.FileSharingDownloadListener)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see net.blogracy.controller.FileSharing#downloadByHash(java.lang.String,
+	 * java.lang.String, net.blogracy.controller.FileSharingDownloadListener)
 	 */
 	@Override
 	public void downloadByHash(final String hash, final String ext, final FileSharingDownloadListener downloadCompleteListener) {
@@ -248,6 +272,7 @@ public class FileSharingImpl implements FileSharing {
 
 							if (downloadCompleteListener != null)
 								downloadCompleteListener.onFileDownloaded(fileFullPath);
+
 						} catch (Exception e) {
 							e.printStackTrace();
 						}
@@ -279,7 +304,9 @@ public class FileSharingImpl implements FileSharing {
 
 	}
 
-	/* (non-Javadoc)
+	/*
+	 * (non-Javadoc)
+	 * 
 	 * @see net.blogracy.controller.FileSharing#getUserData(java.lang.String)
 	 */
 	@Override
@@ -309,8 +336,11 @@ public class FileSharingImpl implements FileSharing {
 		return userData;
 	}
 
-	/* (non-Javadoc)
-	 * @see net.blogracy.controller.FileSharing#getUserAddendumData(java.lang.String)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.blogracy.controller.FileSharing#getUserAddendumData(java.lang.String)
 	 */
 	@Override
 	public UserAddendumData getUserAddendumData(String userId) {
@@ -336,8 +366,12 @@ public class FileSharingImpl implements FileSharing {
 		return userData;
 	}
 
-	/* (non-Javadoc)
-	 * @see net.blogracy.controller.FileSharing#seedUserData(net.blogracy.model.users.UserData)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.blogracy.controller.FileSharing#seedUserData(net.blogracy.model.users
+	 * .UserData)
 	 */
 	@Override
 	public String seedUserData(final UserData userData) throws JSONException, IOException {
@@ -387,8 +421,12 @@ public class FileSharingImpl implements FileSharing {
 		return feedUri;
 	}
 
-	/* (non-Javadoc)
-	 * @see net.blogracy.controller.FileSharing#seedUserAddendumData(net.blogracy.model.users.UserAddendumData)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * net.blogracy.controller.FileSharing#seedUserAddendumData(net.blogracy
+	 * .model.users.UserAddendumData)
 	 */
 	@Override
 	public String seedUserAddendumData(final UserAddendumData userData) throws JSONException, IOException {
@@ -453,6 +491,25 @@ public class FileSharingImpl implements FileSharing {
 			e.printStackTrace();
 		}
 		return users;
+	}
+
+	@Override
+	public void addUserDelegatesChangedListener(UserDelegatesChangedListener l) {
+		if (!userDelegatesChangedListeners.contains(l))
+			userDelegatesChangedListeners.add(l);
+	}
+
+	protected void notifyUserDelegatesChangedListeners(String userId, List<User> newDelegates) {
+		if (userDelegatesChangedListeners != null) {
+			for (UserDelegatesChangedListener l : userDelegatesChangedListeners)
+				l.onUserDelegatesChanged(userId, newDelegates);
+		}
+
+	}
+
+	@Override
+	public void distributedHashTableRecordChanged(String id) {
+		notifyUserDelegatesChangedListeners(id, getDelegates(id));
 	}
 
 	/*

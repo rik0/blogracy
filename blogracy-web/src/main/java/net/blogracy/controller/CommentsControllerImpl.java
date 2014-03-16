@@ -67,8 +67,7 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 
 	private static final CommentsController THE_INSTANCE = new CommentsControllerImpl();
 	private static final FileSharing sharing = FileSharingImpl.getSingleton();
-	AddendumController addendumController = AddendumController.getSingleton();
-
+	
 	public static CommentsController getInstance() {
 		return THE_INSTANCE;
 	}
@@ -409,6 +408,8 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 		if (!record.has("channelUserId"))
 			return;
 
+		final AddendumController addendumController = AddendumController.getSingleton();
+		
 		String messageType = record.getString("bullyMessageType");
 		if (messageType.equalsIgnoreCase("election")) {
 			String channelUserId = record.getString("channelUserId");
@@ -430,7 +431,7 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 			return;
 
 		String requestType = record.getString("request");
-
+		final AddendumController addendumController = AddendumController.getSingleton();
 		if (requestType.equalsIgnoreCase("contentListQuery")) {
 			if (!record.has("queryUserId"))
 				return;
@@ -478,7 +479,7 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 			// If I'm the current delegate for the content's recipient user; I
 			// must approve or reject the message
 			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
-			if (currentUserId.compareToIgnoreCase(addendumController.getCurrentDelegate(contentRecipientUserId)) == 0) {
+			if (addendumController.getCurrentDelegate(contentRecipientUserId) != null && currentUserId.compareToIgnoreCase(addendumController.getCurrentDelegate(contentRecipientUserId)) == 0) {
 				acceptOrRejectContent(contentRecipientUserId, newContentData, contentId, senderUserId, currentUserId);
 			}
 		} else if (requestType.equalsIgnoreCase("contentListReceived")) {
@@ -491,8 +492,7 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 			String contentDataUserId = contentData.getString("contentUserId");
 			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
 
-			// if (currentUserId.compareToIgnoreCase(contentDataUserId) == 0) {
-			if (currentUserId.compareToIgnoreCase(addendumController.getCurrentDelegate(contentDataUserId)) == 0) {
+			if (addendumController.getCurrentDelegate(contentDataUserId) != null && currentUserId.compareToIgnoreCase(addendumController.getCurrentDelegate(contentDataUserId)) == 0) {
 				JSONArray contents = contentData.optJSONArray("contents");
 
 				if (contents == null)
@@ -516,7 +516,7 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 			// Send Accepted message
 			this.acceptContent(currentUserId, contentId);
 			// add the message itself
-
+			final AddendumController addendumController = AddendumController.getSingleton();
 			ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(newContentData, ActivityEntry.class);
 			addendumController.addAddendumEntry(contentRecipientUserId, entry);
 		} else {

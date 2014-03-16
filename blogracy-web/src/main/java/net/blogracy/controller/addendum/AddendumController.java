@@ -38,8 +38,6 @@ public class AddendumController {
 
 	private static final AddendumController theInstance = new AddendumController();
 	private static final FileSharing sharing = FileSharingImpl.getSingleton();
-	// private static final ActivitiesController activities =
-	// ActivitiesController.getSingleton();
 	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
 
 	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
@@ -57,9 +55,9 @@ public class AddendumController {
 		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 
 		delegates = new HashMap<User, DelegateController>();
-		delegates.put(Configurations.getUserConfig().getUser(), new DelegateController(Configurations.getUserConfig().getUser()));
+		delegates.put(Configurations.getUserConfig().getUser(), DelegateController.Create(Configurations.getUserConfig().getUser()));
 		for (User friend : Configurations.getUserConfig().getFriends()) {
-			delegates.put(friend, new DelegateController(friend));
+			delegates.put(friend, DelegateController.Create(friend));
 		}
 
 	}

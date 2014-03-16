@@ -223,7 +223,7 @@ public class PeerControllerImpl implements PeerController {
 					if (message.getID().equals(m.getID())) {
 
 						BlogracyDataMessage msg = m.getClass().cast(message);
-						log.info( "Message recognized as BlogracyDataMessage [" + msg.getClass().getName()+ "] (messageID:" + msg.getMessageID() + "; senderUserId: " + msg.getSenderUserId() + "; content:"+ msg.getContent() + ")");
+						log.info( "Message recognized as " + msg.getClass().getName()+ " (messageID:" + msg.getMessageID() + "; senderUserId: " + msg.getSenderUserId() + "; content:"+ msg.getContent() + ")");
 						// 1. Test if the message has already been  processed
 						if (!checkIfDuplicate(download, msg.getMessageID()))
 							processMessage(download, peer, msg);
