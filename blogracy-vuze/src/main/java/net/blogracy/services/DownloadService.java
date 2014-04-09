@@ -25,7 +25,9 @@ package net.blogracy.services;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.logging.FileHandler;
 import java.util.logging.SimpleFormatter;
@@ -41,8 +43,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.i2p.I2PHelper;
 import net.blogracy.logging.Logger;
 
+import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadCompletionListener;
@@ -51,6 +55,7 @@ import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloaderException;
+
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -146,15 +151,17 @@ public class DownloadService implements MessageListener {
 						URL magnetUri = new URL(entry.getString("uri"));
 						File file = new File(entry.getString("file"));
 						File folder = file.getParentFile();
+						String hash = entry.getString("hash");
 
-						Download download = null;
-						ResourceDownloader rdl = vuze.getUtilities()
-								.getResourceDownloaderFactory().create(magnetUri);
-						InputStream is = rdl.download();
-						Torrent torrent = vuze.getTorrentManager()
-								.createFromBEncodedInputStream(is);
-						download = vuze.getDownloadManager().addDownload(torrent,
-								null, folder);
+                        Torrent torrent = null;
+						if (I2PHelper.isEnabled()) {
+						    torrent = I2PHelper.getTorrent(hash, vuze);
+						} else {
+                            InputStream is = vuze.getUtilities().getResourceDownloaderFactory().create(magnetUri).download();
+    						torrent = vuze.getTorrentManager().createFromBEncodedInputStream(is);
+                        }
+
+						Download download = vuze.getDownloadManager().addDownload(torrent, null, folder);
 						if (download != null && file != null) {
 							download.renameDownload(file.getName());
 							download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
@@ -166,12 +173,16 @@ public class DownloadService implements MessageListener {
 					} catch (ResourceDownloaderException e) {
 						Logger.error("Torrent download error: download service: "
 								+ text);
+					    e.printStackTrace();
 					} catch (TorrentException e) {
 						Logger.error("Torrent error: download service: " + text);
+                        e.printStackTrace();
 					} catch (DownloadException e) {
 						Logger.error("File download error: download service: " + text);
-					} catch (MalformedURLException e) {
-						Logger.error("Malformed URL error: download service: " + text);
+                        e.printStackTrace();
+					} catch (IOException e) {
+						Logger.error("IO error: download service: " + text);
+                        e.printStackTrace();
 					}
 				} catch (JMSException e) {
 					Logger.error("JMS error: download service");
