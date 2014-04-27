@@ -100,8 +100,6 @@ public class FileSharingImpl implements FileSharing, DistributedHashTableRecordC
 	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
 	private static FileSharingImpl theInstance = Create();
-	private static final ActivitiesController activitiesController = ActivitiesController.getSingleton();
-	private static final AddendumController addendumController = AddendumController.getSingleton();
 
 	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
 		@Override
@@ -362,7 +360,7 @@ public class FileSharingImpl implements FileSharing, DistributedHashTableRecordC
 		}
 
 		UserAddendumDataImpl userData = new UserAddendumDataImpl(user);
-		userData.setActivityStream(addendumController.getFeed(userId));
+		userData.setActivityStream(AddendumController.getFeed(userId));
 		return userData;
 	}
 

@@ -57,12 +57,13 @@ public class WebServer {
 
 
 		CommentsControllerImpl.getInstance().initializeConnection();
-
+		ActivitiesController activities = ActivitiesController.getSingleton();
+		
 		while (true) {
-			ActivitiesController activities = ActivitiesController.getSingleton();
 			String now = ISO_DATE_FORMAT.format(new java.util.Date());
 			activities.addFeedEntry(id, now + " " + LOREM_IPSUM, null);
-			CommentsControllerImpl.getInstance().getContentList(id);
+			
+			//CommentsControllerImpl.getInstance().getContentList(id);
 
 			// List<User> friends = Configurations.getUserConfig().getFriends();
 			randomWait = (int) (TOTAL_WAIT * (0.8 + 0.4 * Math.random()));

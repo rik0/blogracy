@@ -11,11 +11,10 @@ import org.gudy.azureus2.plugins.messaging.MessageException;
 public class BlogracyContentListResponse extends BlogracyDataMessageBase {
 
 	public static final String ID = "ID_BLOGRACYMESSAGE_BlogracyContentListResponse";
-	private String destinationUserId;
 
-	public BlogracyContentListResponse(String senderUserId, byte[] senderID, String contentRecipientUserId, int hops, String content) {
+	public BlogracyContentListResponse(String senderUserId, byte[] senderID, String queryUserId, int hops, String content) {
 		super(senderUserId, senderID, hops, content);
-		this.contentRecipientUserId = contentRecipientUserId;
+		this.queryUserId = queryUserId;
 		generateBuffer(generateMessageMap());
 	}
 
@@ -24,13 +23,13 @@ public class BlogracyContentListResponse extends BlogracyDataMessageBase {
 		return ID;
 	}
 
-	protected String contentRecipientUserId;
+	protected String queryUserId;
 
 	/**
-	 * @return the contentRecipientUserId
+	 * @return the queryUserId
 	 */
-	public String getContentRecipientUserId() {
-		return contentRecipientUserId;
+	public String getQueryUserId() {
+		return queryUserId;
 	}
 
 	
@@ -62,9 +61,9 @@ public class BlogracyContentListResponse extends BlogracyDataMessageBase {
 			String uid = new String((byte[]) mMessage.get("uid"));
 			int hops = ((Long) mMessage.get("h")).intValue();
 			String content = new String((byte[]) mMessage.get("t"));
-			String contentRecipientUserId = new String((byte[]) mMessage.get("cruid"));
+			String queryUserId = new String((byte[]) mMessage.get("cruid"));
 			
-			BlogracyContentListResponse message = new BlogracyContentListResponse(uid, senderID,contentRecipientUserId, hops, content);
+			BlogracyContentListResponse message = new BlogracyContentListResponse(uid, senderID, queryUserId, hops, content);
 			message.setMessageID(messageID);
 			return message;
 		}
@@ -78,7 +77,7 @@ public class BlogracyContentListResponse extends BlogracyDataMessageBase {
 	protected Map generateMessageMap()
 	{
 		Map mMessage = super.generateMessageMap();
-		mMessage.put("cruid", contentRecipientUserId);
+		mMessage.put("cruid", queryUserId);
 		return mMessage;
 	}
 
@@ -90,7 +89,7 @@ public class BlogracyContentListResponse extends BlogracyDataMessageBase {
 	 */
 	@Override
 	public BlogracyDataMessageBase copy() {
-		BlogracyContentListResponse message = new BlogracyContentListResponse(getSenderUserId(), getSenderPeerID(), getContentRecipientUserId(), getNbHops(), getContent());
+		BlogracyContentListResponse message = new BlogracyContentListResponse(getSenderUserId(), getSenderPeerID(), getQueryUserId(), getNbHops(), getContent());
 		message.setMessageID(this.getMessageID());
 		return message;
 	}

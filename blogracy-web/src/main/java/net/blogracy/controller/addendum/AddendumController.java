@@ -70,7 +70,7 @@ public class AddendumController {
 	 * @param user
 	 * @return
 	 */
-	public List<ActivityEntry> getFeed(String userId) {
+	public static List<ActivityEntry> getFeed(String userId) {
 		List<ActivityEntry> result = new ArrayList<ActivityEntry>();
 		String hash = Hashes.hash(userId + "-addendum");
 		System.out.println("Getting Addendum feed: " + hash + " (user id: " + userId + ")");
@@ -120,9 +120,9 @@ public class AddendumController {
 		}
 	}
 
-	public void removeUserContent(String contentUserId, String contentId) {
-		SalmonDbController.getSingleton().removeUserContent(contentUserId, contentId);
-		User channelUser = Users.newUser(Hashes.fromString(contentUserId));
+	public void removeUserContent(String contentRecipientUserId, String contentId) {
+		SalmonDbController.getSingleton().removeUserContent(contentRecipientUserId, contentId);
+		User channelUser = Users.newUser(Hashes.fromString(contentRecipientUserId));
 		if (delegates.containsKey(channelUser)) {
 			delegates.get(channelUser).delegateDecisionalMessageReceived(contentId);
 		} 

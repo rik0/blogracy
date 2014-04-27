@@ -5,6 +5,7 @@ import java.util.List;
 import javax.jms.Message;
 
 import net.blogracy.errors.BlogracyItemNotFound;
+import net.blogracy.model.users.User;
 
 import org.apache.shindig.social.opensocial.model.ActivityEntry;
 import org.json.JSONArray;
@@ -20,13 +21,13 @@ public interface CommentsController {
 
 	public void addComment(String commentedUserId, String commentingUserId, String text, String commentedObjectId, String publishedDate) throws BlogracyItemNotFound;
 
-	public void connectToFriends(String userId);
+	public void connectToFriends(User localUser, List<User> friendsList);
 
 	public void getContentList(String userId);
 
-	public void acceptContent(String userId, String contentId);
+	public void acceptContent(String userId,String contentRecipientUserId, String contentId);
 
-	public void rejectContent(String userId, String contentId);
+	public void rejectContent(String userId, String contentRecipientUserId,String contentId);
 
 	public void sendContentListResponse(String userId, String queryUserId, JSONArray contentData);
 
@@ -39,5 +40,4 @@ public interface CommentsController {
 	public void onMessage(Message request);
 
 	public boolean verifyComment(JSONObject contentData, String senderUserId, String contentRecipientUserId);
-
 }

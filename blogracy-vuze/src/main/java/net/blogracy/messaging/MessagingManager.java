@@ -69,8 +69,8 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		peerController = new PeerControllerImpl(pluginInterface);
 		peerController.addMessageListener(this);
 		List<BlogracyDataMessage> listOfHandledMessages = new ArrayList<BlogracyDataMessage>();
-		listOfHandledMessages.add(new BlogracyContentAccepted("", new byte[20], -1, ""));
-		listOfHandledMessages.add(new BlogracyContentRejected("", new byte[20], -1, ""));
+		listOfHandledMessages.add(new BlogracyContentAccepted("", new byte[20], "", -1, ""));
+		listOfHandledMessages.add(new BlogracyContentRejected("", new byte[20], "", -1, ""));
 		listOfHandledMessages.add(new BlogracyContentListRequest("", new byte[20], "", -1, ""));
 		listOfHandledMessages.add(new BlogracyContentListResponse("", new byte[20], "", -1, ""));
 		listOfHandledMessages.add(new BlogracyContent("", new byte[20], "", -1, ""));
@@ -161,8 +161,8 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		return null;
 	}
 
-	public void sendContentAccepted(String senderUserId, String contentSenderUserId, String contentId) {
-		Download userIdSwarm = this.getSwarm(contentSenderUserId);
+	public void sendContentAccepted(String senderUserId, String contentRecipientUserId, String contentId) {
+		Download userIdSwarm = this.getSwarm(contentRecipientUserId);
 
 		if (userIdSwarm == null)
 			return;
@@ -174,17 +174,17 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentAccepted message = new BlogracyContentAccepted(senderUserId, peerID, 0, jsonContent.toString());
+			BlogracyContentAccepted message = new BlogracyContentAccepted(senderUserId, peerID, contentRecipientUserId, 0, jsonContent.toString());
 
-			peerController.sendMessage(userIdSwarm, peerID, contentSenderUserId, message);
+			peerController.sendMessage(userIdSwarm, peerID, senderUserId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
 
 	}
 
-	public void sendContentRejected(String senderUserId, String contentSenderUserId, String contentId) {
-		Download userIdSwarm = this.getSwarm(contentSenderUserId);
+	public void sendContentRejected(String senderUserId, String contentRecipientUserId, String contentId) {
+		Download userIdSwarm = this.getSwarm(contentRecipientUserId);
 
 		if (userIdSwarm == null)
 			return;
@@ -196,8 +196,8 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			} catch (JSONException e) {
 				e.printStackTrace();
 			}
-			BlogracyContentRejected message = new BlogracyContentRejected(senderUserId, peerID, 0, jsonContent.toString());
-			peerController.sendMessage(userIdSwarm, peerID, contentSenderUserId, message);
+			BlogracyContentRejected message = new BlogracyContentRejected(senderUserId, peerID,contentRecipientUserId, 0, jsonContent.toString());
+			peerController.sendMessage(userIdSwarm, peerID, senderUserId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}
@@ -241,7 +241,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		}
 	}
 
-	public void sendContentMessage(String userId, String destinationUserId, String contentData) {
+	public void sendContentMessage(String senderUserId, String destinationUserId, String contentData) {
 		Download destinationSwarm = this.getSwarm(destinationUserId);
 
 		if (destinationSwarm == null)
@@ -250,8 +250,8 @@ public class MessagingManager implements BlogracyDataMessageListener {
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			String content = contentData;
-			BlogracyContent message = new BlogracyContent(userId, peerID, destinationUserId, 0, content);
-			peerController.sendMessage(destinationSwarm, peerID, userId, message);
+			BlogracyContent message = new BlogracyContent(senderUserId, peerID, destinationUserId, 0, content);
+			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
 		} else {
 			System.out.println("System: Torrent isn't running, message can't be delivered");
 		}

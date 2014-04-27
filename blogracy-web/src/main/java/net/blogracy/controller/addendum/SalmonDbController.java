@@ -22,7 +22,7 @@ class SalmonDbController {
 	private static final SalmonDbController THE_INSTANCE = new SalmonDbController();
 
 	// Database structure:
-	// userId
+	// userId [contentRecipientUserId]
 	// contentId
 	// content (JSONObject)
 	private HashMap<String, HashMap<String, JSONObject>> records = new HashMap<String, HashMap<String, JSONObject>>();
@@ -58,10 +58,10 @@ class SalmonDbController {
 		}
 	}
 
-	public JSONArray getUserAllContent(String userId) {
+	public JSONArray getUserAllContent(String contentRecipientUserId) {
 		try {
-			if (records.containsKey(userId)) {
-				Map<String, JSONObject> contents = records.get(userId);
+			if (records.containsKey(contentRecipientUserId)) {
+				Map<String, JSONObject> contents = records.get(contentRecipientUserId);
 				JSONArray data = new JSONArray();
 				for (Map.Entry<String, JSONObject> entry : contents.entrySet()) {
 					JSONObject obj = new JSONObject();
@@ -78,15 +78,15 @@ class SalmonDbController {
 		}
 	}
 
-	public void addUserContent(String userId, String contentId, JSONObject contentData) {
+	public void addUserContent(String contentRecipientUserId, String contentId, JSONObject contentData) {
 		try {
-			if (records.containsKey(userId)) {
-				Map<String, JSONObject> contentsDataMainObject = records.get(userId);
+			if (records.containsKey(contentRecipientUserId)) {
+				Map<String, JSONObject> contentsDataMainObject = records.get(contentRecipientUserId);
 				contentsDataMainObject.put(contentId, contentData);
 			} else {
 				HashMap<String, JSONObject> contentDataMainObject = new HashMap<String, JSONObject>();
 				contentDataMainObject.put(contentId, contentData);
-				records.put(userId, contentDataMainObject);
+				records.put(contentRecipientUserId, contentDataMainObject);
 			}
 			saveRecordsToDb();
 		} catch (Exception ex) {
@@ -94,9 +94,9 @@ class SalmonDbController {
 		}
 	}
 
-	public void removeUserContent(String userId, String contentId) {
-		if (records.containsKey(userId)) {
-			Map<String, JSONObject> contentsDataMainObject = records.get(userId);
+	public void removeUserContent(String contentRecipientUserId, String contentId) {
+		if (records.containsKey(contentRecipientUserId)) {
+			Map<String, JSONObject> contentsDataMainObject = records.get(contentRecipientUserId);
 			if (contentsDataMainObject.containsKey(contentId)) {
 				contentsDataMainObject.remove(contentId);
 				saveRecordsToDb();

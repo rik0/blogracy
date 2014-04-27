@@ -13,9 +13,9 @@ public class BlogracyContentListRequest extends BlogracyDataMessageBase {
 	public final static String ID = "ID_BLOGRACYMESSAGE_BlogracyContentListRequest";
 	
 	
-	public BlogracyContentListRequest( String senderUserId,	byte[] senderID, String contentRecipientUserId,  int hops, String content) {
+	public BlogracyContentListRequest( String senderUserId,	byte[] senderID, String queryUserId,  int hops, String content) {
 		super(senderUserId, senderID,  hops, content);
-		this.contentRecipientUserId = contentRecipientUserId;
+		this.queryUserId = queryUserId;
 		generateBuffer(generateMessageMap());
 	}
 
@@ -26,13 +26,13 @@ public class BlogracyContentListRequest extends BlogracyDataMessageBase {
 	}
 	
 	
-	protected String contentRecipientUserId;
+	protected String queryUserId;
 
 	/**
 	 * @return the contentRecipientUserId
 	 */
-	public String getContentRecipientUserId() {
-		return contentRecipientUserId;
+	public String getQueryUserId() {
+		return queryUserId;
 	}
 
 
@@ -62,9 +62,9 @@ public class BlogracyContentListRequest extends BlogracyDataMessageBase {
 			String uid = new String((byte[])mMessage.get("uid"));
 			int hops = ((Long)mMessage.get("h")).intValue();
 			String content = new String((byte[])mMessage.get("t"));
-			String contentRecipientUserId = new String((byte[]) mMessage.get("cruid"));
+			String queryUserId = new String((byte[]) mMessage.get("cruid"));
 			
-			BlogracyContentListRequest message = new BlogracyContentListRequest(uid, senderID, contentRecipientUserId,  hops, content);
+			BlogracyContentListRequest message = new BlogracyContentListRequest(uid, senderID, queryUserId,  hops, content);
 			message.setMessageID(messageID);
 			return message;
 		} 
@@ -79,7 +79,7 @@ public class BlogracyContentListRequest extends BlogracyDataMessageBase {
 	protected Map generateMessageMap()
 	{
 		Map mMessage = super.generateMessageMap();
-		mMessage.put("cruid", contentRecipientUserId);
+		mMessage.put("cruid", queryUserId);
 		return mMessage;
 	}
 
@@ -89,7 +89,7 @@ public class BlogracyContentListRequest extends BlogracyDataMessageBase {
 	 */
 	@Override
 	public BlogracyDataMessageBase copy() {
-		BlogracyContentListRequest message = new BlogracyContentListRequest(getSenderUserId(), getSenderPeerID(), getContentRecipientUserId(), getNbHops(), getContent());
+		BlogracyContentListRequest message = new BlogracyContentListRequest(getSenderUserId(), getSenderPeerID(), getQueryUserId(), getNbHops(), getContent());
 		message.setMessageID(this.getMessageID());
 		return message;
 	}

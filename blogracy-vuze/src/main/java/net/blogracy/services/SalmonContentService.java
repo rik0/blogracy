@@ -111,7 +111,7 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		if (responseType.equalsIgnoreCase("contentListQueryResponse")) {
 			JSONArray contentData = record.getJSONArray("contentData");
 			String userQueried = record.getString("queryUserId");
-			String userReplying = record.getString("currentUserId");
+			String userReplying = record.getString("senderUserId");
 
 			sendBlogracyContentListResponse(userReplying, userQueried, contentData);
 		}
@@ -125,19 +125,31 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		String userRequesting = record.getString("currentUserId");
 
 		if (requestType.equalsIgnoreCase("contentList")) {
-			sendBlogracyContentListRequest(userRequesting, userRequesting);
+			if (!record.has("queryUserId"))
+				return;
+			
+			String queryUserId = record.getString("queryUserId");
+			
+			sendBlogracyContentListRequest(userRequesting, queryUserId);
 		} else if (requestType.equalsIgnoreCase("contentAccepted")) {
 			if (!record.has("contentId"))
 				return;
-
+			
+			if (!record.has("contentRecipientUserId"))
+				return;
+			
+			String contentRecipientUserId = record.getString("contentRecipientUserId");
 			String contentId = record.getString("contentId");
-			sendBlogracyContentAccepted(userRequesting, userRequesting, contentId);
+			sendBlogracyContentAccepted(userRequesting, contentRecipientUserId, contentId);
 		} else if (requestType.equalsIgnoreCase("contentRejected")) {
 			if (!record.has("contentId"))
 				return;
-
+			if (!record.has("contentRecipientUserId"))
+				return;
+			
+			String contentRecipientUserId = record.getString("contentRecipientUserId");
 			String contentId = record.getString("contentId");
-			sendBlogracyContentRejected(userRequesting, userRequesting, contentId);
+			sendBlogracyContentRejected(userRequesting, contentRecipientUserId, contentId);
 		} else if (requestType.equalsIgnoreCase("connectToFriends")) {
 			// Connect to my friends list
 			connectToSwarm(userRequesting);
@@ -160,16 +172,16 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		}
 	}
 
-	protected void sendBlogracyContentListRequest(String senderUserId, String currentUserId) {
-		messagingManager.sendContentListRequest(senderUserId, currentUserId);
+	protected void sendBlogracyContentListRequest(String senderUserId, String queryUserId) {
+		messagingManager.sendContentListRequest(senderUserId, queryUserId);
 	}
 
-	protected void sendBlogracyContentAccepted(String senderUserId, String currentUserId, String contentId) {
-		messagingManager.sendContentAccepted(senderUserId, currentUserId, contentId);
+	protected void sendBlogracyContentAccepted(String senderUserId, String contentRecipientUserId, String contentId) {
+		messagingManager.sendContentAccepted(senderUserId, contentRecipientUserId, contentId);
 	}
 
-	protected void sendBlogracyContentRejected(String senderUserId, String currentUserId, String contentId) {
-		messagingManager.sendContentRejected(senderUserId, currentUserId, contentId);
+	protected void sendBlogracyContentRejected(String senderUserId, String contentRecipientUserId, String contentId) {
+		messagingManager.sendContentRejected(senderUserId, contentRecipientUserId, contentId);
 	}
 
 	protected void connectToSwarm(String userId) {
@@ -181,8 +193,8 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		messagingManager.sendContentMessage(currentUserId, destinationUserId, contentData);
 	}
 
-	protected void sendBlogracyContentListResponse(String currentUserId, String queriedUserId, JSONArray contentsList) {
-		messagingManager.sendContentListResponse(currentUserId, queriedUserId, contentsList);
+	protected void sendBlogracyContentListResponse(String senderUserId, String queriedUserId, JSONArray contentsList) {
+		messagingManager.sendContentListResponse(senderUserId, queriedUserId, contentsList);
 	}
 
 	
@@ -236,11 +248,11 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 		TextMessage response;
 		try {
 			response = session.createTextMessage();
-
+			
 			JSONObject record = new JSONObject();
 			record.put("request", "contentListQuery");
-			record.put("queryUserId", message.getSenderUserId());
-
+			record.put("queryUserId", message.getQueryUserId());
+			record.put("senderUserId", message.getSenderUserId());
 			response.setText(record.toString());
 
 			producer.send(outgoingQueue, response);
@@ -264,7 +276,7 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 			JSONObject record = new JSONObject();
 			record.put("request", "contentListReceived");
 			record.put("senderUserId", message.getSenderUserId());
-
+			record.put("queryUserId", message.getQueryUserId());
 			JSONObject content = new JSONObject(message.getContent());
 			record.put("contentData", content);
 			response.setText(record.toString());
@@ -289,10 +301,11 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 
 			JSONObject record = new JSONObject();
 			record.put("request", "contentAcceptedInfo");
-			record.put("contentUserId", message.getSenderUserId());
+			record.put("senderUserId", message.getSenderUserId());
 			JSONObject content = new JSONObject(message.getContent());
+			record.put("contentRecipientUserId", message.getContentRecipientUserId());
 			record.put("contentId", content.getString("contentId"));
-
+			
 			response.setText(record.toString());
 
 			producer.send(outgoingQueue, response);
@@ -315,8 +328,9 @@ public class SalmonContentService implements MessageListener, BlogracyContentMes
 
 			JSONObject record = new JSONObject();
 			record.put("request", "contentRejectedInfo");
-			record.put("contentUserId", message.getSenderUserId());
+			record.put("senderUserId", message.getSenderUserId());
 			JSONObject content = new JSONObject(message.getContent());
+			record.put("contentRecipientUserId", message.getContentRecipientUserId());
 			record.put("contentId", content.getString("contentId"));
 
 			response.setText(record.toString());

@@ -10,8 +10,10 @@ import org.gudy.azureus2.plugins.messaging.MessageException;
 
 public class BlogracyContentRejected extends BlogracyDataMessageBase {
 
-	public BlogracyContentRejected(String senderUserId, byte[] senderID, int hops, String content) {
-		super(senderUserId, senderID, hops, content);
+	public BlogracyContentRejected(String senderUserId, byte[] senderID, String contentRecipientUserId,  int hops, String content) {
+		super(senderUserId, senderID,  hops, content);
+		this.contentRecipientUserId = contentRecipientUserId;
+		generateBuffer(generateMessageMap());
 	}
 
 	public static final String ID = "ID_BLOGRACYMESSAGE_BlogracyContentRejected";
@@ -21,6 +23,18 @@ public class BlogracyContentRejected extends BlogracyDataMessageBase {
 		return ID;
 	}
 
+
+	protected String contentRecipientUserId;
+
+	/**
+	 * @return the contentRecipientUserId
+	 */
+	public String getContentRecipientUserId() {
+		return contentRecipientUserId;
+	}
+
+	
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -49,8 +63,9 @@ public class BlogracyContentRejected extends BlogracyDataMessageBase {
 			String uid = new String((byte[]) mMessage.get("uid"));
 			int hops = ((Long) mMessage.get("h")).intValue();
 			String content = new String((byte[]) mMessage.get("t"));
+			String contentRecipientUserId = new String((byte[]) mMessage.get("cruid"));
 
-			BlogracyContentRejected message = new BlogracyContentRejected(uid, senderID,  hops, content);
+			BlogracyContentRejected message = new BlogracyContentRejected(uid, senderID, contentRecipientUserId, hops, content);
 			message.setMessageID(messageID);
 			return message;
 		}
@@ -60,6 +75,17 @@ public class BlogracyContentRejected extends BlogracyDataMessageBase {
 		}
 	}
 
+
+	@SuppressWarnings("rawtypes")
+	protected Map generateMessageMap()
+	{
+		Map mMessage = super.generateMessageMap();
+		mMessage.put("cruid", contentRecipientUserId);
+		return mMessage;
+	}
+
+	
+	
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -67,7 +93,7 @@ public class BlogracyContentRejected extends BlogracyDataMessageBase {
 	 */
 	@Override
 	public BlogracyDataMessageBase copy() {
-		BlogracyContentRejected message = new BlogracyContentRejected(getSenderUserId(), getSenderPeerID(),  getNbHops(), getContent());
+		BlogracyContentRejected message = new BlogracyContentRejected(getSenderUserId(), getSenderPeerID(), getContentRecipientUserId(), getNbHops(), getContent());
 		message.setMessageID(this.getMessageID());
 		return message;
 	}

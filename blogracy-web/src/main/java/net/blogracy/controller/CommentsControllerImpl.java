@@ -65,16 +65,24 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 		}
 	}));
 
-	private static final CommentsController THE_INSTANCE = new CommentsControllerImpl();
-	private static final FileSharing sharing = FileSharingImpl.getSingleton();
-	
+	private static volatile CommentsController THE_INSTANCE = null;
+	private static FileSharing sharing = null;
+
 	public static CommentsController getInstance() {
+		if (THE_INSTANCE == null) {
+			synchronized (CommentsControllerImpl.class) {
+				if (THE_INSTANCE == null)
+					THE_INSTANCE = new CommentsControllerImpl(new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL), FileSharingImpl.getSingleton());
+			}
+		}
+
 		return THE_INSTANCE;
 	}
 
-	protected CommentsControllerImpl() {
+	protected CommentsControllerImpl(ConnectionFactory factory, FileSharing fileSharing) {
 		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-		connectionFactory = new ActiveMQConnectionFactory(ActiveMQConnection.DEFAULT_BROKER_URL);
+		sharing = fileSharing;
+		connectionFactory = factory;
 		try {
 			connection = connectionFactory.createConnection();
 			connection.start();
@@ -102,9 +110,10 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 	public void initializeConnection() {
 		if (!isInitialized) {
 			User localUser = Configurations.getUserConfig().getUser();
+			List<User> friendList = Configurations.getUserConfig().getFriends();
 			synchronized (lockObject) {
 				if (!isInitialized) {
-					connectToFriends(localUser.getHash().toString());
+					connectToFriends(localUser, friendList);
 					isInitialized = true;
 				}
 			}
@@ -200,14 +209,15 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 	 * .String)
 	 */
 	@Override
-	public void connectToFriends(String userId) {
-		List<User> friendList = Configurations.getUserConfig().getFriends();
+	public void connectToFriends(User localUser, List<User> friendsList) {
+		String currentUserId = localUser.getHash().toString();
+
 		try {
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("request", "connectToFriends");
-			requestObj.put("currentUserId", userId);
+			requestObj.put("currentUserId", currentUserId);
 			JSONArray friends = new JSONArray();
-			for (User friend : friendList) {
+			for (User friend : friendsList) {
 				friends.put(friend.getHash().toString());
 			}
 			requestObj.put("friendsList", friends);
@@ -227,11 +237,13 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 	 * )
 	 */
 	@Override
-	public void getContentList(String userId) {
+	public void getContentList(String queryUserId) {
+		String currentUser = Configurations.getUserConfig().getUser().getHash().toString();
 		try {
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("request", "contentList");
-			requestObj.put("currentUserId", userId);
+			requestObj.put("queryUserId", queryUserId);
+			requestObj.put("currentUserId", currentUser);
 			TextMessage request = session.createTextMessage();
 			request.setText(requestObj.toString());
 			producer.send(salmonContentQueue, request);
@@ -248,11 +260,12 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 	 * , java.lang.String)
 	 */
 	@Override
-	public void acceptContent(String userId, String contentId) {
+	public void acceptContent(String userId, String contentRecipientUserId, String contentId) {
 		try {
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("request", "contentAccepted");
 			requestObj.put("currentUserId", userId);
+			requestObj.put("contentRecipientUserId", contentRecipientUserId);
 			requestObj.put("contentId", contentId);
 			TextMessage request = session.createTextMessage();
 			request.setText(requestObj.toString());
@@ -270,11 +283,12 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 	 * , java.lang.String)
 	 */
 	@Override
-	public void rejectContent(String userId, String contentId) {
+	public void rejectContent(String userId, String contentRecipientUserId, String contentId) {
 		try {
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("request", "contentRejected");
 			requestObj.put("currentUserId", userId);
+			requestObj.put("contentRecipientUserId", contentRecipientUserId);
 			requestObj.put("contentId", contentId);
 			TextMessage request = session.createTextMessage();
 			request.setText(requestObj.toString());
@@ -292,13 +306,13 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 	 * .lang.String, java.lang.String, org.json.JSONArray)
 	 */
 	@Override
-	public void sendContentListResponse(String userId, String queryUserId, JSONArray contentData) {
+	public void sendContentListResponse(String senderUserId, String queryUserId, JSONArray contentData) {
 		try {
 			JSONObject requestObj = new JSONObject();
 			requestObj.put("response", "contentListQueryResponse");
 			requestObj.put("queryUserId", queryUserId);
 			requestObj.put("contentData", contentData);
-			requestObj.put("currentUserId", userId);
+			requestObj.put("senderUserId", senderUserId);
 			TextMessage request = session.createTextMessage();
 			request.setText(requestObj.toString());
 			producer.send(salmonContentQueue, request);
@@ -409,7 +423,7 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 			return;
 
 		final AddendumController addendumController = AddendumController.getSingleton();
-		
+
 		String messageType = record.getString("bullyMessageType");
 		if (messageType.equalsIgnoreCase("election")) {
 			String channelUserId = record.getString("channelUserId");
@@ -442,26 +456,26 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 
 			if (content == null)
 				return;
-			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
-			sendContentListResponse(currentUserId, queryUserId, content);
+			String senderUserId = Configurations.getUserConfig().getUser().getHash().toString();
+			sendContentListResponse(senderUserId, queryUserId, content);
 		} else if (requestType.equalsIgnoreCase("contentAcceptedInfo")) {
-			if (!record.has("contentUserId"))
+			if (!record.has("contentRecipientUserId"))
 				return;
 
-			String contentUserId = record.getString("contentUserId");
+			String contentRecipientUserId = record.getString("contentRecipientUserId");
 
 			String contentId = record.getString("contentId");
 
-			addendumController.removeUserContent(contentUserId, contentId);
+			addendumController.removeUserContent(contentRecipientUserId, contentId);
 		} else if (requestType.equalsIgnoreCase("contentRejectedInfo")) {
-			if (!record.has("contentUserId"))
+			if (!record.has("contentRecipientUserId"))
 				return;
 
-			String contentUserId = record.getString("contentUserId");
+			String contentRecipientUserId = record.getString("contentRecipientUserId");
 
 			String contentId = record.getString("contentId");
 
-			addendumController.removeUserContent(contentUserId, contentId);
+			addendumController.removeUserContent(contentRecipientUserId, contentId);
 		} else if (requestType.equalsIgnoreCase("contentReceived")) {
 			if (!record.has("senderUserId"))
 				return;
@@ -489,10 +503,10 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 			if (contentData == null)
 				return;
 
-			String contentDataUserId = contentData.getString("contentUserId");
+			String queryUserId = contentData.getString("queryUserId");
 			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
 
-			if (addendumController.getCurrentDelegate(contentDataUserId) != null && currentUserId.compareToIgnoreCase(addendumController.getCurrentDelegate(contentDataUserId)) == 0) {
+			if (addendumController.getCurrentDelegate(queryUserId) != null && currentUserId.compareToIgnoreCase(addendumController.getCurrentDelegate(queryUserId)) == 0) {
 				JSONArray contents = contentData.optJSONArray("contents");
 
 				if (contents == null)
@@ -503,7 +517,7 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 					String contentId = content.getJSONObject("object").getString("id");
 					String contentSenderUserId = content.optJSONObject("actor") == null ? null : content.getJSONObject("actor").getString("id");
 
-					acceptOrRejectContent(contentDataUserId, content, contentId, contentSenderUserId, currentUserId);
+					acceptOrRejectContent(queryUserId, content, contentId, contentSenderUserId, currentUserId);
 				}
 			}
 
@@ -514,14 +528,14 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 	private void acceptOrRejectContent(String contentRecipientUserId, JSONObject newContentData, String contentId, String senderUserId, String currentUserId) {
 		if (this.verifyComment(newContentData, senderUserId, contentRecipientUserId)) {
 			// Send Accepted message
-			this.acceptContent(currentUserId, contentId);
+			this.acceptContent(currentUserId, contentRecipientUserId, contentId);
 			// add the message itself
 			final AddendumController addendumController = AddendumController.getSingleton();
 			ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(newContentData, ActivityEntry.class);
 			addendumController.addAddendumEntry(contentRecipientUserId, entry);
 		} else {
 			// Send Rejected message
-			this.rejectContent(currentUserId, contentId);
+			this.rejectContent(currentUserId, contentRecipientUserId, contentId);
 		}
 	}
 
