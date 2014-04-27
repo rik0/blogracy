@@ -63,6 +63,7 @@ pageContext.setAttribute("user", user);
 pageContext.setAttribute("feed", ActivitiesController.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
+pageContext.setAttribute("delegates", Configurations.getUserConfig().getDelegates());
 pageContext.setAttribute("userAlbums", albums);
 pageContext.setAttribute("photoMap", mediaItemMap);
 pageContext.setAttribute("privateChannel", channel);
@@ -341,7 +342,13 @@ pageContext.setAttribute("publicChannel", userHash);
                 <h3>Followees</h3>
                 <ul id="user-friends">
 				<c:forEach var="friend" items="${friends}">
-					<li><a href="/user.jsp?user=${friend.hash}">${friend.localNick}</a></li>
+				<c:set var="contains" value="false" />
+					<c:forEach var="item" items="${delegates}">
+					  <c:if test="${item.hash eq friend.hash}">
+					    <c:set var="contains" value="true" />
+					  </c:if>
+					</c:forEach>
+					<li><a href="/user.jsp?user=${friend.hash}">${friend.localNick}</a><c:if test="${contains}"><span class="userDelegateMarker"> (D)</span></c:if></li>
 				</c:forEach>
 				</ul>
                 <h3>Tags</h3>
