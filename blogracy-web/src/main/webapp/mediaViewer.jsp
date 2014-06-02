@@ -1,3 +1,5 @@
+<%@page import="net.blogracy.controller.CommentsControllerImpl"%>
+<%@page import="net.blogracy.controller.CommentsController"%>
 <%@page import="java.util.Collection"%>
 <%@ page language="java" contentType="text/html; charset=ISO-8859-1"
 	pageEncoding="ISO-8859-1"%>
@@ -52,6 +54,8 @@
 	    }
 	});
 	pageContext.setAttribute("comments", allComments);
+	List<String> likeUsers = CommentsControllerImpl.getInstance().getLikeUsers(userId, mediaId);
+	pageContext.setAttribute("likeUsers", likeUsers);
 %>
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
@@ -90,6 +94,20 @@
 			</div>
 
 			</c:forEach>
+		</div>
+		<div class="likePane">
+			<form class="span10" id="like-send">
+				<input type="hidden" name="userId" value="${uid}" /> 
+				<input type="hidden" name="mediaId" value="${media.id}" />
+				<input type="submit" class="btn primary" value="I like this!">
+			</form>	
+			<div><span>Liked by:</span>
+			</div>
+			<ul class="likedUsers">
+				<c:forEach var="mapEntry" items="${likeUsers}">
+					  		  <li>${mapEntry}</li>
+					  	</c:forEach>
+			</ul>
 		</div>
 		<div class="inputComment">
 			<form class="span10" id="comment-send">

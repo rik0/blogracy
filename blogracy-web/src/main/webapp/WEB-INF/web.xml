@@ -190,6 +190,16 @@
 		<url-pattern>/commentSender</url-pattern>
 	</servlet-mapping>
 
+	<servlet>
+		<servlet-name>likeSender</servlet-name>
+		<servlet-class>net.blogracy.web.LikeSender</servlet-class>
+	</servlet>
+	
+	<servlet-mapping>
+		<servlet-name>likeSender</servlet-name>
+		<url-pattern>/likeSender</url-pattern>
+	</servlet-mapping>
+
 	<listener>
         <listener-class>org.apache.activemq.web.SessionListener</listener-class>
     </listener>

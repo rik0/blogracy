@@ -551,4 +551,82 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 		return true;
 	}
 
+	public List<ActivityEntry> getLike(final String userId, final String objectId) {
+		List<ActivityEntry> likes = new ArrayList<ActivityEntry>();
+		UserData data = sharing.getUserData(userId);
+		likes.addAll(data.getLikeByObjectId(objectId));
+		UserAddendumData addendumData = sharing.getUserAddendumData(userId);
+		likes.addAll(addendumData.getLikeByObjectId(objectId));
+		return likes;
+	}
+
+	public List<String> getLikeUsers(final String userId, final String objectId) {
+		List<String> likes = new ArrayList<String>();
+		UserData data = sharing.getUserData(userId);
+		List<ActivityEntry> userDataLikes = data.getLikeByObjectId(objectId);
+		UserAddendumData addendumData = sharing.getUserAddendumData(userId);
+		List<ActivityEntry> addendumLikes = addendumData.getLikeByObjectId(objectId);
+		for (ActivityEntry e : userDataLikes) {
+			String userName = e.getActor().getDisplayName();
+			if (!likes.contains(userName))
+				likes.add(userName);
+		}
+		
+		for (ActivityEntry e : addendumLikes) {
+			String userName = e.getActor().getDisplayName();
+			if (!likes.contains(userName))
+				likes.add(userName);
+		}
+
+		return likes;
+	}
+
+	public void addLike(final String likedUserId, final String likingUserId, final String objectId) throws BlogracyItemNotFound {
+		this.addLike(likedUserId, likingUserId, objectId, ISO_DATE_FORMAT.format(new Date()));
+	}
+
+	public void addLike(final String likedUserId, final String likingUserId, final String likedObjectId, final String publishedDate) throws BlogracyItemNotFound {
+
+		User likingUser = null;
+		if (likedUserId.equals(likingUserId)) {
+			UserData data = sharing.getUserData(likedUserId);
+			likingUser = data.getUser();
+			data.addLike(likingUser, likedObjectId, publishedDate);
+			try {
+				String dbUri = sharing.seedUserData(data);
+				DistributedHashTable.getSingleton().store(likedUserId, likedUserId, dbUri, publishedDate);
+			} catch (JSONException e) {
+				e.printStackTrace();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} else {
+			likingUser = Configurations.getUserConfig().getUser();
+
+			// This shouldn't happen... anyway a new user with the requested
+			// userHash is built (maybe it should throw an exception)
+			if (likingUser == null)
+				likingUser = Users.newUser(Hashes.fromString(likingUserId));
+
+			// Getting commented user's data in order to build a comment
+			// ActivityObject
+			UserData data = sharing.getUserData(likedUserId);
+
+			try {
+				JSONObject requestObj = new JSONObject();
+				requestObj.put("request", "content");
+				requestObj.put("currentUserId", likingUserId);
+				requestObj.put("destinationUserId", likedUserId);
+				requestObj.put("contentData", data.createLike(likingUser, likedObjectId, publishedDate));
+
+				TextMessage request = session.createTextMessage();
+				request.setText(requestObj.toString());
+				producer.send(salmonContentQueue, request);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+
+	}
+
 }

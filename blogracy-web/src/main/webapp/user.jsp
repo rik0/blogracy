@@ -348,7 +348,7 @@ pageContext.setAttribute("publicChannel", userHash);
 					    <c:set var="contains" value="true" />
 					  </c:if>
 					</c:forEach>
-					<li><a href="/user.jsp?user=${friend.hash}">${friend.localNick}</a><c:if test="${contains}"><span class="userDelegateMarker"> (D)</span></c:if></li>
+					<li><a href="/user.jsp?user=${friend.hash}">${friend.localNick}</a><c:if test="${contains}"><span class="userDelegateMarker" onclick="blogracyGalleryHelper.openDialogWithLink('/BullyDelegateStatus.jsp?&channel=${friend.localNick}');"> (D)</span></c:if></li>
 				</c:forEach>
 				</ul>
                 <h3>Tags</h3>

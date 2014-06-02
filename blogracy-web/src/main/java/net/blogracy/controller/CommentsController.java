@@ -40,4 +40,10 @@ public interface CommentsController {
 	public void onMessage(Message request);
 
 	public boolean verifyComment(JSONObject contentData, String senderUserId, String contentRecipientUserId);
+	
+	public void addLike(final String likedUserId, final String likingUserId, final String objectId) throws BlogracyItemNotFound;
+	
+	public List<ActivityEntry> getLike(final String userId, final String objectId);
+	
+	public List<String> getLikeUsers(final String userId, final String objectId);
 }

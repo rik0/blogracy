@@ -26,6 +26,24 @@
     width: 500px;
 }
 
+.commentsList {
+	width: 345px;
+    float: left;
+    margin-right: 5px;
+}
+.likePane 
+{
+	float: left;
+	width: 145px;
+	margin-left: 5px;
+}
+
+.inputComment 
+{
+	clear:both;
+	
+}
+
 .commentDate
 {
     float: right;
@@ -36,4 +54,11 @@
 {
     max-height: 400px;
     max-width: 500px;
+}
+
+.blogracyMedia
+{
+    max-height: 400px;
+    max-width: 500px;
+	
 }

@@ -304,4 +304,63 @@ public class UserDataImpl implements UserData {
 	public void setDelegates(List<User> delegates) {
 		this.delegates = new ArrayList<User>(delegates);
 	}
+	
+	public ActivityEntry createLike(final User likingUser, final String likedObjectId, final String publishDate)
+			throws BlogracyItemNotFound {
+
+		List<ActivityEntry> currentUserActivities = this.getActivityStream();
+
+		// Getting the entry in the activity stream that commentingUser is
+		// actually posting a like for...
+		ActivityEntry likedEntry = null;
+		for (ActivityEntry entry : currentUserActivities) {
+			if (entry.getObject() != null && entry.getObject().getId() != null && entry.getObject().getId().equals(likedObjectId)) {
+				likedEntry = entry;
+				break;
+			}
+		}
+
+		// Cannot comment nothing! Probably the content to be commented has been
+		// removed....
+		if (likedEntry == null)
+			throw new BlogracyItemNotFound(likedObjectId);
+
+		final ActivityEntry like = new ActivityEntryImpl();
+		ActivityObject actor = new ActivityObjectImpl();
+		actor.setObjectType("person");
+		actor.setId(likingUser.getHash().toString());
+		actor.setDisplayName(likingUser.getLocalNick());
+		like.setActor(actor);
+		like.setVerb("like");
+		like.setPublished(publishDate);
+		like.setTarget(likedEntry.getObject());
+		return like;
+	}
+	
+	public void addLike(final User likingUser, final String commentedObjectId, final String publishDate) throws BlogracyItemNotFound {
+		final ActivityEntry like = this.createLike(likingUser, commentedObjectId, publishDate);
+		this.activityStream.add(0, like);
+	}
+	
+	public List<ActivityEntry> getLikeByObjectId(final String objectId) {
+		List<ActivityEntry> comments = new ArrayList<ActivityEntry>();
+
+		for (ActivityEntry entry : this.getActivityStream()) {
+			if (entry.getTarget() != null 
+					&& entry.getTarget().getId() != null 
+					&& entry.getTarget().getId().equals(objectId) 
+					&& entry.getVerb() != null 
+					&& entry.getVerb().equals("like")) {
+				comments.add(entry);
+			}
+		}
+
+		java.util.Collections.sort(comments, new Comparator<ActivityEntry>() {
+			public int compare(ActivityEntry o1, ActivityEntry o2) {
+				return o1.getPublished().compareTo(o2.getPublished());
+			}
+		});
+
+		return comments;
+	}
 }

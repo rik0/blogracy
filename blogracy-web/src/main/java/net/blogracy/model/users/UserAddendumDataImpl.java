@@ -56,4 +56,26 @@ public class UserAddendumDataImpl implements UserAddendumData {
 	public void setActivityStream(Collection<ActivityEntry> activityStream) {
 		this.activityStream = new ArrayList<ActivityEntry>(activityStream);
 	}
+	
+	public List<ActivityEntry> getLikeByObjectId(final String objectId) {
+		List<ActivityEntry> comments = new ArrayList<ActivityEntry>();
+
+		for (ActivityEntry entry : this.getActivityStream()) {
+			if (entry.getTarget() != null 
+					&& entry.getTarget().getId() != null 
+					&& entry.getTarget().getId().equals(objectId) 
+					&& entry.getVerb() != null 
+					&& entry.getVerb().equals("like")) {
+				comments.add(entry);
+			}
+		}
+
+		java.util.Collections.sort(comments, new Comparator<ActivityEntry>() {
+			public int compare(ActivityEntry o1, ActivityEntry o2) {
+				return o1.getPublished().compareTo(o2.getPublished());
+			}
+		});
+
+		return comments;
+	}
 }

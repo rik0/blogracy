@@ -167,4 +167,12 @@ public class AddendumController {
 		if (delegates.containsKey(channelUser))
 			delegates.get(channelUser).coordinatorMessageReceived(senderUserId);
 	}
+	
+	public DelegateController getDelegateController(String channelUserId) {
+		User channelUser = Users.newUser(Hashes.fromString(channelUserId));
+		if (delegates.containsKey(channelUser))
+			return delegates.get(channelUser);
+		return null;
+	}
+	
 }

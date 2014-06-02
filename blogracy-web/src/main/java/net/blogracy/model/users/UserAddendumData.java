@@ -19,4 +19,6 @@ public interface UserAddendumData {
 	public User getUser();
 	
 	public List<ActivityEntry> getActivityStream();
+	
+	public List<ActivityEntry> getLikeByObjectId(final String objectId);
 }

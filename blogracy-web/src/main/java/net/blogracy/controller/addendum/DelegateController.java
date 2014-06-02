@@ -19,7 +19,7 @@ import net.blogracy.model.hashes.Hashes;
 import net.blogracy.model.users.User;
 import net.blogracy.model.users.Users;
 
-class DelegateController implements DelegateApprovableMessageListener, DelegateDecisionalMessageListener, UserDelegatesChangedListener {
+public class DelegateController implements DelegateApprovableMessageListener, DelegateDecisionalMessageListener, UserDelegatesChangedListener {
 
 	/**
 	 * Represents the user to which the communication channel belongs to
@@ -92,7 +92,7 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 	 * @param userId
 	 * @return
 	 */
-	protected int getDelegateScore(String userId) {
+	public int getDelegateScore(String userId) {
 		if (userId.compareToIgnoreCase(currentUser.getHash().toString()) == 0)
 			return 0;
 
@@ -108,7 +108,6 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 	}
 
 	public User getCurrentDelegate() {
-
 		if (currentDelegate != null && currentState == BullyAlgorithmState.IDLE)
 			return currentDelegate;
 
@@ -398,5 +397,9 @@ class DelegateController implements DelegateApprovableMessageListener, DelegateD
 			s += u.getHash().toString() + ", ";
 		}
 		return s;
+	}
+
+	public BullyAlgorithmState getCurrentState() {
+		return currentState;
 	}
 }

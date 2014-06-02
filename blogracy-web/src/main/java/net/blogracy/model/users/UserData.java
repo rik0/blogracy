@@ -5,7 +5,10 @@ import java.util.List;
 import net.blogracy.errors.BlogracyItemNotFound;
 import net.blogracy.errors.PhotoAlbumDuplicated;
 
+import org.apache.shindig.social.core.model.ActivityEntryImpl;
+import org.apache.shindig.social.core.model.ActivityObjectImpl;
 import org.apache.shindig.social.opensocial.model.ActivityEntry;
+import org.apache.shindig.social.opensocial.model.ActivityObject;
 import org.apache.shindig.social.opensocial.model.Album;
 import org.apache.shindig.social.opensocial.model.MediaItem;
 
@@ -114,4 +117,8 @@ public interface UserData {
 
 	
 	public List<User> getDelegates();
+	
+	public ActivityEntry createLike(final User likingUser, final String likedObjectId, final String publishDate) throws BlogracyItemNotFound;
+	public void addLike(final User likingUser, final String commentedObjectId, final String publishDate) throws BlogracyItemNotFound ;
+	public List<ActivityEntry> getLikeByObjectId(final String objectId);
 }
