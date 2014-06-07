@@ -580,6 +580,26 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 
 		return likes;
 	}
+	
+	public boolean canCurrentUserLike(final String userId, final String objectId) {
+		User currentUser = Configurations.getUserConfig().getUser();
+		UserData data = sharing.getUserData(userId);
+		List<ActivityEntry> userDataLikes = data.getLikeByObjectId(objectId);
+		 
+		for (ActivityEntry e : userDataLikes) {
+			String userName = e.getActor().getDisplayName();
+			if (userName.equalsIgnoreCase(currentUser.getLocalNick()))
+				return false;
+		}
+		UserAddendumData addendumData = sharing.getUserAddendumData(userId);
+		List<ActivityEntry> addendumLikes = addendumData.getLikeByObjectId(objectId);
+		for (ActivityEntry e : addendumLikes) {
+			String userName = e.getActor().getDisplayName();
+			if (userName.equalsIgnoreCase(currentUser.getLocalNick()))
+				return false;
+		}
+		return true;
+	}
 
 	public void addLike(final String likedUserId, final String likingUserId, final String objectId) throws BlogracyItemNotFound {
 		this.addLike(likedUserId, likingUserId, objectId, ISO_DATE_FORMAT.format(new Date()));

@@ -46,4 +46,6 @@ public interface CommentsController {
 	public List<ActivityEntry> getLike(final String userId, final String objectId);
 	
 	public List<String> getLikeUsers(final String userId, final String objectId);
+	
+	public boolean canCurrentUserLike(final String userId, final String objectId);
 }

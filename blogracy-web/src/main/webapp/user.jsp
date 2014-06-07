@@ -79,7 +79,7 @@ pageContext.setAttribute("publicChannel", userHash);
     <title>${application}</title>
     <meta name="description" content="">
     <meta name="author" content="">
-
+	
     <!-- Le HTML5 shim, for IE6-8 support of HTML elements -->
     <!--[if lt IE 9]>
     <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
@@ -121,7 +121,7 @@ pageContext.setAttribute("publicChannel", userHash);
         });
 
     </script>
-
+    <script type="text/javascript" src="/scripts/blogracy-dialog.js"></script>
     <script type="text/javascript" src="/scripts/blogracy-userGalleryHelper.js"></script>
     <script type="text/javascript" src="/scripts/blogracy-mediaThumbnailViewer.js"></script>
 	
@@ -314,7 +314,7 @@ pageContext.setAttribute("publicChannel", userHash);
 						<p>${album.title}</p> 
 						</div>  
 						<c:if test="${localUser == user}"> 
-							<div id="pop"  style="display:none;"></div>
+
 							<div style='float:right'>
 							<button  class="btn primary"  type="submit" id="imageUploadOpener" onclick="blogracyGalleryHelper.openDialogWithLink('/imageGallery.jsp?albumId=${album.id}&user=${user.hash}');">Add Images to Gallery</button>
 							</div> 
@@ -348,7 +348,7 @@ pageContext.setAttribute("publicChannel", userHash);
 					    <c:set var="contains" value="true" />
 					  </c:if>
 					</c:forEach>
-					<li><a href="/user.jsp?user=${friend.hash}">${friend.localNick}</a><c:if test="${contains}"><span class="userDelegateMarker" onclick="blogracyGalleryHelper.openDialogWithLink('/BullyDelegateStatus.jsp?&channel=${friend.localNick}');"> (D)</span></c:if></li>
+					<li><a href="/user.jsp?user=${friend.hash}">${friend.localNick}</a><c:if test="${contains}"><span class="userDelegateMarker" onclick="dialogHelper.openDialogWithLink('/BullyDelegateStatus.jsp?&channel=${friend.localNick}', 'Delegate status', 600, 700, true, true );"> (D)</span></c:if></li>
 				</c:forEach>
 				</ul>
                 <h3>Tags</h3>
@@ -374,7 +374,7 @@ pageContext.setAttribute("publicChannel", userHash);
 
 </div>
 <!-- /container -->
-
+	<div id="pop"  style="display:none;"></div>
 
 </body>
 </html>

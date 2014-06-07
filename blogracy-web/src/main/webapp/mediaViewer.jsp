@@ -55,6 +55,7 @@
 	});
 	pageContext.setAttribute("comments", allComments);
 	List<String> likeUsers = CommentsControllerImpl.getInstance().getLikeUsers(userId, mediaId);
+	boolean canUserLike = CommentsControllerImpl.getInstance().canCurrentUserLike(userId, mediaId);
 	pageContext.setAttribute("likeUsers", likeUsers);
 %>
 
@@ -96,11 +97,14 @@
 			</c:forEach>
 		</div>
 		<div class="likePane">
+			<c:if test="${canUserLike}">
 			<form class="span10" id="like-send">
 				<input type="hidden" name="userId" value="${uid}" /> 
 				<input type="hidden" name="mediaId" value="${media.id}" />
 				<input type="submit" class="btn primary" value="I like this!">
 			</form>	
+			</c:if>
+			
 			<div><span>Liked by:</span>
 			</div>
 			<ul class="likedUsers">
