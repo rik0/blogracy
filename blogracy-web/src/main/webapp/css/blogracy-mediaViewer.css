@@ -23,19 +23,19 @@
 
 .commentsPane
 {
-    width: 500px;
+    width: 530px;
 }
 
 .commentsList {
 	width: 345px;
     float: left;
-    margin-right: 5px;
+    margin-right: 7px;
 }
 .likePane 
 {
 	float: left;
-	width: 145px;
-	margin-left: 5px;
+	width: 165px;
+	margin-left: 7px;
 }
 
 .inputComment 
@@ -53,12 +53,27 @@
 .blogracyImage
 {
     max-height: 400px;
-    max-width: 500px;
+    max-width: 530px;
 }
 
 .blogracyMedia
 {
     max-height: 400px;
-    max-width: 500px;
+    max-width: 530px;
 	
 }
+
+#comment-send .action {
+    margin-top: 5px;
+}
+
+#comment-send fieldset {
+    margin-top: 5px;
+    padding-top: 5px;
+}
+
+#comment-send fieldset.clearfix {
+    padding-left: 0px;
+}
+
+
