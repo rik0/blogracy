@@ -34,7 +34,7 @@
 <body>
 <div class="channelTitle">
 	<span class="channelUser">${channel}'s channel </span>
-	<span class="channelStatus">${delegate.CurrentState}</span>
+	<span class="channelStatus">${controller.CurrentState}</span>
 </div>
 <div class="currentDelegate">
 	<span>Delegate: <span class="currentDelegateUser">${delegate.localNick}</span><span> ${delegate.hash} </span>
