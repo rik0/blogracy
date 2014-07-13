@@ -28,6 +28,7 @@ import net.blogracy.messaging.peer.impl.PeerControllerImpl;
 
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
+import org.gudy.azureus2.plugins.download.DownloadListener;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.Formatters;
@@ -58,7 +59,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			ANNOUNCE_URL = new URL("dht://chat.dht/announce");
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
-			Logger.error("MessagingManager | " + e.getMessage());
+			Logger.error("MessagingManager | ctor | " + e.getMessage());
 		}
 
 		// localUserHash = currentUserHash;
@@ -96,11 +97,11 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			try {
 				return pluginInterface.getTorrentManager().createFromBEncodedInputStream(is);
 			} catch (Exception e) {
-				Logger.info("MessagingManager | " +"System: The channel torrent is impossible to create!");
+				Logger.info("MessagingManager | loadTorrent |" + "System: The channel torrent is impossible to create!");
 				return null;
 			}
 		}
-		Logger.info("MessagingManager | " +"System: The channel torrent created is null");
+		Logger.info("MessagingManager | loadTorrent |" + "System: The channel torrent created is null");
 		return null;
 	}
 
@@ -123,7 +124,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
-			Logger.error("MessagingManager | " + e.getMessage());
+			Logger.error("MessagingManager | getSwarmTorrent | " + e.getMessage());
 		}
 		return null;
 	}
@@ -149,6 +150,22 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			synchronized (swarmList) {
 				dl = pluginInterface.getDownloadManager().addDownload(torrent, null, saveDir);
 				dl.setForceStart(true);
+				dl.addListener(new DownloadListener() {
+
+					@Override
+					public void stateChanged(Download download, int old_state, int new_state) {
+						Logger.error("MessagingManager | download state changed  " + Download.ST_NAMES[old_state] + " -> " + Download.ST_NAMES[new_state]);
+						if (new_state != Download.ST_SEEDING || new_state != Download.ST_DOWNLOADING)
+							download.startDownload(true);
+
+					}
+
+					@Override
+					public void positionChanged(Download download, int oldPosition, int newPosition) {
+						// TODO Auto-generated method stub
+
+					}
+				});
 
 				swarmList.put(userId, dl);
 			}
@@ -166,8 +183,11 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	public void sendContentAccepted(String senderUserId, String contentRecipientUserId, String contentId) {
 		Download userIdSwarm = this.getSwarm(contentRecipientUserId);
 
-		if (userIdSwarm == null)
+		if (userIdSwarm == null) {
+			Logger.error("MessagingManager | sendContentAccepted | No swarm found for userId " + contentRecipientUserId);
 			return;
+		}
+
 		byte[] peerID = userIdSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			JSONObject jsonContent = new JSONObject();
@@ -175,13 +195,13 @@ public class MessagingManager implements BlogracyDataMessageListener {
 				jsonContent.put("contentId", contentId);
 			} catch (JSONException e) {
 				e.printStackTrace();
-				Logger.error("MessagingManager | " + e.getMessage());
+				Logger.error("MessagingManager | sendContentAccepted | " + e.getMessage());
 			}
 			BlogracyContentAccepted message = new BlogracyContentAccepted(senderUserId, peerID, contentRecipientUserId, 0, jsonContent.toString());
 
 			peerController.sendMessage(userIdSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendContentAccepted | " + "System: Torrent isn't running, message can't be delivered");
 		}
 
 	}
@@ -189,8 +209,10 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	public void sendContentRejected(String senderUserId, String contentRecipientUserId, String contentId) {
 		Download userIdSwarm = this.getSwarm(contentRecipientUserId);
 
-		if (userIdSwarm == null)
+		if (userIdSwarm == null) {
+			Logger.error("MessagingManager | sendContentRejected | No swarm found for userId " + contentRecipientUserId);
 			return;
+		}
 		byte[] peerID = userIdSwarm.getDownloadPeerId();
 		if (peerID != null) {
 			JSONObject jsonContent = new JSONObject();
@@ -198,20 +220,22 @@ public class MessagingManager implements BlogracyDataMessageListener {
 				jsonContent.put("contentId", contentId);
 			} catch (JSONException e) {
 				e.printStackTrace();
-				Logger.error("MessagingManager | " + e.getMessage());
+				Logger.error("MessagingManager | sendContentRejected |" + e.getMessage());
 			}
-			BlogracyContentRejected message = new BlogracyContentRejected(senderUserId, peerID,contentRecipientUserId, 0, jsonContent.toString());
+			BlogracyContentRejected message = new BlogracyContentRejected(senderUserId, peerID, contentRecipientUserId, 0, jsonContent.toString());
 			peerController.sendMessage(userIdSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendContentRejected |" + "System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
 	public void sendContentListRequest(String senderUserId, String queriedUserId) {
 		Download userIdSwarm = this.getSwarm(queriedUserId);
 
-		if (userIdSwarm == null)
+		if (userIdSwarm == null) {
+			Logger.error("MessagingManager | sendContentListRequest | No swarm found for userId " + queriedUserId);
 			return;
+		}
 
 		byte[] peerID = userIdSwarm.getDownloadPeerId();
 		if (peerID != null) {
@@ -219,15 +243,17 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			BlogracyContentListRequest message = new BlogracyContentListRequest(senderUserId, peerID, queriedUserId, 0, content);
 			peerController.sendMessage(userIdSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendContentListRequest | " + "System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
 	public void sendContentListResponse(String senderUserId, String queriedUserId, JSONArray contentData) {
 		Download queriedUserIdSwarm = this.getSwarm(queriedUserId);
 
-		if (queriedUserIdSwarm == null)
+		if (queriedUserIdSwarm == null) {
+			Logger.error("MessagingManager | sendContentListResponse | No swarm found for userId " + queriedUserIdSwarm);
 			return;
+		}
 
 		byte[] peerID = queriedUserIdSwarm.getDownloadPeerId();
 		if (peerID != null) {
@@ -237,20 +263,22 @@ public class MessagingManager implements BlogracyDataMessageListener {
 				jsonContent.put("contents", contentData);
 			} catch (JSONException e) {
 				e.printStackTrace();
-				Logger.error("MessagingManager | " + e.getMessage());
+				Logger.error("MessagingManager | sendContentListResponse | " + e.getMessage());
 			}
 			BlogracyContentListResponse message = new BlogracyContentListResponse(senderUserId, peerID, queriedUserId, 0, jsonContent.toString());
 			peerController.sendMessage(queriedUserIdSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendContentListResponse |" + "System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
 	public void sendContentMessage(String senderUserId, String destinationUserId, String contentData) {
 		Download destinationSwarm = this.getSwarm(destinationUserId);
 
-		if (destinationSwarm == null)
+		if (destinationSwarm == null) {
+			Logger.error("MessagingManager | sendContentMessage | No swarm found for userId " + destinationUserId);
 			return;
+		}
 
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
@@ -258,55 +286,61 @@ public class MessagingManager implements BlogracyDataMessageListener {
 			BlogracyContent message = new BlogracyContent(senderUserId, peerID, destinationUserId, 0, content);
 			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendContentMessage |" + "System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
 	public void sendBullyCoordinatorMessage(String channelUserId, String senderUserId) {
 		Download destinationSwarm = this.getSwarm(channelUserId);
 
-		if (destinationSwarm == null)
+		if (destinationSwarm == null) {
+			Logger.error("MessagingManager | sendBullyCoordinatorMessage | No swarm found for userId " + channelUserId);
 			return;
+		}
 
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
-			BlogracyBullyCoordinatorMessage message = new BlogracyBullyCoordinatorMessage(senderUserId, peerID,  0, null);
+			BlogracyBullyCoordinatorMessage message = new BlogracyBullyCoordinatorMessage(senderUserId, peerID, 0, null);
 			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendBullyCoordinatorMessage |" + "System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
 	public void sendBullyAnswerMessage(String channelUserId, String senderUserId) {
 		Download destinationSwarm = this.getSwarm(channelUserId);
 
-		if (destinationSwarm == null)
+		if (destinationSwarm == null) {
+			Logger.error("MessagingManager | sendBullyAnswerMessage | No swarm found for userId " + channelUserId);
 			return;
+		}
 
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
-			BlogracyBullyAnswerMessage message = new BlogracyBullyAnswerMessage(senderUserId, peerID,  0, null);
+			BlogracyBullyAnswerMessage message = new BlogracyBullyAnswerMessage(senderUserId, peerID, 0, null);
 			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendBullyAnswerMessage | " + "System: Torrent isn't running, message can't be delivered");
 		}
 	}
 
 	public void sendBullyElectionMessage(String channelUserId, String senderUserId) {
 		Download destinationSwarm = this.getSwarm(channelUserId);
 
-		if (destinationSwarm == null)
+		if (destinationSwarm == null) {
+			Logger.error("MessagingManager | sendBullyElectionMessage | No swarm found for userId " + channelUserId);
 			return;
+		}
 
 		byte[] peerID = destinationSwarm.getDownloadPeerId();
 		if (peerID != null) {
-			BlogracyBullyElectionMessage message = new BlogracyBullyElectionMessage(senderUserId, peerID,  0, null);
+			BlogracyBullyElectionMessage message = new BlogracyBullyElectionMessage(senderUserId, peerID, 0, null);
 			peerController.sendMessage(destinationSwarm, peerID, senderUserId, message);
 		} else {
-			Logger.error("MessagingManager | " +"System: Torrent isn't running, message can't be delivered");
+			Logger.error("MessagingManager | sendBullyElectionMessage | " + "System: Torrent isn't running, message can't be delivered");
 		}
 	}
-	
+
 	public static byte[] bEncode(Map map) {
 		if (formatters == null) {
 			return new byte[0];
@@ -334,26 +368,26 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	/*****************************************************
 	 * 
 	 * BlogracyDataMessageListener members
-	 * @throws UnsupportedEncodingException 
+	 * 
+	 * @throws UnsupportedEncodingException
 	 * 
 	 * 
 	 *****************************************************/
 	@Override
 	public void blogracyDataMessageReceived(Download download, byte[] sender, String nick, BlogracyDataMessage message) {
 		String channelUserId = "";
-		try 
-		{
+		try {
 			Map genericMap = download.getTorrent().writeToMap();
 			Map downloadMap = (Map) genericMap.get("info");
-			channelUserId = new String( (byte[])downloadMap.get("name.utf8"), "UTF-8");
-			if(channelUserId != null)
+			channelUserId = new String((byte[]) downloadMap.get("name.utf8"), "UTF-8");
+			if (channelUserId != null)
 				channelUserId = channelUserId.replace("-BLOGRACY-FRIENDSWARM", "");
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		} catch (TorrentException e1) {
 			e1.printStackTrace();
 		} catch (Exception ex) {
-			Logger.error("MessagingManager | " + ex.getMessage());
+			Logger.error("MessagingManager | blogracyDataMessageReceived |" + ex.getMessage());
 		}
 
 		synchronized (listeners) {
@@ -371,9 +405,9 @@ public class MessagingManager implements BlogracyDataMessageListener {
 				else if (message.getID() == BlogracyBullyAnswerMessage.ID)
 					l.blogracyBullyAnswerReceived(channelUserId, (BlogracyBullyAnswerMessage) message);
 				else if (message.getID() == BlogracyBullyCoordinatorMessage.ID)
-					l.blogracyBullyCoordinatorReceived(channelUserId,(BlogracyBullyCoordinatorMessage) message);
+					l.blogracyBullyCoordinatorReceived(channelUserId, (BlogracyBullyCoordinatorMessage) message);
 				else if (message.getID() == BlogracyBullyElectionMessage.ID)
-					l.blogracyBullyElectionReceived(channelUserId,(BlogracyBullyElectionMessage) message);
+					l.blogracyBullyElectionReceived(channelUserId, (BlogracyBullyElectionMessage) message);
 			}
 		}
 
@@ -395,7 +429,5 @@ public class MessagingManager implements BlogracyDataMessageListener {
 	@Override
 	public void downloadInactive(Download download) {
 	}
-
-	
 
 }

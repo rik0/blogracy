@@ -2,6 +2,7 @@ package net.blogracy.controller.addendum;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -41,8 +42,8 @@ public class DelegateController implements DelegateApprovableMessageListener, De
 
 	private List<String> answerList = new ArrayList<String>();
 
-	private final long BULLY_WAIT_TIME_MS = 3000;
-	private final long DELEGATE_CONTENT_UNHANDLED_TIMEOUT_MS = 10000;
+	private final long BULLY_WAIT_TIME_MS = 10000 + (new Random()).nextInt(1000);
+	private final long DELEGATE_CONTENT_UNHANDLED_TIMEOUT_MS = 10000 + (new Random()).nextInt(1000);
 
 	private volatile String lastContentId;
 
@@ -147,8 +148,8 @@ public class DelegateController implements DelegateApprovableMessageListener, De
 		if (!isAnswersTimerActive())
 			startAnswersTimer();
 
-		int myScore = this.getDelegateScore(Configurations.getUserConfig().getUser().getHash().toString());
-		if (this.getDelegateScore(messageSenderUserId) > myScore)
+		//int myScore = this.getDelegateScore(Configurations.getUserConfig().getUser().getHash().toString());
+		//if (this.getDelegateScore(messageSenderUserId) > myScore)
 			sendAnswerMessage();
 	}
 
@@ -182,7 +183,7 @@ public class DelegateController implements DelegateApprovableMessageListener, De
 			startBullyElection();
 	}
 
-	public synchronized void delegateApprovableMessageReceived(String contentId) {
+	public synchronized void delegateApprovableMessageReceived(String contentId, String contentRecipientUserId) {
 		if (contentId == null)
 			return;
 

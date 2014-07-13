@@ -42,9 +42,9 @@
 </div>
 <div class="otherUsers">
 	<ul>
-	 	<c:forEach var="user" items="${otherUsers.entrySet}">
-		<li><span class="otherDelegateUser">${user.key.localNick}</span><span>(${user.key.hash})</span>
-		<span class="score"> ${user.value} </span></li>
+	 	<c:forEach var="user" items="${otherUsers}">
+		<li><span class="otherDelegateUser">${user.key.localNick}</span><span> (${user.key.hash}) </span>
+		<span class="score">-  ${user.value} </span></li>
 		</c:forEach>
 	</ul>
 </div>

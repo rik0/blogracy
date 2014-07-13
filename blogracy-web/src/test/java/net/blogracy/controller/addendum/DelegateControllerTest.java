@@ -63,7 +63,7 @@ public class DelegateControllerTest {
 	@Test
 	public void testDelegateApprovableMessageReceived() {
 		String contentId = UUID.randomUUID().toString();
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, currentChannelUser.getHash().toString());
 		assertEquals(contentId, delegateController.getLastContentId());
 		assertTrue(delegateController.isContentTimerActive());
 	}
@@ -71,7 +71,7 @@ public class DelegateControllerTest {
 	@Test
 	public void testDelegateApprovableMessageReceived_null() {
 		String contentId = null;
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, currentChannelUser.getHash().toString());
 		assertEquals(contentId, delegateController.getLastContentId());
 		assertFalse(delegateController.isContentTimerActive());
 	}
@@ -88,7 +88,7 @@ public class DelegateControllerTest {
 			e.printStackTrace();
 		}
 
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, "");
 		assertEquals(contentId, delegateController.getLastContentId());
 		assertFalse(delegateController.isContentTimerActive());
 	}
@@ -97,10 +97,10 @@ public class DelegateControllerTest {
 	public void testDelegateApprovableMessageReceived_TwoDifferent() {
 		String contentId = UUID.randomUUID().toString();
 
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, currentChannelUser.getHash().toString());
 
 		contentId = UUID.randomUUID().toString();
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, currentChannelUser.getHash().toString());
 		assertEquals(contentId, delegateController.getLastContentId());
 		assertTrue(delegateController.isContentTimerActive());
 	}
@@ -108,7 +108,7 @@ public class DelegateControllerTest {
 	@Test
 	public void testDelegateDecisionalMessageReceived() {
 		String contentId = UUID.randomUUID().toString();
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, currentChannelUser.getHash().toString());
 
 		delegateController.delegateDecisionalMessageReceived(contentId);
 		assertNull(delegateController.getLastContentId());
@@ -118,7 +118,7 @@ public class DelegateControllerTest {
 	@Test
 	public void testDelegateDecisionalMessageReceived_null() {
 		String contentId = null;
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, currentChannelUser.getHash().toString());
 
 		delegateController.delegateDecisionalMessageReceived(contentId);
 		assertNull(delegateController.getLastContentId());
@@ -128,7 +128,7 @@ public class DelegateControllerTest {
 	@Test
 	public void testDelegateDecisionalMessageReceived_TwoDifferent() {
 		String contentId = UUID.randomUUID().toString();
-		delegateController.delegateApprovableMessageReceived(contentId);
+		delegateController.delegateApprovableMessageReceived(contentId, currentChannelUser.getHash().toString());
 		String secondContentId = UUID.randomUUID().toString();
 		delegateController.delegateDecisionalMessageReceived(secondContentId);
 		assertEquals(contentId, delegateController.getLastContentId());

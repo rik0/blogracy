@@ -136,7 +136,7 @@ public class AddendumController {
 		SalmonDbController.getSingleton().addUserContent(contentRecipientUserId, contentId, newContentData);
 		User channelUser = Users.newUser(Hashes.fromString(contentRecipientUserId));
 		if (delegates.containsKey(channelUser)) {
-			delegates.get(channelUser).delegateApprovableMessageReceived(contentId);
+			delegates.get(channelUser).delegateApprovableMessageReceived(contentId, contentRecipientUserId);
 		} 
 	}
 
