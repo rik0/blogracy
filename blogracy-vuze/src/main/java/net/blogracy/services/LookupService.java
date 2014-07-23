@@ -135,13 +135,14 @@ public class LookupService implements MessageListener {
 
 			if (I2PHelper.isEnabled()) {
 			    String value = I2PHelper.lookup(record.getString("id"));
-
-                record.put("value", value);
-                Logger.info("lookup record received: " + record.getString("id"));
-                TextMessage response = session.createTextMessage();
-                response.setText(record.toString());
-                response.setJMSCorrelationID(request.getJMSCorrelationID());
-                producer.send(request.getJMSReplyTo(), response);
+			    if (value != null && value.length() > 10) {
+                    record.put("value", value);
+                    Logger.info("lookup record received: " + record.getString("id"));
+                    TextMessage response = session.createTextMessage();
+                    response.setText(record.toString());
+                    response.setJMSCorrelationID(request.getJMSCorrelationID());
+                    producer.send(request.getJMSReplyTo(), response);
+                }
 		    } else {
                 final long TIMEOUT = 5 * 60 * 1000; // 5 mins
                 DistributedDatabase ddb = plugin.getDistributedDatabase();

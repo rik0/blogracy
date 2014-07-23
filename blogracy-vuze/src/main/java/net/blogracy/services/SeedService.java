@@ -190,8 +190,8 @@ public class SeedService implements MessageListener {
     }
 
     public static void main(String[] args) {
-        I2PHelper.upload(new File ("/home/mic/Downloads/azureus-networks.tar.gz.torrent"),
+        /* I2PHelper.upload(new File ("/home/mic/Downloads/azureus-networks.tar.gz.torrent"),
             "http://ph6quzd5xi5gppykj34pp7sukjly6gjxsw6onp6pnro3cri2il7q.b32.i2p/upfile/fileupload",
-            "127.0.0.1", 4444);
+            "127.0.0.1", 4444); */
     }    
 }

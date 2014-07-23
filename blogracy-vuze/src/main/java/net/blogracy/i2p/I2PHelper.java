@@ -72,7 +72,9 @@ public class I2PHelper {
     }
     
     public static boolean isEnabled() {
-		return COConfigurationManager.getBooleanParameter("Plugin.azneti2p.enabled");
+		// return COConfigurationManager.getBooleanParameter("Plugin.azneti2p.enabled");
+        String tstore = COConfigurationManager.getStringParameter("Plugin.blogracy.torrent_store");
+        return tstore != null && ! tstore.equals("");
     }
     
     public static void store(String key, String value) throws IOException {
@@ -94,7 +96,7 @@ public class I2PHelper {
 		} catch (MalformedURLException e) { e.printStackTrace(); }
         Proxy proxy = new Proxy(Proxy.Type.HTTP, new InetSocketAddress("127.0.0.1", 4444));
 	    InputStream is = torrentURL.openConnection(proxy).getInputStream();
-	    String value = (new Scanner(is)).nextLine();
+	    String value = (new Scanner(is)).nextLine().trim();
 	    return value;
 	}
 

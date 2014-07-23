@@ -3,6 +3,7 @@
  */
 package net.blogracy;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -61,10 +62,12 @@ public class Blogracy implements Plugin {
     public void initialize(PluginInterface vuze) throws PluginException {
         createQueues(vuze);
 
+        /*
         vuze.addListener(new PluginListener() {
-			public void initializationComplete() {
+            public void initializationComplete() {
                 try {
-                    if (COConfigurationManager.getIntParameter("User Mode") == 0 || argList.contains("--config")) {
+                    File f = new File("plugins/blogracy/vuze.properties");
+                    if (f.exists() && (COConfigurationManager.getIntParameter("User Mode") == 0 || argList.contains("--config"))) {
                         java.util.Properties prop = new java.util.Properties();
                         prop.load(new java.io.FileReader("plugins/blogracy/vuze.properties"));
                         for (String key : prop.stringPropertyNames()) {
@@ -84,14 +87,15 @@ public class Blogracy implements Plugin {
                         }
                     }
                 } catch (Exception e) {
-                	e.printStackTrace();
+                    e.printStackTrace();
                 }
-			}
-			
-			public void closedownInitiated() { }
-			
-			public void closedownComplete() { }
-	    });
+            }
+            
+            public void closedownInitiated() { }
+            
+            public void closedownComplete() { }
+        });
+        */
     }
 
     void createQueues(final PluginInterface vuze) {
@@ -125,25 +129,32 @@ public class Blogracy implements Plugin {
         }
         
         try {
-        	(new java.io.File("plugins/chat")).mkdirs();
-        	Properties chatProp = new Properties();
-        	chatProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/chat/plugin.properties"));
-        	chatProp.store(new FileWriter("plugins/chat/plugin.properties"), "Chat plugin");
-        	(new java.io.File("plugins/azneti2p")).mkdirs();
-        	Properties i2pProp = new Properties();
-        	i2pProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/azneti2p/plugin.properties"));
-        	i2pProp.store(new FileWriter("plugins/azneti2p/plugin.properties"), "I2P plugin");
-        	(new java.io.File("plugins/blogracy")).mkdirs();
-        	Properties blogracyProp = new Properties();
-        	blogracyProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/plugin.properties"));
-        	blogracyProp.store(new FileWriter("plugins/blogracy/plugin.properties"), "Blogracy plugin");
-        	if (! (new java.io.File("plugins/blogracy/vuze.properties")).exists()) {
-            	Properties vuzeProp = new Properties();
-            	vuzeProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/vuze.properties"));
-            	vuzeProp.store(new FileWriter("plugins/blogracy/vuze.properties"), "Vuze properties");
-        	}
+            (new java.io.File("plugins/chat")).mkdirs();
+            Properties chatProp = new Properties();
+            chatProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/chat/plugin.properties"));
+            chatProp.store(new FileWriter("plugins/chat/plugin.properties"), "Chat plugin");
+            
+            /*
+            (new java.io.File("plugins/azneti2p")).mkdirs();
+            Properties i2pProp = new Properties();
+            i2pProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/azneti2p/plugin.properties"));
+            i2pProp.store(new FileWriter("plugins/azneti2p/plugin.properties"), "I2P plugin");
+            */
+            
+            (new java.io.File("plugins/blogracy")).mkdirs();
+            Properties blogracyProp = new Properties();
+            blogracyProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/plugin.properties"));
+            blogracyProp.store(new FileWriter("plugins/blogracy/plugin.properties"), "Blogracy plugin");
+            
+            /*
+            if (! (new java.io.File("plugins/blogracy/vuze.properties")).exists()) {
+                Properties vuzeProp = new Properties();
+                vuzeProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/vuze.properties"));
+                vuzeProp.store(new FileWriter("plugins/blogracy/vuze.properties"), "Vuze properties");
+            }
+            */
         } catch (Exception e) {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
 
         argList.add("--ui=console");
