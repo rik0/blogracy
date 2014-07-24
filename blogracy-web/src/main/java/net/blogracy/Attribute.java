@@ -5,10 +5,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.cert.CertificateException;
-import java.util.List;
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
@@ -17,7 +14,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
-import de.odysseus.el.tree.impl.Parser;
 import net.blogracy.config.Configurations;
 import net.blogracy.controller.FileSharing;
 import net.blogracy.util.FileUtils;
@@ -41,10 +37,10 @@ public class Attribute {
 		
 	/**
      * Set the attribute for friends of the user
-     * NOTE: That function create a file with the name: "id.attribute"
-     *
-     * @param id to identify user that set the attribute
-     * @param attr a List that contains a String in the form "ID attribute"
+     * 
+     * @param uri magnet uri point to JSON file that contains the info about cipher method
+     * @param id of the user that set the attributes
+     * @param attribute
      * 
      */
 	public void setAttribute(String uri, String id, String attribute)
@@ -70,7 +66,6 @@ public class Attribute {
 			
 			if( jsonObject.has("attributes") ) {
 				JSONArray listAttr = (JSONArray) jsonObject.get("attributes");
-				JSONObject idAttribute = new JSONObject();
 				
 				boolean flag = false;
 				for(int i=0; i<listAttr.length(); i++) {
@@ -120,7 +115,7 @@ public class Attribute {
 	/**
      * Returns a string that contains the attributes of a given user
      *
-     * @param file to identify the file that contains the attributes
+     * @param file to identify the JSON file that contains the attributes
      * @param id to identify the user
      * @return the attributes
 	 * @throws JSONException 

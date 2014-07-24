@@ -4,18 +4,11 @@ import cpabe.Cpabe;
 
 import java.io.File;
 import java.io.FileWriter;
-import java.security.KeyPair;
-import java.security.PublicKey;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.TimeZone;
 import java.util.logging.Logger;
-
-import javax.security.auth.login.Configuration;
 
 import net.blogracy.config.Configurations;
 import net.blogracy.controller.ActivitiesController;
@@ -23,11 +16,8 @@ import net.blogracy.controller.ChatController;
 import net.blogracy.controller.DistributedHashTable;
 import net.blogracy.controller.FileSharing;
 import net.blogracy.model.users.User;
-import net.blogracy.util.FileUtils;
-
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
-import org.json.JSONArray;
 import org.json.JSONObject;
 
 public class WebServer {
@@ -50,7 +40,7 @@ public class WebServer {
     public static void main(String[] args) throws Exception {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        int randomWait = 1000 * 15;//(int) (TOTAL_WAIT * Math.random());
+        int randomWait = (int) (TOTAL_WAIT * Math.random());
         Logger log = Logger.getLogger("net.blogracy.webserver");
         log.info("Web server: waiting for " + (randomWait / 1000)
                 + " secs before starting");
@@ -106,10 +96,10 @@ public class WebServer {
 		System.out.println("CPABE ||| End to setup");
 		
 		// CP-ABE: Attribute
-		// Attributi di MIC
+		// MIC's attributes
 		attribute.setAttribute(uriCipherInfo, id, "role:doctor level:A");
 		
-		// Attributi degli amici di MIC
+		// MIC's friends attributes
 		int count = 0;
 		System.out.println("MIC | Set attribute for friends");
 		for(User friend : friends) {
@@ -125,11 +115,7 @@ public class WebServer {
             String now = ISO_DATE_FORMAT.format(new java.util.Date());
             activities.addFeedEntry(id, now + " " + LOREM_IPSUM, null);
             
-            Thread.currentThread();	Thread.sleep(1000 * 5);
-    		
-    		// -------------------------------------------------- //
     		Thread.currentThread();	Thread.sleep(1000 * 5);
-    		// -------------------------------------------------- //
     		
     		System.out.println(" DEBUG | Post a CHIPER message on my feed");
     		String policy = "role:doctor level:A 1of2";
