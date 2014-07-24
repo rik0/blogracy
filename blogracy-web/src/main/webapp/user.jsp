@@ -196,6 +196,10 @@ pageContext.setAttribute("publicChannel", userHash);
                             <div class="input">
                                 <textarea class="xxlarge" name="usertext" id="messageArea" rows="3"></textarea>
                             </div>
+                            <label for="policyArea">Set a policy for your message</label>
+                            <div class="input">
+                            	<textarea class="xylarge" name="policy" id="policyArea" rows="1"></textarea>
+                            </div>
                         </div>
                     </fieldset>
                     <fieldset class="form-stacked">

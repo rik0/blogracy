@@ -1,5 +1,9 @@
 package net.blogracy;
 
+import cpabe.Cpabe;
+
+import java.io.File;
+import java.io.FileWriter;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -12,9 +16,9 @@ import net.blogracy.controller.ChatController;
 import net.blogracy.controller.DistributedHashTable;
 import net.blogracy.controller.FileSharing;
 import net.blogracy.model.users.User;
-
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
+import org.json.JSONObject;
 
 public class WebServer {
 
@@ -23,7 +27,14 @@ public class WebServer {
             + "incididunt ut labore et dolore magna aliqua.";
     static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
+    
+    // CP-ABE Files
+    private static final String PUBFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath()+File.separator + "pubfile";
+    private static final String MSKFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath()+File.separator + "mskfile";
 
+    private static final FileSharing sharing = FileSharing.getSingleton();
+    private static final Attribute attribute = Attribute.getSingleton();
+    
     static final int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
 
     public static void main(String[] args) throws Exception {
@@ -33,7 +44,8 @@ public class WebServer {
         Logger log = Logger.getLogger("net.blogracy.webserver");
         log.info("Web server: waiting for " + (randomWait / 1000)
                 + " secs before starting");
-        Thread.currentThread().sleep(randomWait);
+        Thread.currentThread();
+		Thread.sleep(randomWait);
 
         String webDir = WebServer.class.getClassLoader().getResource("webapp")
                 .toExternalForm();
@@ -56,21 +68,72 @@ public class WebServer {
         String id = Configurations.getUserConfig().getUser().getHash()
                 .toString();
         ChatController.getSingleton().joinChannel(id);
+        
+        // CP-ABE: Initial Setup
+        Cpabe cpabe = new Cpabe();
+        System.out.println("CPABE ||| Start to setup");
+		cpabe.setup(PUBFILE, MSKFILE);
+		// CP-ABE: sharing PUBFILE, MSKFILE
+    	File pub = new File(PUBFILE);
+    	File msk = new File(MSKFILE);
+
+    	JSONObject cipherProp = new JSONObject();
+    	String uriPub = sharing.seed(pub);
+    	String uriMsk = sharing.seed(msk);
+    	cipherProp.put("uri-pubkey", uriPub);
+    	cipherProp.put("uri-mskkey", uriMsk);
+    	pub.delete();
+    	msk.delete();
+    	
+    	File cipherInfo = new File(Configurations.getPathConfig().getCachedFilesDirectoryPath() 
+				+ File.separator + "chiperInfo.json");
+		FileWriter w = new FileWriter(cipherInfo);
+		w.write(cipherProp.toString());
+		w.flush();
+		w.close();
+		
+		String uriCipherInfo = sharing.seed(cipherInfo);
+		System.out.println("CPABE ||| End to setup");
+		
+		// CP-ABE: Attribute
+		// MIC's attributes
+		attribute.setAttribute(uriCipherInfo, id, "role:doctor level:A");
+		
+		// MIC's friends attributes
+		int count = 0;
+		System.out.println("MIC | Set attribute for friends");
+		for(User friend : friends) {
+			if( count % 2 == 0 ) attribute.setAttribute(uriCipherInfo, friend.getHash().toString(), "role:doctor");
+			else attribute.setAttribute(uriCipherInfo, friend.getHash().toString(), "role:doctor");
+			count++;
+		}
 
         while (true) {
             ActivitiesController activities = ActivitiesController
                     .getSingleton();
+            
             String now = ISO_DATE_FORMAT.format(new java.util.Date());
             activities.addFeedEntry(id, now + " " + LOREM_IPSUM, null);
-
-            // List<User> friends = Configurations.getUserConfig().getFriends();
+            
+    		Thread.currentThread();	Thread.sleep(1000 * 5);
+    		
+    		System.out.println(" DEBUG | Post a CHIPER message on my feed");
+    		String policy = "role:doctor level:A 1of2";
+    		now = ISO_DATE_FORMAT.format(new java.util.Date());
+    		activities.addFeedEntry(id,
+    								now + " [CIPHER] " + LOREM_IPSUM,
+									null,
+									policy,
+									uriCipherInfo);
+            
             randomWait = (int) (TOTAL_WAIT * (0.8 + 0.4 * Math.random()));
             int wait = randomWait / friends.size();
+            wait = 1000 * 5;
             for (User friend : friends) {
-                DistributedHashTable.getSingleton().lookup(
-                        friend.getHash().toString());
+            	DistributedHashTable.getSingleton().lookup(friend.getHash().toString());
                 activities.getFeed(friend.getHash().toString());
-                Thread.currentThread().sleep(wait);
+                Thread.currentThread();
+				Thread.sleep(wait);
             }
         }
     }

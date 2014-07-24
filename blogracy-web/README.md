@@ -10,6 +10,27 @@ Essentially Blogracy is composed by two main modules:
 
 This information regards the second module, the Web application.
 
+### Download and Install CP-ABE ###
+
+Blogracy uses the CPABE library, so it's necessary to download and install it to the Maven repository.
+
+```
+wget http://shibboleth.googlecode.com/svn/trunk/lib/WebRoot/WEB-INF/lib/ABE/cpabe.jar
+
+mvn install:install-file -DgroupId=cpabe -DartifactId=cpabe -Dpackaging=jar -Dversion=1.0 -DgeneratePom=true -Dfile=cpabe.jar
+```
+
+CPABE requiers two additional components: JPBC-API and JPBC-PLAF.
+To download and install, run the following commands, in 'blogracy-web' folder:
+
+```
+wget http://shibboleth.googlecode.com/svn/trunk/lib/WebRoot/WEB-INF/lib/ABE/jpbc-api-1.2.1.jar
+wget http://shibboleth.googlecode.com/svn/trunk/lib/WebRoot/WEB-INF/lib/ABE/jpbc-plaf-1.2.1.jar
+
+mvn install:install-file -DgroupId=it.unisa.dia.gas.jpbc -DartifactId=jpbc-api -Dpackaging=jar -Dversion=1.2.1 -DgeneratePom=true -Dfile=jpbc-api-1.2.1.jar
+mvn install:install-file -DgroupId=it.unisa.dia.gas.plaf.jpbc -DartifactId=jpbc-plaf -Dpackaging=jar -Dversion=1.2.1 -DgeneratePom=true -Dfile=jpbc-plaf-1.2.1.jar
+```
+
 ### Compile ###
 
 To compile this sub-project, it is sufficient to issue
