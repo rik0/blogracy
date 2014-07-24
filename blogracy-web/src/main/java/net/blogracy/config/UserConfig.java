@@ -23,6 +23,7 @@
 package net.blogracy.config;
 
 import java.security.KeyPair;
+import java.security.PublicKey;
 import java.util.List;
 
 import net.blogracy.model.users.User;
@@ -34,6 +35,8 @@ public interface UserConfig {
     public User getUser();
 
     public KeyPair getUserKeyPair();
+    
+    public PublicKey getFriendPublicKey(String hash);
 
     public List<User> getFriends();
     
