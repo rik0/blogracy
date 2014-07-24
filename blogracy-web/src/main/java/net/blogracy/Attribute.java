@@ -38,11 +38,7 @@ public class Attribute {
 	public static Attribute getSingleton() {
         return theInstance;
     }
-	
-	Attribute() {
 		
-	}
-	
 	/**
      * Set the attribute for friends of the user
      * NOTE: That function create a file with the name: "id.attribute"
