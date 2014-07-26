@@ -22,6 +22,17 @@
 
 package net.blogracy.services;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+import java.util.Scanner;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -33,8 +44,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.i2p.I2PHelper;
 import net.blogracy.logging.Logger;
 
+import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabase;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
@@ -91,11 +104,15 @@ public class StoreService implements MessageListener {
                 DistributedDatabaseValue value = ddb.createValue(keyValue
                         .getString("value"));
 
-                ddb.write(new DistributedDatabaseListener() {
-                    @Override
-                    public void event(DistributedDatabaseEvent event) {
-                    }
-                }, key, new DistributedDatabaseValue[] { value });
+                if (I2PHelper.isEnabled()) {
+                    I2PHelper.store(keyValue.getString("key"), keyValue.getString("value"));
+                } else {                    
+                    ddb.write(new DistributedDatabaseListener() {
+                        @Override
+                        public void event(DistributedDatabaseEvent event) {
+                        }
+                    }, key, new DistributedDatabaseValue[] { value });
+                }
             } catch (DistributedDatabaseException e) {
                 Logger.error("DDB error: store service: " + text);
             } catch (Exception e) {

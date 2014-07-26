@@ -3,6 +3,7 @@
  */
 package net.blogracy;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.Properties;
 import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 
+import net.blogracy.i2p.I2PHelper;
 import net.blogracy.logging.Logger;
 import net.blogracy.services.ChatService;
 import net.blogracy.services.DownloadService;
@@ -47,6 +49,7 @@ public class Blogracy implements Plugin {
     private SeedService seedService;
     private DownloadService downloadService;
     private ChatService chatService;
+    private static final List<String> argList = new ArrayList<String>();
 
     /*
      * (non-Javadoc)
@@ -59,10 +62,12 @@ public class Blogracy implements Plugin {
     public void initialize(PluginInterface vuze) throws PluginException {
         createQueues(vuze);
 
+        /*
         vuze.addListener(new PluginListener() {
-			public void initializationComplete() {
+            public void initializationComplete() {
                 try {
-                    if (COConfigurationManager.getIntParameter("User Mode") == 0) {
+                    File f = new File("plugins/blogracy/vuze.properties");
+                    if (f.exists() && (COConfigurationManager.getIntParameter("User Mode") == 0 || argList.contains("--config"))) {
                         java.util.Properties prop = new java.util.Properties();
                         prop.load(new java.io.FileReader("plugins/blogracy/vuze.properties"));
                         for (String key : prop.stringPropertyNames()) {
@@ -74,16 +79,23 @@ public class Blogracy implements Plugin {
                                 COConfigurationManager.setParameter(key, str);
                             }
                         }
+                        String ip = COConfigurationManager.getStringParameter("Override Ip");
+                        if (ip.startsWith("i2p:")) {
+                            String tunnel = I2PHelper.getTunnel(ip.substring(4));
+                            String destination = I2PHelper.getDestination(tunnel);
+                            COConfigurationManager.setParameter("Override Ip", destination + ".i2p");
+                        }
                     }
                 } catch (Exception e) {
-                	e.printStackTrace();
+                    e.printStackTrace();
                 }
-			}
-			
-			public void closedownInitiated() { }
-			
-			public void closedownComplete() { }
-	    });
+            }
+            
+            public void closedownInitiated() { }
+            
+            public void closedownComplete() { }
+        });
+        */
     }
 
     void createQueues(final PluginInterface vuze) {
@@ -117,30 +129,36 @@ public class Blogracy implements Plugin {
         }
         
         try {
-        	(new java.io.File("plugins/chat")).mkdirs();
-        	Properties chatProp = new Properties();
-        	chatProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/chat/plugin.properties"));
-        	chatProp.store(new FileWriter("plugins/chat/plugin.properties"), "Chat plugin");
-        	(new java.io.File("plugins/azneti2p")).mkdirs();
-        	Properties i2pProp = new Properties();
-        	i2pProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/azneti2p/plugin.properties"));
-        	i2pProp.store(new FileWriter("plugins/azneti2p/plugin.properties"), "I2P plugin");
-        	(new java.io.File("plugins/blogracy")).mkdirs();
-        	Properties blogracyProp = new Properties();
-        	blogracyProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/plugin.properties"));
-        	blogracyProp.store(new FileWriter("plugins/blogracy/plugin.properties"), "Blogracy plugin");
-        	if (! (new java.io.File("plugins/blogracy/vuze.properties")).exists()) {
-            	Properties vuzeProp = new Properties();
-            	vuzeProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/vuze.properties"));
-            	vuzeProp.store(new FileWriter("plugins/blogracy/vuze.properties"), "Vuze properties");
-        	}
+            (new java.io.File("plugins/chat")).mkdirs();
+            Properties chatProp = new Properties();
+            chatProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/chat/plugin.properties"));
+            chatProp.store(new FileWriter("plugins/chat/plugin.properties"), "Chat plugin");
+            
+            /*
+            (new java.io.File("plugins/azneti2p")).mkdirs();
+            Properties i2pProp = new Properties();
+            i2pProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/azneti2p/plugin.properties"));
+            i2pProp.store(new FileWriter("plugins/azneti2p/plugin.properties"), "I2P plugin");
+            */
+            
+            (new java.io.File("plugins/blogracy")).mkdirs();
+            Properties blogracyProp = new Properties();
+            blogracyProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/plugin.properties"));
+            blogracyProp.store(new FileWriter("plugins/blogracy/plugin.properties"), "Blogracy plugin");
+            
+            /*
+            if (! (new java.io.File("plugins/blogracy/vuze.properties")).exists()) {
+                Properties vuzeProp = new Properties();
+                vuzeProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/vuze.properties"));
+                vuzeProp.store(new FileWriter("plugins/blogracy/vuze.properties"), "Vuze properties");
+            }
+            */
         } catch (Exception e) {
-        	e.printStackTrace();
+            e.printStackTrace();
         }
 
-        List<String> argList = new ArrayList<String>();
-        argList.addAll(Arrays.asList(args));
         argList.add("--ui=console");
+        argList.addAll(Arrays.asList(args));
         org.gudy.azureus2.ui.common.Main.main(argList.toArray(args));
         //PluginManager.startAzureus(PluginManager.UI_NONE, new java.util.Properties());
     }

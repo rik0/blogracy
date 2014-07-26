@@ -24,7 +24,7 @@ public class WebServer {
     static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
 
-    static final int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
+    static final int TOTAL_WAIT = 2 * 60 * 1000; // 2 minutes
 
     public static void main(String[] args) throws Exception {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));

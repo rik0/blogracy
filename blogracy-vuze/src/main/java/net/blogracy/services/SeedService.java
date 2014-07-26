@@ -24,7 +24,9 @@ package net.blogracy.services;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.net.MalformedURLException;
+import java.net.Proxy;
 import java.net.URL;
 import java.util.logging.SimpleFormatter;
 
@@ -39,9 +41,11 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.i2p.I2PHelper;
 import net.blogracy.logging.Logger;
 import net.blogracy.services.DownloadService.CompletionListener;
 
+import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.core3.util.Base32;
 import org.gudy.azureus2.core3.util.ByteFormatter;
 import org.gudy.azureus2.plugins.PluginInterface;
@@ -133,12 +137,16 @@ public class SeedService implements MessageListener {
             try {
                 File file = new File(entry.getString("file"));
 
-                /*Torrent torrent = plugin.getTorrentManager()
-                        .createFromDataFile(file,
-                                new URL("udp://tracker.openbittorrent.com:80"));*/
-                Torrent torrent = vuze.getTorrentManager().createFromDataFile( file, new URL("dht:"));
-    			torrent.setAnnounceURL(new URL("dht://" + ByteFormatter.encodeString(torrent.getHash()) + ".dht/announce"));
-    			torrent.setComplete(file.getParentFile());
+                Torrent torrent = null;
+                if (I2PHelper.isEnabled()) {
+                    torrent = I2PHelper.createTorrent(file, vuze);
+                } else {                    
+                    /*Torrent torrent = plugin.getTorrentManager()
+                            .createFromDataFile(file, new URL("udp://tracker.openbittorrent.com:80"));*/
+                    torrent = vuze.getTorrentManager().createFromDataFile( file, new URL("dht://"));
+        			torrent.setAnnounceURL(new URL("dht://" + ByteFormatter.encodeString(torrent.getHash()) + ".dht/announce"));
+        			torrent.setComplete(file.getParentFile());
+        	    }
 
                 String name = Base32.encode(torrent.getHash());
                 int index = file.getName().lastIndexOf('.');
@@ -153,6 +161,7 @@ public class SeedService implements MessageListener {
                     download.renameDownload(name);
 					download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
                     download.setForceStart(true);
+                    download.requestTrackerAnnounce(true);
                 }
                 entry.put("uri", torrent.getMagnetURI().toExternalForm());
 
@@ -166,11 +175,10 @@ public class SeedService implements MessageListener {
                 Logger.error("Malformed URL error: seed service " + text);
             } catch (TorrentException e) {
                 Logger.error("Torrent error: seed service: " + text);
-                e.printStackTrace();
             } catch (DownloadException e) {
                 Logger.error("Download error: seed service: " + text);
                 e.printStackTrace();
-            } catch (IOException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
         } catch (JMSException e) {
@@ -180,4 +188,10 @@ public class SeedService implements MessageListener {
             e.printStackTrace();
         }
     }
+
+    public static void main(String[] args) {
+        /* I2PHelper.upload(new File ("/home/mic/Downloads/azureus-networks.tar.gz.torrent"),
+            "http://ph6quzd5xi5gppykj34pp7sukjly6gjxsw6onp6pnro3cri2il7q.b32.i2p/upfile/fileupload",
+            "127.0.0.1", 4444); */
+    }    
 }
