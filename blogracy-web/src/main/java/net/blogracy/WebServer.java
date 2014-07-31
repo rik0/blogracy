@@ -9,8 +9,8 @@ import java.util.logging.Logger;
 import net.blogracy.config.Configurations;
 import net.blogracy.controller.ActivitiesController;
 import net.blogracy.controller.ChatController;
+import net.blogracy.controller.CpAbeController;
 import net.blogracy.controller.DistributedHashTable;
-import net.blogracy.controller.FileSharing;
 import net.blogracy.model.users.User;
 
 import org.eclipse.jetty.server.Server;
@@ -23,8 +23,8 @@ public class WebServer {
             + "incididunt ut labore et dolore magna aliqua.";
     static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
             "yyyy-MM-dd'T'HH:mm:ss'Z'");
-
-    static final int TOTAL_WAIT = 2 * 60 * 1000; // 2 minutes
+        
+    static final int TOTAL_WAIT = 5 * 60 * 1000; // 5 minutes
 
     public static void main(String[] args) throws Exception {
         ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -33,7 +33,8 @@ public class WebServer {
         Logger log = Logger.getLogger("net.blogracy.webserver");
         log.info("Web server: waiting for " + (randomWait / 1000)
                 + " secs before starting");
-        Thread.currentThread().sleep(randomWait);
+        Thread.currentThread();
+		Thread.sleep(randomWait);
 
         String webDir = WebServer.class.getClassLoader().getResource("webapp")
                 .toExternalForm();
@@ -56,22 +57,29 @@ public class WebServer {
         String id = Configurations.getUserConfig().getUser().getHash()
                 .toString();
         ChatController.getSingleton().joinChannel(id);
+        
+        // CP-ABE: Initial Setup
+        CpAbeController.getSingleton().setup();
+        // CP-ABE: Set the attributes for the local user "mic"
+        CpAbeController.getSingleton().setFriendPrivateKey(id, "circle:friends circle:work circle:university");
 
         while (true) {
             ActivitiesController activities = ActivitiesController
                     .getSingleton();
+            
             String now = ISO_DATE_FORMAT.format(new java.util.Date());
             activities.addFeedEntry(id, now + " " + LOREM_IPSUM, null);
-
-            // List<User> friends = Configurations.getUserConfig().getFriends();
+            
             randomWait = (int) (TOTAL_WAIT * (0.8 + 0.4 * Math.random()));
             int wait = randomWait / friends.size();
+            wait = 1000 * 5;
             for (User friend : friends) {
-                DistributedHashTable.getSingleton().lookup(
-                        friend.getHash().toString());
+            	DistributedHashTable.getSingleton().lookup(friend.getHash().toString());
                 activities.getFeed(friend.getHash().toString());
-                Thread.currentThread().sleep(wait);
+                Thread.currentThread();
+				Thread.sleep(wait);
             }
         }
+
     }
 }
