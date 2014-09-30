@@ -17,6 +17,9 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
 
 public class WebServer {
+	
+	private static final CpAbeController cpabe = CpAbeController.getSingleton();
+	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
 
     public static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, "
             + "consectetur adipisicing elit, sed do eiusmod tempor "
@@ -33,8 +36,7 @@ public class WebServer {
         Logger log = Logger.getLogger("net.blogracy.webserver");
         log.info("Web server: waiting for " + (randomWait / 1000)
                 + " secs before starting");
-        Thread.currentThread();
-		Thread.sleep(randomWait);
+        Thread.currentThread().sleep(randomWait);
 
         String webDir = WebServer.class.getClassLoader().getResource("webapp")
                 .toExternalForm();
@@ -59,9 +61,9 @@ public class WebServer {
         ChatController.getSingleton().joinChannel(id);
         
         // CP-ABE: Initial Setup
-        CpAbeController.getSingleton().setup();
+        cpabe.setup();
         // CP-ABE: Set the attributes for the local user "mic"
-        CpAbeController.getSingleton().setFriendPrivateKey(id, "circle:friends circle:work circle:university");
+        cpabe.setFriendPrivateKey(id, "circle:friends circle:work circle:university");
 
         while (true) {
             ActivitiesController activities = ActivitiesController
@@ -74,10 +76,9 @@ public class WebServer {
             int wait = randomWait / friends.size();
             wait = 1000 * 5;
             for (User friend : friends) {
-            	DistributedHashTable.getSingleton().lookup(friend.getHash().toString());
+            	dht.lookup(friend.getHash().toString());
                 activities.getFeed(friend.getHash().toString());
-                Thread.currentThread();
-				Thread.sleep(wait);
+                Thread.currentThread().sleep(wait);
             }
         }
 
