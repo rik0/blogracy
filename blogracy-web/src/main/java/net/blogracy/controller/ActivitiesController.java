@@ -104,13 +104,13 @@ public class ActivitiesController extends SecurityManager {
                         .getString("uri"));
                 File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
                 if (!dbFile.exists() && record.has("prev")) {
-                	latestHash = FileSharing.getHashFromMagnetURI(record
+                    latestHash = FileSharing.getHashFromMagnetURI(record
                             .getString("prev"));
                     dbFile = new File(CACHE_FOLDER + File.separator
                             + latestHash + ".json");
                 }
                 if (dbFile.exists()) {
-                	System.out.println("Getting feed: " + dbFile.getAbsolutePath());
+                    System.out.println("Getting feed: " + dbFile.getAbsolutePath());
                     JSONObject db = new JSONObject(new JSONTokener(new FileReader(dbFile)));
 
                     JSONArray items = db.getJSONArray("items");
