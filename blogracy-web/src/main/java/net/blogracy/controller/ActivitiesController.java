@@ -99,7 +99,7 @@ public class ActivitiesController extends SecurityManager {
         JSONObject record = dht.getRecord(user);
         
         if (record != null) {
-        	try {
+            try {
                 String latestHash = FileSharing.getHashFromMagnetURI(record
                         .getString("uri"));
                 File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
