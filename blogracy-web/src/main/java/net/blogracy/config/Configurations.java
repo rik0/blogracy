@@ -248,7 +248,7 @@ public class Configurations {
                 
                 @Override
                 public PublicKey getFriendPublicKey(String user) {
-                	PublicKey pk = null;
+					PublicKey pk = null;
 					try {
 						char[] password = new char[] { 'b', 'l', 'o', 'g', 'r', 'a', 'c', 'y' };
 						InputStream is = getResourceAsStream("blogracy.jks");
@@ -257,6 +257,7 @@ public class Configurations {
 						is.close();
 						
 						java.security.cert.Certificate cert = keyStore.getCertificate(user);
+						
 						// Get public key
 						pk = cert.getPublicKey();
 						
@@ -266,10 +267,10 @@ public class Configurations {
 						e.printStackTrace();
 					} catch (CertificateException e) {
 						e.printStackTrace();
-                    } catch (IOException e) {
-                    	e.printStackTrace();
-                   	}
-                   	return pk;
+					} catch (IOException e) {
+						e.printStackTrace();
+					}
+					return pk;
 				}
             };
         } catch (IOException e) {
