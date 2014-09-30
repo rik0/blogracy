@@ -129,47 +129,46 @@ public class ActivitiesController extends SecurityManager {
                         	String privateKeyFilePath = privateKeyFile.getAbsolutePath();
                         	
                         	File publicKeyFile = new File(cpabe.getPubPath());
-                			FileWriter writer = new FileWriter(publicKeyFile);
+                		FileWriter writer = new FileWriter(publicKeyFile);
                 	        writer.write( cipherSchemeInfo.getString("pubkey").toString() );
-                			writer.close();
+                		writer.close();
                         	
                         	// Get the path of the file to decipher
                         	String pathFileToDec = CACHE_FOLDER + File.separator + 
-                        								sharing.getHashFromMagnetURI( item.get("url").toString() )
-                        									+ ".cpabe";
+                        	    sharing.getHashFromMagnetURI( item.get("url").toString() ) + ".cpabe";
                         	
                         	// Avoid the 'System.exit()' in the CP-ABE Library
                         	SecurityManager previousSM = System.getSecurityManager();
-                            final SecurityManager SM = new SecurityManager() {
-                            	@Override
-                            	public void checkPermission(final Permission permission) {
-                            		if( permission.getName() != null && permission.getName().startsWith("exitVM") )
-                            			throw new SecurityException();
-                            	}
-                            };
+                                    final SecurityManager SM = new SecurityManager() {
+                                        @Override
+                                        public void checkPermission(final Permission permission) {
+                            		    if( permission.getName() != null && permission.getName().startsWith("exitVM") )
+                                                throw new SecurityException();
+                            	        }
+                                    };
                         	System.setSecurityManager(SM);
                             
                         	// Try to decipher the message
                         	try {
-                        		cpabe.decryptMessage(publicKeyFile.getAbsolutePath(),
-                        				  			privateKeyFilePath,
-                        				  			pathFileToDec,
-                        				  			cpabe.getDecPath());
-                        		publicKeyFile.delete();
-                        		privateKeyFile.delete();
+                        	    cpabe.decryptMessage(publicKeyFile.getAbsolutePath(),
+                        				  		privateKeyFilePath,
+                        				  		pathFileToDec,
+                        				  		cpabe.getDecPath());
+                        	    publicKeyFile.delete();
+                        	    privateKeyFile.delete();
                         		
-                        		System.out.println(" CP-ABE | Decrypted Message!!!");
+                                    System.out.println(" CP-ABE | Decrypted Message!!!");
                         		
-                        		File decFile = new File(cpabe.getDecPath());
-                        		String fileText = FileUtils.getContentFromFile(decFile);
-                        		decFile.delete();
+                        	    File decFile = new File(cpabe.getDecPath());
+                        	    String fileText = FileUtils.getContentFromFile(decFile);
+                        	    decFile.delete();
                         		
-                        		entry.setContent(fileText);
-                        		result.add(entry);
+                        	    entry.setContent(fileText);
+                        	    result.add(entry);
                         	} catch (SecurityException e){ 
-                        		System.out.println(" CP-ABE | Unable to decipher the message.");
+                                    System.out.println(" CP-ABE | Unable to decipher the message.");
                         	} finally {
-                        		System.setSecurityManager(previousSM);
+                        	    System.setSecurityManager(previousSM);
                         	}
                     	} else {
                     		result.add(entry);
