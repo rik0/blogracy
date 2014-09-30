@@ -18,8 +18,8 @@ import org.eclipse.jetty.webapp.WebAppContext;
 
 public class WebServer {
 	
-	private static final CpAbeController cpabe = CpAbeController.getSingleton();
-	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
+    private static final CpAbeController cpabe = CpAbeController.getSingleton();
+    private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
 
     public static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, "
             + "consectetur adipisicing elit, sed do eiusmod tempor "
