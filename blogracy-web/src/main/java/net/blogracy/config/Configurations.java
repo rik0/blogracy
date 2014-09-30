@@ -248,30 +248,30 @@ public class Configurations {
                 
                 @Override
                 public PublicKey getFriendPublicKey(String user) {
-					PublicKey pk = null;
-					try {
-						char[] password = new char[] { 'b', 'l', 'o', 'g', 'r', 'a', 'c', 'y' };
-						InputStream is = getResourceAsStream("blogracy.jks");
-						KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-						keyStore.load(is, password);
-						is.close();
+                    PublicKey pk = null;
+		    try {
+			char[] password = new char[] { 'b', 'l', 'o', 'g', 'r', 'a', 'c', 'y' };
+			InputStream is = getResourceAsStream("blogracy.jks");
+			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			keyStore.load(is, password);
+			is.close();
 						
-						java.security.cert.Certificate cert = keyStore.getCertificate(user);
+			java.security.cert.Certificate cert = keyStore.getCertificate(user);
 						
-						// Get public key
-						pk = cert.getPublicKey();
+			// Get public key
+			pk = cert.getPublicKey();
 						
-					} catch (NoSuchAlgorithmException e) {
-						e.printStackTrace();
-					} catch (KeyStoreException e) {
-						e.printStackTrace();
-					} catch (CertificateException e) {
-						e.printStackTrace();
-					} catch (IOException e) {
-						e.printStackTrace();
-					}
-					return pk;
-				}
+		    } catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		    } catch (KeyStoreException e) {
+			e.printStackTrace();
+		    } catch (CertificateException e) {
+			e.printStackTrace();
+		    } catch (IOException e) {
+			e.printStackTrace();
+		    }
+		    return pk;
+		}
             };
         } catch (IOException e) {
             e.printStackTrace();
