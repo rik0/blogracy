@@ -248,32 +248,32 @@ public class Configurations {
                 
                 @Override
                 public PublicKey getFriendPublicKey(String user) {
-                	PublicKey pk = null;
+                    PublicKey pk = null;
+                    try {
+                	char[] password = new char[] { 'b', 'l', 'o', 'g', 'r', 'a', 'c', 'y' };
+                	InputStream is = getResourceAsStream("blogracy.jks");
                 	try {
-                		char[] password = new char[] { 'b', 'l', 'o', 'g', 'r', 'a', 'c', 'y' };
-                		InputStream is = getResourceAsStream("blogracy.jks");
-                		try {
-                			KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-                			keyStore.load(is, password);
+                	    KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+                	    keyStore.load(is, password);
 						
-                			java.security.cert.Certificate cert = keyStore.getCertificate(user);
+                	    java.security.cert.Certificate cert = keyStore.getCertificate(user);
 						
-                			// Get public key
-                			pk = cert.getPublicKey();
+                	    // Get public key
+                	    pk = cert.getPublicKey();
 			
-                		} finally {
-                			if(is != null) is.close();
-                		}
-                	} catch (NoSuchAlgorithmException e) {
-                		e.printStackTrace();
-                	} catch (KeyStoreException e) {
-                		e.printStackTrace();
-                	} catch (CertificateException e) {
-                		e.printStackTrace();
-                	} catch (IOException e) {
-                		e.printStackTrace();
-                	}
-                return pk;
+                	} finally {
+                	    if(is != null) is.close();
+               		}
+                    } catch (NoSuchAlgorithmException e) {
+                	e.printStackTrace();
+                    } catch (KeyStoreException e) {
+                	e.printStackTrace();
+                    } catch (CertificateException e) {
+                	e.printStackTrace();
+                    } catch (IOException e) {
+                	e.printStackTrace();
+                    }
+                    return pk;
                 }
             };
         } catch (IOException e) {
