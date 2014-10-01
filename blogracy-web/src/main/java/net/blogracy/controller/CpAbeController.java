@@ -26,9 +26,9 @@ import cpabe.Cpabe;
 
 public class CpAbeController {
 	
-	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
+    static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 	
-	// CP-ABE Files
+    // CP-ABE Files
     private final String PUBFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + File.separator + 
     											Configurations.getUserConfig().getUser().getHash().toString() + ".pub";
     private final String MSKFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + File.separator + 
@@ -49,8 +49,8 @@ public class CpAbeController {
 	private int outputBlockSizeRSA = (RSAKeySize / 8);
 	
 	public static CpAbeController getSingleton() {
-        return theInstance;
-    }
+	    return theInstance;
+	}
 	
 	public void setup() throws IOException, ClassNotFoundException, JSONException {
 		if( !new File(MSKFILE).exists() ) {
@@ -117,7 +117,7 @@ public class CpAbeController {
 			
 			File publicKeyFile = new File(PUBFILE);
 			FileWriter writer = new FileWriter(publicKeyFile);
-	        writer.write( cipherInfoJSON.get("pubkey").toString() );
+	                writer.write( cipherInfoJSON.get("pubkey").toString() );
 			writer.close();
 			
 			System.out.println(" CP-ABE Controller | Start to generate Private Key");
@@ -238,7 +238,7 @@ public class CpAbeController {
 
 		File privateKeyFile = new File( PVRFILE );
 		FileWriter writer = new FileWriter(privateKeyFile);
-        writer.write(privateKey);
+        	writer.write(privateKey);
 		writer.close();
         
 		return privateKeyFile;
