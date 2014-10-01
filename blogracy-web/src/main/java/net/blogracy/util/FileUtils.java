@@ -148,20 +148,23 @@ public class FileUtils {
         is.close();
         return bytes;
     }
-        
+    
     public static String getContentFromFile(File file) throws IOException {
 
     	FileReader r = new FileReader(file);
 		BufferedReader br = new BufferedReader(r);
-		String temp = null;
-		String text = "";
-		while( (temp = br.readLine()) != null) {
-			text += temp + "\n";
+		try{
+			String temp = null;
+			String text = "";
+			while( (temp = br.readLine()) != null) {
+				text += temp + "\n";
+			}
+						
+			return text;
+		} finally {
+			if(r != null) r.close();
+			if(br != null) br.close();
 		}
-		br.close();
-		r.close();
-		
-		return text;
     }
     
     public static JSONObject getJSONFromFile(File file) throws IOException, JSONException {

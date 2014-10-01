@@ -129,9 +129,9 @@ public class ActivitiesController extends SecurityManager {
                         	String privateKeyFilePath = privateKeyFile.getAbsolutePath();
                         	
                         	File publicKeyFile = new File(cpabe.getPubPath());
-                		FileWriter writer = new FileWriter(publicKeyFile);
+                        	FileWriter writer = new FileWriter(publicKeyFile);
                 	        writer.write( cipherSchemeInfo.getString("pubkey").toString() );
-                		writer.close();
+                	        writer.close();
                         	
                         	// Get the path of the file to decipher
                         	String pathFileToDec = CACHE_FOLDER + File.separator + 
@@ -157,7 +157,7 @@ public class ActivitiesController extends SecurityManager {
                         	    publicKeyFile.delete();
                         	    privateKeyFile.delete();
                         		
-                                    System.out.println(" CP-ABE | Decrypted Message!!!");
+                                //System.out.println(" CP-ABE | Decrypted Message!!!");
                         		
                         	    File decFile = new File(cpabe.getDecPath());
                         	    String fileText = FileUtils.getContentFromFile(decFile);
@@ -166,7 +166,7 @@ public class ActivitiesController extends SecurityManager {
                         	    entry.setContent(fileText);
                         	    result.add(entry);
                         	} catch (SecurityException e){ 
-                                    System.out.println(" CP-ABE | Unable to decipher the message.");
+                                    //System.out.println(" CP-ABE | Unable to decipher the message.");
                         	} finally {
                         	    System.setSecurityManager(previousSM);
                         	}

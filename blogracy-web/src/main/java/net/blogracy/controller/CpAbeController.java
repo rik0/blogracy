@@ -70,10 +70,13 @@ public class CpAbeController {
 										+ File.separator + "chiperInfo.json");
 			
 	    	FileWriter w = new FileWriter(cipherInfo);
-			w.write( JSONObj.toString() );
-			w.flush();
-			w.close();
-			
+	    	try {
+	    		w.write( JSONObj.toString() );
+	    		w.flush();
+	    	} finally {
+	    		if(w != null) w.close();
+	    	}
+	    	
 			String uri = sharing.seed(cipherInfo);
 			cipherInfo.delete();
 			
@@ -136,40 +139,8 @@ public class CpAbeController {
 			String pvrContent = FileUtils.getContentFromFile(pvrFile);
 			pvrFile.delete();
 			
-			final Cipher cipher = Cipher.getInstance("RSA");
-			cipher.init(Cipher.ENCRYPT_MODE, pk);
-			
-			byte[] pvrByte = pvrContent.getBytes();
-			int pvrByteLength = pvrByte.length;
-			int numberOfBlock = pvrByteLength / blockRSASize;
-			if ( pvrByteLength % blockRSASize != 0 )
-				numberOfBlock++;
-			
-			int blockStart = 0;
-			int blockEnd = blockRSASize;
-			byte[] cipherText = new byte[outputBlockSizeRSA * numberOfBlock];
-			
-			for( int i=0; i<numberOfBlock; i++ ) {
-				byte[] tempBlock = new byte[blockRSASize];
-				for( int j=blockStart; j<blockEnd; j++) {
-					tempBlock[j%blockRSASize] = pvrByte[j];
-				}
-				
-				byte[] cipherBlock = cipher.doFinal(tempBlock);
-				
-				for( int k=i*outputBlockSizeRSA; k<(i+1)*outputBlockSizeRSA; k++){
-					cipherText[k] = cipherBlock[k%outputBlockSizeRSA];
-				}
-				
-				blockStart += blockRSASize;
-				if( i+1 == numberOfBlock-1 ){
-					blockEnd += pvrByteLength-(blockRSASize*(i+1));
-				} else {
-					blockEnd += blockRSASize;
-				}
-			}
-			
-			String cipherText64 = Base64.encodeBase64String(cipherText);
+			//New function Chipering
+			String cipherText64 = ciphering(pvrContent, pk);
 			
 			if( cipherInfoJSON.has("private-keys") ) {
 				JSONArray listKeys = (JSONArray) cipherInfoJSON.get("private-keys");
@@ -271,5 +242,45 @@ public class CpAbeController {
 		writer.close();
         
 		return privateKeyFile;
+	}
+	
+	private String ciphering(String pvrContent, PublicKey pk) 
+			throws NoSuchAlgorithmException, NoSuchPaddingException, InvalidKeyException, IllegalBlockSizeException,
+					BadPaddingException {
+		final Cipher cipher = Cipher.getInstance("RSA");
+		cipher.init(Cipher.ENCRYPT_MODE, pk);
+		
+		byte[] pvrByte = pvrContent.getBytes();
+		int pvrByteLength = pvrByte.length;
+		int numberOfBlock = pvrByteLength / blockRSASize;
+		if ( pvrByteLength % blockRSASize != 0 )
+			numberOfBlock++;
+		
+		int blockStart = 0;
+		int blockEnd = blockRSASize;
+		byte[] cipherText = new byte[outputBlockSizeRSA * numberOfBlock];
+		
+		for( int i=0; i<numberOfBlock; i++ ) {
+			byte[] tempBlock = new byte[blockRSASize];
+			for( int j=blockStart; j<blockEnd; j++) {
+				tempBlock[j%blockRSASize] = pvrByte[j];
+			}
+			
+			byte[] cipherBlock = cipher.doFinal(tempBlock);
+			
+			for( int k=i*outputBlockSizeRSA; k<(i+1)*outputBlockSizeRSA; k++){
+				cipherText[k] = cipherBlock[k%outputBlockSizeRSA];
+			}
+			
+			blockStart += blockRSASize;
+			if( i+1 == numberOfBlock-1 ){
+				blockEnd += pvrByteLength-(blockRSASize*(i+1));
+			} else {
+				blockEnd += blockRSASize;
+			}
+		}
+		
+		String cipherText64 = Base64.encodeBase64String(cipherText);
+		return cipherText64;
 	}
 }
