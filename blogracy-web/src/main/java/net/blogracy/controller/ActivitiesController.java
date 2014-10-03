@@ -158,14 +158,14 @@ public class ActivitiesController extends SecurityManager {
             										+ sharing.getHashFromMagnetURI(uriCipherInfo) + ".json"));
 
             	File publicKeyFile = new File(cpabe.getPubPath());
-    			FileWriter writer = new FileWriter(publicKeyFile);
+    		FileWriter writer = new FileWriter(publicKeyFile);
     	        writer.write( cipherInfoJSON.get("pubkey").toString() );
-    			writer.close();
+    		writer.close();
             	
             	cpabe.encryptMessage(cpabe.getPubPath(),
-            						 policy,	// Policy
-            						 textFile.getAbsolutePath(),	// Input File
-            						 CACHE_FOLDER + File.separator + hash + ".cpabe");	// Output File
+            			     policy,	// Policy
+            			     textFile.getAbsolutePath(),	// Input File
+            			     CACHE_FOLDER + File.separator + hash + ".cpabe");	// Output File
             	
             	publicKeyFile.delete();
             	textFile.delete();
@@ -204,8 +204,7 @@ public class ActivitiesController extends SecurityManager {
             }
             feed.add(0, entry);
             String feedUri = seedActivityStream(id, feed);
-            DistributedHashTable.getSingleton().store(id, feedUri,
-                    entry.getPublished());
+            DistributedHashTable.getSingleton().store(id, feedUri, entry.getPublished());
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -239,7 +238,7 @@ public class ActivitiesController extends SecurityManager {
     }
     
     public static void tryToDecipher(List<ActivityEntry> result, ActivityEntry entry, 
-    		JSONObject item, boolean addNewEntry, JSONObject db) throws Exception {
+    	JSONObject item, boolean addNewEntry, JSONObject db) throws Exception {
     	// Check if the message is encrypted with cpabe and the getFeed(..) function is called for
         // showing the entries in the Web interface
         if( item.get("cipher-scheme").toString().equalsIgnoreCase("cpabe") && !addNewEntry ) {
@@ -261,22 +260,22 @@ public class ActivitiesController extends SecurityManager {
         	
         	// Avoid the 'System.exit()' in the CP-ABE Library
         	SecurityManager previousSM = System.getSecurityManager();
-                    final SecurityManager SM = new SecurityManager() {
-                        @Override
-                        public void checkPermission(final Permission permission) {
-            		    if( permission.getName() != null && permission.getName().startsWith("exitVM") )
-                                throw new SecurityException();
-            	        }
-                    };
+                final SecurityManager SM = new SecurityManager() {
+                    @Override
+                    public void checkPermission(final Permission permission) {
+            		if( permission.getName() != null && permission.getName().startsWith("exitVM") )
+                    	    throw new SecurityException();
+            	    }
+                };
         	System.setSecurityManager(SM);
             
         	// Try to decipher the message
         	// Abbiamo separato l'istruzione result.add(entry) in due parti, sia qui
-        	// che nel ramo dell'else, poichŽ se un utente cerca di recuperare 
-        	// un messaggio cifrato, ma non riesce a decifrarlo (perchŽ non possiede
-        	// i giusti attributi) esso non dovrˆ aggiungerlo al vettore result
-        	// altrimenti visualizzerˆ nello stream sull'interfaccia web un messaggio cifrato.
-        	// Quindi questo accade poichŽ se cpabe.decryptMessage(..) non va a buon fine 
+        	// che nel ramo dell'else, poichÂŽ se un utente cerca di recuperare 
+        	// un messaggio cifrato, ma non riesce a decifrarlo (perchÂŽ non possiede
+        	// i giusti attributi) esso non dovrÂˆ aggiungerlo al vettore result
+        	// altrimenti visualizzerÂˆ nello stream sull'interfaccia web un messaggio cifrato.
+        	// Quindi questo accade poichÂŽ se cpabe.decryptMessage(..) non va a buon fine 
         	// l'istruzioni successive non vengono eseguite.
         	try {
         	    cpabe.decryptMessage(publicKeyFile.getAbsolutePath(),
@@ -286,7 +285,7 @@ public class ActivitiesController extends SecurityManager {
         	    publicKeyFile.delete();
         	    privateKeyFile.delete();
         		
-                //System.out.println(" CP-ABE | Decrypted Message!!!");
+                    //System.out.println(" CP-ABE | Decrypted Message!!!");
         		
         	    File decFile = new File(cpabe.getDecPath());
         	    String fileText = FileUtils.getContentFromFile(decFile);
