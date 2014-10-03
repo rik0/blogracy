@@ -118,61 +118,7 @@ public class ActivitiesController extends SecurityManager {
                         JSONObject item = items.getJSONObject(i);
                         ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(item, ActivityEntry.class);
 
-                        // Check if the message is encrypted with cpabe and the getFeed(..) function is called for
-                        // showing the entries in the Web interface
-                        if( item.get("cipher-scheme").toString().equalsIgnoreCase("cpabe") && !addNewEntry ) {
-                        	// Get file with info on the cipher-scheme
-                        	JSONObject cipherSchemeInfo = db.getJSONObject("cpabe-scheme-info");
-
-                        	// Get the private key for the local user and retrieve its absolute path
-                        	File privateKeyFile = cpabe.getPrivateKeyFile(cipherSchemeInfo);
-                        	String privateKeyFilePath = privateKeyFile.getAbsolutePath();
-                        	
-                        	File publicKeyFile = new File(cpabe.getPubPath());
-                        	FileWriter writer = new FileWriter(publicKeyFile);
-                	        writer.write( cipherSchemeInfo.getString("pubkey").toString() );
-                	        writer.close();
-                        	
-                        	// Get the path of the file to decipher
-                        	String pathFileToDec = CACHE_FOLDER + File.separator + 
-                        	    sharing.getHashFromMagnetURI( item.get("url").toString() ) + ".cpabe";
-                        	
-                        	// Avoid the 'System.exit()' in the CP-ABE Library
-                        	SecurityManager previousSM = System.getSecurityManager();
-                                    final SecurityManager SM = new SecurityManager() {
-                                        @Override
-                                        public void checkPermission(final Permission permission) {
-                            		    if( permission.getName() != null && permission.getName().startsWith("exitVM") )
-                                                throw new SecurityException();
-                            	        }
-                                    };
-                        	System.setSecurityManager(SM);
-                            
-                        	// Try to decipher the message
-                        	try {
-                        	    cpabe.decryptMessage(publicKeyFile.getAbsolutePath(),
-                        				  		privateKeyFilePath,
-                        				  		pathFileToDec,
-                        				  		cpabe.getDecPath());
-                        	    publicKeyFile.delete();
-                        	    privateKeyFile.delete();
-                        		
-                                //System.out.println(" CP-ABE | Decrypted Message!!!");
-                        		
-                        	    File decFile = new File(cpabe.getDecPath());
-                        	    String fileText = FileUtils.getContentFromFile(decFile);
-                        	    decFile.delete();
-                        		
-                        	    entry.setContent(fileText);
-                        	    result.add(entry);
-                        	} catch (SecurityException e){ 
-                                    //System.out.println(" CP-ABE | Unable to decipher the message.");
-                        	} finally {
-                        	    System.setSecurityManager(previousSM);
-                        	}
-                    	} else {
-                    		result.add(entry);
-                    	}
+                        tryToDecipher(result, entry, item, addNewEntry, db);
                     }
                     System.out.println("Feed loaded");
                 } else {
@@ -290,5 +236,71 @@ public class ActivitiesController extends SecurityManager {
 
         String feedUri = sharing.seed(feedFile);
         return feedUri;
+    }
+    
+    public static void tryToDecipher(List<ActivityEntry> result, ActivityEntry entry, 
+    		JSONObject item, boolean addNewEntry, JSONObject db) throws Exception {
+    	// Check if the message is encrypted with cpabe and the getFeed(..) function is called for
+        // showing the entries in the Web interface
+        if( item.get("cipher-scheme").toString().equalsIgnoreCase("cpabe") && !addNewEntry ) {
+        	// Get file with info on the cipher-scheme
+        	JSONObject cipherSchemeInfo = db.getJSONObject("cpabe-scheme-info");
+
+        	// Get the private key for the local user and retrieve its absolute path
+        	File privateKeyFile = cpabe.getPrivateKeyFile(cipherSchemeInfo);
+        	String privateKeyFilePath = privateKeyFile.getAbsolutePath();
+        	
+        	File publicKeyFile = new File(cpabe.getPubPath());
+        	FileWriter writer = new FileWriter(publicKeyFile);
+	        writer.write( cipherSchemeInfo.getString("pubkey").toString() );
+	        writer.close();
+        	
+        	// Get the path of the file to decipher
+        	String pathFileToDec = CACHE_FOLDER + File.separator + 
+        	    sharing.getHashFromMagnetURI( item.get("url").toString() ) + ".cpabe";
+        	
+        	// Avoid the 'System.exit()' in the CP-ABE Library
+        	SecurityManager previousSM = System.getSecurityManager();
+                    final SecurityManager SM = new SecurityManager() {
+                        @Override
+                        public void checkPermission(final Permission permission) {
+            		    if( permission.getName() != null && permission.getName().startsWith("exitVM") )
+                                throw new SecurityException();
+            	        }
+                    };
+        	System.setSecurityManager(SM);
+            
+        	// Try to decipher the message
+        	// Abbiamo separato l'istruzione result.add(entry) in due parti, sia qui
+        	// che nel ramo dell'else, poiché se un utente cerca di recuperare 
+        	// un messaggio cifrato, ma non riesce a decifrarlo (perché non possiede
+        	// i giusti attributi) esso non dovrà aggiungerlo al vettore result
+        	// altrimenti visualizzerà nello stream sull'interfaccia web un messaggio cifrato.
+        	// Quindi questo accade poiché se cpabe.decryptMessage(..) non va a buon fine 
+        	// l'istruzioni successive non vengono eseguite.
+        	try {
+        	    cpabe.decryptMessage(publicKeyFile.getAbsolutePath(),
+        				  		privateKeyFilePath,
+        				  		pathFileToDec,
+        				  		cpabe.getDecPath());
+        	    publicKeyFile.delete();
+        	    privateKeyFile.delete();
+        		
+                //System.out.println(" CP-ABE | Decrypted Message!!!");
+        		
+        	    File decFile = new File(cpabe.getDecPath());
+        	    String fileText = FileUtils.getContentFromFile(decFile);
+        	    decFile.delete();
+        		
+        	    entry.setContent(fileText);
+        	    result.add(entry);
+        	} catch (SecurityException e){ 
+                    //System.out.println(" CP-ABE | Unable to decipher the message.");
+        	} finally {
+        	    System.setSecurityManager(previousSM);
+        	}
+    	} else {
+    		result.add(entry);
+    	}
     }
 }

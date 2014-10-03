@@ -26,16 +26,16 @@ import cpabe.Cpabe;
 
 public class CpAbeController {
 	
-    static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
+	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 	
-    // CP-ABE Files
+	// CP-ABE Files
     private final String PUBFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + File.separator + 
     											Configurations.getUserConfig().getUser().getHash().toString() + ".pub";
     private final String MSKFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + File.separator + 
     											Configurations.getUserConfig().getUser().getHash().toString() + ".msk";
-    private final String PVRFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + 
+    private final String PVRFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + File.separator +
     											Configurations.getUserConfig().getUser().getHash().toString() + ".pvr";
-    private final String DECFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + 
+    private final String DECFILE = Configurations.getPathConfig().getCachedFilesDirectoryPath() + File.separator +
     											Configurations.getUserConfig().getUser().getHash().toString() + ".dec";
     
 	private static final CpAbeController theInstance = new CpAbeController();
@@ -49,8 +49,8 @@ public class CpAbeController {
 	private int outputBlockSizeRSA = (RSAKeySize / 8);
 	
 	public static CpAbeController getSingleton() {
-	    return theInstance;
-	}
+        return theInstance;
+    }
 	
 	public void setup() throws IOException, ClassNotFoundException, JSONException {
 		if( !new File(MSKFILE).exists() ) {
@@ -117,7 +117,7 @@ public class CpAbeController {
 			
 			File publicKeyFile = new File(PUBFILE);
 			FileWriter writer = new FileWriter(publicKeyFile);
-	                writer.write( cipherInfoJSON.get("pubkey").toString() );
+	        writer.write( cipherInfoJSON.get("pubkey").toString() );
 			writer.close();
 			
 			System.out.println(" CP-ABE Controller | Start to generate Private Key");
@@ -134,7 +134,7 @@ public class CpAbeController {
 				pk = Configurations.getUserConfig().getFriendPublicKey(
 						Configurations.getUserConfig().getFriend(id).getLocalNick());
 			}
-			
+						
 			File pvrFile = new File(PVRFILE);
 			String pvrContent = FileUtils.getContentFromFile(pvrFile);
 			pvrFile.delete();
@@ -202,43 +202,21 @@ public class CpAbeController {
 		String privateKey = "";
 		
 		JSONArray jsonArr = (JSONArray) jObj.get("private-keys");
-
+		
 		final Cipher cipher = Cipher.getInstance("RSA");
 		cipher.init( Cipher.DECRYPT_MODE, Configurations.getUserConfig().getUserKeyPair().getPrivate() );
 		
 		for(int i=0; i<jsonArr.length(); i++){
 			JSONObject j = (JSONObject) jsonArr.get(i);
 			if( j.get("id").toString().equalsIgnoreCase(userId) ) {
-				String coded64CipherText = j.getString("private-key");
-				byte[] cipherByte = Base64.decodeBase64(coded64CipherText);
-				
-				int cipherByteLength = cipherByte.length;
-				int numberOfBlock = cipherByteLength / outputBlockSizeRSA;
-				int blockStart = 0;
-				int blockEnd = outputBlockSizeRSA;
-				for( int k=0; k<numberOfBlock; k++ ) {
-					byte[] tempBlock = new byte[outputBlockSizeRSA];
-					for( int jj=blockStart; jj<blockEnd; jj++) {
-						tempBlock[jj%outputBlockSizeRSA] = cipherByte[jj];
-					}
-					
-					byte[] decText = cipher.doFinal(tempBlock);
-					privateKey += new String(decText);
-					
-					blockStart += outputBlockSizeRSA;
-					if( i+1 == numberOfBlock-1 ){
-						blockEnd += cipherByteLength-(outputBlockSizeRSA*(i+1));
-					} else {
-						blockEnd += outputBlockSizeRSA;
-					}
-				}
+				privateKey = deciphering(j, cipher, i);
 				break;
 			}
 		}
 
 		File privateKeyFile = new File( PVRFILE );
 		FileWriter writer = new FileWriter(privateKeyFile);
-        	writer.write(privateKey);
+        writer.write(privateKey);
 		writer.close();
         
 		return privateKeyFile;
@@ -283,4 +261,35 @@ public class CpAbeController {
 		String cipherText64 = Base64.encodeBase64String(cipherText);
 		return cipherText64;
 	}
+	
+	private String deciphering(JSONObject j, Cipher cipher, int i) throws JSONException, IllegalBlockSizeException, BadPaddingException {
+
+		String privateKey = "";
+		
+		String coded64CipherText = j.getString("private-key");
+		byte[] cipherByte = Base64.decodeBase64(coded64CipherText);
+		
+		int cipherByteLength = cipherByte.length;
+		int numberOfBlock = cipherByteLength / outputBlockSizeRSA;
+		int blockStart = 0;
+		int blockEnd = outputBlockSizeRSA;
+		for( int k=0; k<numberOfBlock; k++ ) {
+			byte[] tempBlock = new byte[outputBlockSizeRSA];
+			for( int jj=blockStart; jj<blockEnd; jj++) {
+				tempBlock[jj%outputBlockSizeRSA] = cipherByte[jj];
+			}
+			
+			byte[] decText = cipher.doFinal(tempBlock);
+			privateKey += new String(decText);
+			
+			blockStart += outputBlockSizeRSA;
+			if( i+1 == numberOfBlock-1 ){
+				blockEnd += cipherByteLength-(outputBlockSizeRSA*(i+1));
+			} else {
+				blockEnd += outputBlockSizeRSA;
+			}
+		}
+		return privateKey;
+	}
 }
+
