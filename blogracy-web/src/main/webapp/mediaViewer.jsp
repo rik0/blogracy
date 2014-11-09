@@ -57,6 +57,7 @@
 	List<String> likeUsers = CommentsControllerImpl.getInstance().getLikeUsers(userId, mediaId);
 	boolean canUserLike = CommentsControllerImpl.getInstance().canCurrentUserLike(userId, mediaId);
 	pageContext.setAttribute("likeUsers", likeUsers);
+	pageContext.setAttribute("canUserLike", canUserLike);
 %>
 
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
