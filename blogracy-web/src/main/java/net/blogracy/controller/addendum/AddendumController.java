@@ -39,7 +39,7 @@ public class AddendumController {
 	private static final AddendumController theInstance = new AddendumController();
 	private static final FileSharing sharing = FileSharingImpl.getSingleton();
 	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
-
+	private static SalmonDbController salmonDbController =  SalmonDbController.getSingleton();
 	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
 		@Override
 		public void configure(Binder b) {

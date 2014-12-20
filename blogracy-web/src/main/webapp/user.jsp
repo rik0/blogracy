@@ -334,7 +334,7 @@ pageContext.setAttribute("publicChannel", userHash);
             <div class="span4">
                 <h3>Local user</h3>
                 <ul>
-					<li><a href="/user.jsp?user=${localUser.hash}">${localUser.localNick}</a></li>
+					<li><a href="/user.jsp?user=${localUser.hash}">${localUser.localNick}</a><span class="userDelegateMarker" onclick="dialogHelper.openDialogWithLink('/BullyDelegateStatus.jsp?&channel=${localUser.localNick}', 'Delegate status', 600, 700, true, true );"> (D)</span></li>
 				</ul>
                 
                 <h3>Followers</h3>

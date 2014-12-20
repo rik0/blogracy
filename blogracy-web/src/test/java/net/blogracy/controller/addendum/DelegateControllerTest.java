@@ -154,7 +154,7 @@ public class DelegateControllerTest {
 			e.printStackTrace();
 		}
 
-		Mockito.verify(commentsController, Mockito.times(0)).sendBullyAnswerMessage(Matchers.eq(currentChannelUser.getHash().toString()), Matchers.eq(currentUser.getHash().toString()));
+		Mockito.verify(commentsController).sendBullyAnswerMessage(Matchers.eq(currentChannelUser.getHash().toString()), Matchers.eq(currentUser.getHash().toString()));
 	}
 
 	@Test

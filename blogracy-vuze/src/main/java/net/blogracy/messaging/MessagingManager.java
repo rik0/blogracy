@@ -155,7 +155,7 @@ public class MessagingManager implements BlogracyDataMessageListener {
 					@Override
 					public void stateChanged(Download download, int old_state, int new_state) {
 						Logger.error("MessagingManager | download state changed  " + Download.ST_NAMES[old_state] + " -> " + Download.ST_NAMES[new_state]);
-						if (new_state != Download.ST_SEEDING || new_state != Download.ST_DOWNLOADING)
+						if (new_state != Download.ST_SEEDING && new_state != Download.ST_DOWNLOADING)
 							download.startDownload(true);
 
 					}

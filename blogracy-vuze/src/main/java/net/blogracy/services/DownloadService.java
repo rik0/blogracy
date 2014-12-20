@@ -47,6 +47,7 @@ import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadCompletionListener;
 import org.gudy.azureus2.plugins.download.DownloadException;
+import org.gudy.azureus2.plugins.download.DownloadStats;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
@@ -153,7 +154,7 @@ public class DownloadService implements MessageListener {
 						ResourceDownloader rdl = vuze.getUtilities().getResourceDownloaderFactory().create(magnetUri);
 						InputStream is = rdl.download();
 						Torrent torrent = vuze.getTorrentManager().createFromBEncodedInputStream(is);
-
+						
 						download = vuze.getDownloadManager().addDownload(torrent, null, folder);
 
 						if (download != null && file != null) {

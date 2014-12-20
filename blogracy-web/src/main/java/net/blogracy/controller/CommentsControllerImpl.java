@@ -493,7 +493,8 @@ public class CommentsControllerImpl implements MessageListener, CommentsControll
 			// If I'm the current delegate for the content's recipient user; I
 			// must approve or reject the message
 			String currentUserId = Configurations.getUserConfig().getUser().getHash().toString();
-			if (addendumController.getCurrentDelegate(contentRecipientUserId) != null && currentUserId.compareToIgnoreCase(addendumController.getCurrentDelegate(contentRecipientUserId)) == 0) {
+			String currentDelegateUserId = addendumController.getCurrentDelegate(contentRecipientUserId);
+			if (currentDelegateUserId != null && currentUserId.compareToIgnoreCase(currentDelegateUserId) == 0) {
 				acceptOrRejectContent(contentRecipientUserId, newContentData, contentId, senderUserId, currentUserId);
 			}
 		} else if (requestType.equalsIgnoreCase("contentListReceived")) {

@@ -27,6 +27,7 @@ import org.gudy.azureus2.plugins.network.OutgoingMessageQueueListener;
 import org.gudy.azureus2.plugins.peers.Peer;
 
 import java.util.logging.FileHandler;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 import java.util.logging.XMLFormatter;
@@ -97,25 +98,23 @@ public class PeerControllerImpl implements PeerController {
 
 	private List<BlogracyDataMessage> listOfRegisteredMessageTypes = new ArrayList<BlogracyDataMessage>();
 
-	
 	private Logger log;
 
 	public PeerControllerImpl(PluginInterface plugin) {
 		log = Logger.getLogger("net.blogracy.messaging.PeerControllerImpl");
+		log.setLevel(Level.FINER);
 		FileHandler fh;
 		try {
 			fh = new FileHandler("PeerControllerImpl.log");
 			fh.setFormatter(new SimpleFormatter());
+			fh.setLevel(Level.FINER);
 			log.addHandler(fh);
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
 
-
-		
 		this.plugin = plugin;
 		downloadsToLastMessages = new HashMap<Download, List<Long>>();
 		downloadsToRouters = new HashMap<Download, List<Peer>>();
@@ -132,7 +131,7 @@ public class PeerControllerImpl implements PeerController {
 			plugin.getMessageManager().registerMessageType(new BMNoRoute());
 			plugin.getMessageManager().registerMessageType(new BMRoute());
 
-			plugin.getMessageManager().registerMessageType(new BlogracyDataMessageBase("", new byte[20],  -1, ""));
+			plugin.getMessageManager().registerMessageType(new BlogracyDataMessageBase("", new byte[20], -1, ""));
 			if (listOfMessageTypes != null) {
 				for (BlogracyDataMessage m : listOfMessageTypes) {
 					plugin.getMessageManager().registerMessageType(m);
@@ -189,8 +188,8 @@ public class PeerControllerImpl implements PeerController {
 
 	private void compatiblePeerFound(final Download download, final Peer peer) {
 
-		log.info("Compatible peer found (client/ip/port): " + peer.getClient() + "; "+ peer.getIp() + "; " + peer.getPort());
-		
+		log.info("Compatible peer found (client/ip/port): " + peer.getClient() + "; " + peer.getIp() + "; " + peer.getPort());
+
 		// Add the peer to the list of peers
 		List<Peer> peers = downloadsToPeers.get(download);
 		if (peers != null) {
@@ -206,7 +205,7 @@ public class PeerControllerImpl implements PeerController {
 		peer.getConnection().getIncomingMessageQueue().registerListener(new IncomingMessageQueueListener() {
 			public boolean messageReceived(Message message) {
 
-		        log.info( "Received [" +message.getDescription()+ "] message (id: " + message.getID() + ") from peer [" +peer.getClient()+ " @" +peer.getIp()+ ":" +peer.getPort()+ "]" );
+				log.info("Received [" + message.getDescription() + "] message (id: " + message.getID() + ") from peer [" + peer.getClient() + " @" + peer.getIp() + ":" + peer.getPort() + "]");
 				// Handling system messages
 				if (message.getID().equals(BMNoRoute.ID_BM_NO_ROUTE)) {
 					processNoRoute(download, peer);
@@ -223,8 +222,9 @@ public class PeerControllerImpl implements PeerController {
 					if (message.getID().equals(m.getID())) {
 
 						BlogracyDataMessage msg = m.getClass().cast(message);
-						log.info( "Message recognized as " + msg.getClass().getName()+ " (messageID:" + msg.getMessageID() + "; senderUserId: " + msg.getSenderUserId() + "; content:"+ msg.getContent() + ")");
-						// 1. Test if the message has already been  processed
+						log.info("Message recognized as " + msg.getClass().getName() + " (messageID:" + msg.getMessageID() + "; senderUserId: " + msg.getSenderUserId() + "; content:"
+								+ msg.getContent() + ")");
+						// 1. Test if the message has already been processed
 						if (!checkIfDuplicate(download, msg.getMessageID()))
 							processMessage(download, peer, msg);
 
@@ -235,28 +235,30 @@ public class PeerControllerImpl implements PeerController {
 				return false;
 			}
 
-			public void bytesReceived(int byte_count) {/* nothing */}
+			public void bytesReceived(int byte_count) {/* nothing */
+			}
 		});
 
 		// register listener to outgoing queue (for logging purposes)
 		peer.getConnection().getOutgoingMessageQueue().registerListener(new OutgoingMessageQueueListener() {
-			
+
 			@Override
 			public void messageSent(Message message) {
-				  log.fine( "Sending [" +message.getDescription()+ "] message (id: " + message.getID() + ") completed");
-				
+				log.fine("Sending [" + message.getDescription() + "] message (id: " + message.getID() + ") completed");
+
 			}
-			
+
 			@Override
 			public boolean messageAdded(Message message) {
-				  log.finer( "Enqueued [" +message.getDescription()+ "] message (id: " + message.getID() + ") for sending");
-				  return true;
+				log.finer("Enqueued [" + message.getDescription() + "] message (id: " + message.getID() + ") for sending");
+				return true;
 			}
-			
+
 			@Override
-			public void bytesSent(int byte_count) { /* nothing */	}
+			public void bytesSent(int byte_count) { /* nothing */
+			}
 		});
-		
+
 		// Peers start as "non routing", ie none of the 2 newly connected peers
 		// should
 		// route any message to the other.
@@ -405,36 +407,33 @@ public class PeerControllerImpl implements PeerController {
 		return true;
 	}
 
-	public void sendMessage(String userId, BlogracyDataMessage message) {
-		if (downloadsToPeers == null)
-			return;
-
-		synchronized (downloadsToPeers) {
-			Iterator<Download> iter = downloadsToPeers.keySet().iterator();
-			while (iter.hasNext()) {
-				Download download = iter.next();
-				sendMessage(download, download.getDownloadPeerId(), userId, message);
-			}
-		}
-	}
+	/*
+	 * public void sendMessage(String userId, BlogracyDataMessage message) { if
+	 * (downloadsToPeers == null) return;
+	 * 
+	 * synchronized (downloadsToPeers) { Iterator<Download> iter =
+	 * downloadsToPeers.keySet().iterator(); while (iter.hasNext()) { Download
+	 * download = iter.next(); sendMessage(download,
+	 * download.getDownloadPeerId(), userId, message); } } }
+	 */
 
 	public void sendMessage(Download download, byte[] peerID, String senderUserId, BlogracyDataMessage message) {
 
 		notifyListenersOfMessageReceived(download, download.getDownloadPeerId(), senderUserId, message);
 		List<Peer> routePeers = downloadsToPeers.get(download);
-		
 
-		if (routePeers != null) {
+		if (routePeers != null && routePeers.size() > 0) {
 			synchronized (routePeers) {
 				for (Iterator<Peer> iter = routePeers.iterator(); iter.hasNext();) {
 					Peer peerToSendMsg = iter.next();
-					log.info("Sending message "+ message.getDescription()+ "  (messageID:" + message.getMessageID() + "; senderUserId: " + message.getSenderUserId() + "; content:"+ message.getContent() + ") to  peer  (client/ip/port): " + peerToSendMsg.getClient() + "; "+ peerToSendMsg.getIp() + "; " + peerToSendMsg.getPort());
+					log.info("Sending message " + message.getDescription() + "  (messageID:" + message.getMessageID() + "; senderUserId: " + message.getSenderUserId() + "; content:"
+							+ message.getContent() + ") to  peer  (client/ip/port): " + peerToSendMsg.getClient() + "; " + peerToSendMsg.getIp() + "; " + peerToSendMsg.getPort());
 					peerToSendMsg.getConnection().getOutgoingMessageQueue().sendMessage(message);
 				}
 			}
-		}
-		else
-			log.info("No peer found for channel " + download.getName());
+		} else
+			log.info("No peers found for channel " + senderUserId + " downloadName " + download.getName() + "  (messageID:" + message.getMessageID() + "; senderUserId: " + message.getSenderUserId()
+					+ "; content:" + message.getContent() + ")");
 	}
 
 	/*

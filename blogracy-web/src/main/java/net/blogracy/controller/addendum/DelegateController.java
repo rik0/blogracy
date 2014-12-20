@@ -148,9 +148,10 @@ public class DelegateController implements DelegateApprovableMessageListener, De
 		if (!isAnswersTimerActive())
 			startAnswersTimer();
 
-		//int myScore = this.getDelegateScore(Configurations.getUserConfig().getUser().getHash().toString());
-		//if (this.getDelegateScore(messageSenderUserId) > myScore)
-			sendAnswerMessage();
+		// int myScore =
+		// this.getDelegateScore(Configurations.getUserConfig().getUser().getHash().toString());
+		// if (this.getDelegateScore(messageSenderUserId) > myScore)
+		sendAnswerMessage();
 	}
 
 	public void answerMessageReceived(String messageSenderUserId) {
@@ -194,7 +195,12 @@ public class DelegateController implements DelegateApprovableMessageListener, De
 			if (isContentTimerActive())
 				stopContentTimer();
 
-			startContentTimer();
+			User currentDelegate = this.getCurrentDelegate();
+
+			if (currentDelegate != null && currentDelegate.getHash().toString().compareToIgnoreCase(Configurations.getUserConfig().getUser().getHash().toString()) == 0) {
+				// I'm the current delegate so I can decide upon the message (That case should be handled by the AddendumController)
+			} else
+				startContentTimer();
 		}
 	}
 
