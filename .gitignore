@@ -3,6 +3,7 @@
 .svn
 .classpath
 .project
+.metadata
 *.jar
 .idea
 $config

@@ -11,7 +11,7 @@
     <resources>
       <resource>
         <directory>src/main/plugins</directory>
-        <targetPath>../plugins/</targetPath>
+        <targetPath>plugins</targetPath>
       </resource>
       <!--resource>
         <directory>src/main/java/net/blogracy/chat/resources</directory>
@@ -88,6 +88,11 @@
       <artifactId>slf4j-api</artifactId>
       <version>1.6.4</version>
     </dependency>
+    <dependency>
+	  <groupId>log4j</groupId>
+	  <artifactId>log4j</artifactId>
+	  <version>1.2.16</version>
+    </dependency>
     <!--dependency>
       <groupId>ch.qos.logback</groupId>
       <artifactId>logback-classic</artifactId>
@@ -107,6 +112,16 @@
       <groupId>org.json</groupId>
       <artifactId>json</artifactId>
       <version>20090211</version>
+    </dependency>
+    <dependency>
+	  <groupId>org.apache.httpcomponents</groupId>
+	  <artifactId>httpclient</artifactId>
+	  <version>4.3.3</version>
+    </dependency>
+    <dependency>
+	  <groupId>org.apache.httpcomponents</groupId>
+	  <artifactId>httpmime</artifactId>
+	  <version>4.3.3</version>
     </dependency>
   </dependencies>
 </project>

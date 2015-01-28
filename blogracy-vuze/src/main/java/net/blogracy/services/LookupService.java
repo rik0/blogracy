@@ -22,6 +22,17 @@
 
 package net.blogracy.services;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
+import java.net.Proxy;
+import java.net.URL;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+import java.util.Scanner;
+
 import javax.jms.Connection;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
@@ -33,8 +44,10 @@ import javax.jms.MessageProducer;
 import javax.jms.Session;
 import javax.jms.TextMessage;
 
+import net.blogracy.i2p.I2PHelper;
 import net.blogracy.logging.Logger;
 
+import org.gudy.azureus2.core3.config.COConfigurationManager;
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabase;
 import org.gudy.azureus2.plugins.ddb.DistributedDatabaseEvent;
@@ -75,6 +88,7 @@ public class LookupService implements MessageListener {
                     JSONObject record = new JSONObject(request.getText());
                     record.put("value", value);
                     Logger.info("lookup record received: " + record.getString("ddbKey"));
+
                     TextMessage response = session.createTextMessage();
                     response.setText(record.toString());
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
@@ -120,16 +134,31 @@ public class LookupService implements MessageListener {
             Logger.info("lookup service:" + text + ";");
             JSONObject record = new JSONObject(text);
 
-            final long TIMEOUT = 5 * 60 * 1000; // 5 mins
-            DistributedDatabase ddb = plugin.getDistributedDatabase();
-            ddb.read(new DhtListener(textRequest),
-                    ddb.createKey(record.getString("ddbKey")), TIMEOUT,
-                    DistributedDatabase.OP_EXHAUSTIVE_READ);
+			if (I2PHelper.isEnabled()) {
+			    String value = I2PHelper.lookup(record.getString("ddbKey"));
+			    if (value != null && value.length() > 10) {
+                    record.put("value", value);
+                    Logger.info("lookup record received: " + record.getString("ddbKey"));
+                    TextMessage response = session.createTextMessage();
+                    response.setText(record.toString());
+                    response.setJMSCorrelationID(request.getJMSCorrelationID());
+                    producer.send(request.getJMSReplyTo(), response);
+                }
+		    } else {
+                final long TIMEOUT = 5 * 60 * 1000; // 5 mins
+                DistributedDatabase ddb = plugin.getDistributedDatabase();
+                ddb.read(new DhtListener(textRequest),
+                        ddb.createKey(record.getString("id")), TIMEOUT,
+                        DistributedDatabase.OP_EXHAUSTIVE_READ);
+            }
+
         } catch (DistributedDatabaseException e) {
             Logger.error("DDB error: lookup service: " + text);
         } catch (JMSException e) {
             Logger.error("JMS error: lookup service: " + text);
         } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }

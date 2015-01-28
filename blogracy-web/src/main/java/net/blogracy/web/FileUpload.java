@@ -15,28 +15,29 @@ import net.blogracy.controller.FileSharingImpl;
 
 public class FileUpload extends HttpServlet {
 
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
+    protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+            throws ServletException, IOException {
 
-		File attachment = (File) req.getAttribute("userfile");
-		String text = req.getParameter("usertext").trim();
+        File attachment = (File) req.getAttribute("userfile");
+        String text = req.getParameter("usertext").trim();
 
 		 ActivitiesController activities = ActivitiesController.getSingleton();
-		// String id = sharing.hash("mic");
-		String id = Configurations.getUserConfig().getUser().getHash()
-				.toString();
+        // String id = sharing.hash("mic");
+        String id = Configurations.getUserConfig().getUser().getHash()
+                .toString();
 
-		// TODO recipient of message/files? the publishing user or the profile's
-		// user?
-		// String dest = req.getParameter("user");
+        // TODO recipient of message/files? the publishing user or the profile's
+        // user?
+        // String dest = req.getParameter("user");
 		activities.addFeedEntry(id, text, attachment);
+        activities.addFeedEntry(id, text, attachment);
 
-		PrintWriter outp = resp.getWriter();
-		outp.write("<html>");
-		outp.write("<head><title>FileUpload page</title></head>");
-		outp.write("<body>");
-		outp.write("<h2>" + text + "</h2>");
-		outp.write("</body>");
-		outp.write("</html>");
-	}
+        PrintWriter outp = resp.getWriter();
+        outp.write("<html>");
+        outp.write("<head><title>FileUpload page</title></head>");
+        outp.write("<body>");
+        outp.write("<h2>" + text + "</h2>");
+        outp.write("</body>");
+        outp.write("</html>");
+    }
 }

@@ -7,9 +7,26 @@
 	<packaging>jar</packaging>
 	<name>Blogracy Web</name>
 
+
 	<properties>
 		<jettyVersion>8.1.2.v20120308</jettyVersion>
 	</properties>
+
+  <build>
+    <resources>
+      <resource>
+        <directory>src/main/config</directory>
+        <!--filtering>true</filtering-->
+      </resource>
+      <resource>
+        <directory>src/main/resources</directory>
+      </resource>
+      <resource>
+        <directory>src/main/webapp</directory>
+        <targetPath>webapp</targetPath>
+      </resource>
+    </resources>
+
 
 	<dependencies>
 		<dependency>

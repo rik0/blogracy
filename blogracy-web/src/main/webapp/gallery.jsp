@@ -1,6 +1,7 @@
 <%@ page import="net.blogracy.model.hashes.Hashes" %>
 <%@ page import="net.blogracy.model.users.Users" %>
 <%@ page import="net.blogracy.controller.FileSharingImpl" %>
+
 <%@ page import="net.blogracy.controller.ChatController" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
@@ -9,7 +10,8 @@
 <%@ page import="org.apache.shindig.social.opensocial.model.Album" %>
 <%@ page import="org.apache.shindig.social.opensocial.model.MediaItem" %>
 <%
-	String userHash = request.getParameter("user");
+
+String userHash = request.getParameter("user");
 if (userHash == null || userHash.length() == 0) {
     userHash = Configurations.getUserConfig().getUser().getHash().toString();
 } else if (userHash.length() != 32) {
@@ -32,11 +34,12 @@ Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>
 for (Album a : albums)
 {
 	mediaItemMap.put(a.getId(), FileSharingImpl.getSingleton().getMediaItemsWithCachedImages(userHash, a.getId()));
-}
+
 
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", Users.newUser(Hashes.fromString(userHash)));
 pageContext.setAttribute("feed", FileSharingImpl.getFeed(userHash));
+
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
 pageContext.setAttribute("userAlbums", albums);
@@ -59,6 +62,7 @@ pageContext.setAttribute("photoMap", mediaItemMap);
 
     <!-- Le styles -->
     <link href="/css/bootstrap.css" rel="stylesheet"/>
+
     <link type="text/css" href="/css/smoothness/jquery-ui-1.9.0.custom.min.css" rel="stylesheet" />
     
     <script type="text/javascript" src="/scripts/jquery-1.8.2.js"></script>
@@ -66,6 +70,7 @@ pageContext.setAttribute("photoMap", mediaItemMap);
     <script type="text/javascript" src="/scripts/jquery-ui-1.9.0.custom.min.js"></script>
     <script type="text/javascript" src="/scripts/bootstrap-alerts.js"></script>
     <script type="text/javascript" src="/scripts/fancybox/jquery.fancybox.js?v=2.1.2"></script>
+
     <script type="text/javascript" src="js/amq_jquery_adapter.js"></script>
     <script type="text/javascript" src="js/amq.js"></script>
     <script type="text/javascript" src="js/chat.js"></script>
@@ -76,8 +81,7 @@ pageContext.setAttribute("photoMap", mediaItemMap);
             org.activemq.Chat.init();
         });
     </script>
-
-    
+   
     <script type="text/javascript">
         // wait for the DOM to be loaded
         jQuery(function() {
@@ -100,7 +104,7 @@ pageContext.setAttribute("photoMap", mediaItemMap);
                 
             });
         });
-    
+   
     </script>
 	
 	<script type="text/javascript" src="/scripts/blogracy-userGalleryHelper.js"></script>
@@ -288,6 +292,7 @@ pageContext.setAttribute("photoMap", mediaItemMap);
 		                    </fieldset>
 		                </form>
 	                </c:if>
+
                   <div class="blogracyUserGalleries">
                      <c:forEach var="album" items="${userAlbums}">
 						<div class="imageRow"> 
@@ -299,12 +304,14 @@ pageContext.setAttribute("photoMap", mediaItemMap);
 							<div id="pop"  style="display:none;"></div>
 							<div style='float:right'>
 							<button  class="btn primary"  type="submit" id="imageUploadOpener" onclick="blogracyGalleryHelper.openDialogWithLink('/imageGallery.jsp?albumId=${album.id}&user=${user.hash}');">Add Images to Gallery</button>
+
 							</div> 
 						</c:if>
 						</div>
 						<div class="set">
 						<c:forEach var="mapEntry" items="${photoMap[album.id]}">
 					  		  <a href="mediaViewer.jsp?uid=${user.hash}&aid=${album.id}&mid=${mapEntry.id}" rel="${album.id}" title="${mapEntry.title}" class="blogracyMediaThumbnail"><img class="blogracy-thumbnail" src="${mapEntry.url}"/></a>
+
 					  	</c:forEach>
 					  	</div>
 					  </div>

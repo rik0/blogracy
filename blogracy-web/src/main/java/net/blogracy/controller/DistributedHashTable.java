@@ -34,11 +34,18 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.logging.FileHandler;
+
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
@@ -46,6 +53,7 @@ import javax.jms.Connection;
 import javax.jms.ConnectionFactory;
 import javax.jms.DeliveryMode;
 import javax.jms.Destination;
+import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
@@ -68,7 +76,6 @@ import org.json.JSONTokener;
  * Generic functions to manipulate feeds are defined in this class.
  */
 public class DistributedHashTable {
-
 	class DownloadListener implements FileSharingDownloadListener {
 		private String ddbKey;
 		private String hash;
@@ -301,4 +308,5 @@ public class DistributedHashTable {
 				l.distributedHashTableRecordChanged(id);
 		}
 	}
+
 }
