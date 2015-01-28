@@ -1,5 +1,7 @@
 <%@ page import="net.blogracy.controller.ChatController" %>
-<% ChatController.getSingleton().joinChannel(channel); // Blogracy %>
+
+<% ChatController.getSingleton().joinChannel(request.getParameter("channel")); // Blogracy %>
+
 
 <html>
 <head>

@@ -1,6 +1,16 @@
 package net.blogracy;
 
+
 import net.blogracy.model.users.User;
+
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.TimeZone;
+import java.util.logging.Logger;
+
+import net.blogracy.config.Configurations;
+
 import net.blogracy.controller.ActivitiesController;
 import net.blogracy.controller.ChatController;
 import net.blogracy.controller.CommentsControllerImpl;
@@ -8,10 +18,7 @@ import net.blogracy.controller.DistributedHashTable;
 import net.blogracy.controller.FileSharingImpl;
 import net.blogracy.config.Configurations;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.List;
-import java.util.TimeZone;
+import net.blogracy.controller.FileSharing;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.webapp.WebAppContext;
@@ -19,7 +26,7 @@ import java.util.logging.Logger;
 
 public class WebServer {
 
-	public static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, " + "consectetur adipisicing elit, sed do eiusmod tempor " + "incididunt ut labore et dolore magna aliqua.";
+	public static final String LOREM_IPSUM = "Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.";
 	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
 	static final int TOTAL_WAIT = 2 * 60 * 1000; // 2 minutes
@@ -33,20 +40,20 @@ public class WebServer {
 		log.info("Web server: waiting for " + (randomWait / 1000) + " secs before starting");
 		Thread.currentThread().sleep(randomWait);
 
-		Server server = new Server(8181);
+        String webDir = WebServer.class.getClassLoader().getResource("webapp")
+                .toExternalForm();
+        WebAppContext context = new WebAppContext();
+        context.setResourceBase(webDir);
+        // context.setDescriptor(webDir + "/WEB-INF/web.xml");
+        // context.setContextPath("/");
+        // context.setParentLoaderPriority(true);
 
-		WebAppContext context = new WebAppContext();
-		context.setDescriptor("target/webapp/WEB-INF/web.xml");
-		context.setResourceBase("target/webapp");
-		context.setContextPath("/");
-		context.setParentLoaderPriority(true);
+        Server server = new Server(8181);
+        server.setHandler(context);
+        server.start();
+        // server.join();
 
-		server.setHandler(context);
-
-		server.start();
-		// server.join();
-
-		List<User> friends = Configurations.getUserConfig().getFriends();
+        List<User> friends = Configurations.getUserConfig().getFriends();
         for (User friend : friends) {
             String hash = friend.getHash().toString();
             ChatController.getSingleton().joinChannel(hash);
@@ -55,7 +62,6 @@ public class WebServer {
                 .toString();
         ChatController.getSingleton().joinChannel(id);
 
-
 		CommentsControllerImpl.getInstance().initializeConnection();
 		ActivitiesController activities = ActivitiesController.getSingleton();
 		
@@ -63,9 +69,6 @@ public class WebServer {
 			String now = ISO_DATE_FORMAT.format(new java.util.Date());
 			activities.addFeedEntry(id, now + " " + LOREM_IPSUM, null);
 			
-			//CommentsControllerImpl.getInstance().getContentList(id);
-
-			// List<User> friends = Configurations.getUserConfig().getFriends();
 			randomWait = (int) (TOTAL_WAIT * (0.8 + 0.4 * Math.random()));
 			int wait = randomWait / friends.size();
 			for (User friend : friends) {

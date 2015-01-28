@@ -198,15 +198,3 @@ org.activemq.Chat = function() {
 	}
 }();
 
-
-
-
-
-
-
-
-
-
-
-
-

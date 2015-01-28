@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,6 +27,7 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
+
 import java.security.InvalidParameterException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -56,6 +57,7 @@ import net.blogracy.config.Configurations;
 import net.blogracy.errors.PhotoAlbumDuplicated;
 import net.blogracy.model.users.UserData;
 import net.blogracy.util.FileExtensionConverter;
+
 import net.blogracy.util.FileUtils;
 
 import org.apache.activemq.ActiveMQConnection;

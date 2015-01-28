@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
+ * Copyright (c)  2011 Enrico Franchi, Michele Tomaiuolo and University of Parma.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -53,6 +53,7 @@ import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
 import net.blogracy.model.users.UserData;
+
 import net.blogracy.util.FileUtils;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -179,21 +180,6 @@ public class ActivitiesController {
 		}
 	}
 
-	/*
-	 * public String seedActivityStream(String userId, final List<ActivityEntry>
-	 * feed) throws JSONException, IOException { final File feedFile = new
-	 * File(CACHE_FOLDER + File.separator + userId + ".json");
-	 * 
-	 * JSONArray items = new JSONArray(); for (int i = 0; i < feed.size(); ++i)
-	 * { JSONObject item = new JSONObject(feed.get(i)); items.put(item); }
-	 * JSONObject db = new JSONObject();
-	 * 
-	 * db.put("items", items);
-	 * 
-	 * FileWriter writer = new FileWriter(feedFile); db.write(writer);
-	 * writer.close();
-	 * 
-	 * String feedUri = sharing.seed(feedFile); return feedUri; }
-	 */
+
 
 }

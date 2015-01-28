@@ -3,6 +3,7 @@
 <%@ page import="net.blogracy.model.users.User" %>
 <%@ page import="net.blogracy.controller.ActivitiesController" %>
 <%@ page import="net.blogracy.controller.MediaController" %>
+
 <%@ page import="net.blogracy.controller.ChatController" %>
 <%@ page import="net.blogracy.controller.CommentsControllerImpl" %>
 <%@ page import="net.blogracy.controller.DistributedHashTable" %>
@@ -10,19 +11,15 @@
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
 <%@ page import="java.util.HashMap" %>
-<%@ page import="org.apache.shindig.social.opensocial.model.Album" %>
-<%@ page import="org.apache.shindig.social.opensocial.model.MediaItem" %>
 <%
 String localUserHash = Configurations.getUserConfig().getUser().getHash().toString();
-
 
 String userHash = request.getParameter("user");
 if (userHash == null || userHash.length() == 0) {
     userHash = Configurations.getUserConfig().getUser().getHash().toString();
 } else if (userHash.length() != 32) {
-	userHash = Hashes.hash(userHash); // TODO: remove
+	  userHash = Hashes.hash(userHash); // TODO: remove
 }
-
 
 String channel = ChatController.getPrivateChannel(localUserHash, userHash); 
 //ChatController.getSingleton().joinChannel(channel); 
@@ -58,6 +55,9 @@ Map<String, List<MediaItem>> mediaItemMap = new HashMap<String, List<MediaItem>>
 for (Album a : albums)
 	mediaItemMap.put(a.getId(), MediaController.getMediaItemsWithCachedImages(userHash, a.getId()));
 
+
+pageContext.setAttribute("localUserHash",  localUserHash);
+pageContext.setAttribute("userHash", userHash);
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", user);
 pageContext.setAttribute("feed", ActivitiesController.getFeed(userHash));
@@ -86,9 +86,9 @@ pageContext.setAttribute("publicChannel", userHash);
     <![endif]-->
 
     <!-- Le styles -->
+
     <link type="text/css" href="/css/bootstrap.css" rel="stylesheet"/>
-   <!--  <link type="text/css" href="/css/lightbox.css" rel="stylesheet" /> -->
-    <link type="text/css" href="/css/smoothness/jquery-ui-1.9.0.custom.min.css" rel="stylesheet" />
+     <link type="text/css" href="/css/smoothness/jquery-ui-1.9.0.custom.min.css" rel="stylesheet" />
     
     
     <script type="text/javascript" src="/scripts/jquery-1.8.2.js"></script>
@@ -97,6 +97,7 @@ pageContext.setAttribute("publicChannel", userHash);
     <script type="text/javascript" src="/scripts/bootstrap-alerts.js"></script>
     <script type="text/javascript" src="/scripts/fancybox/jquery.fancybox.js?v=2.1.2"></script>
     <link type="text/css" href="/css/jquery.fancybox.css" rel="stylesheet" />
+
     <script type="text/javascript">
         // wait for the DOM to be loaded
         jQuery(function() {
@@ -119,15 +120,14 @@ pageContext.setAttribute("publicChannel", userHash);
                 
             });
         });
-
     </script>
     <script type="text/javascript" src="/scripts/blogracy-dialog.js"></script>
     <script type="text/javascript" src="/scripts/blogracy-userGalleryHelper.js"></script>
     <script type="text/javascript" src="/scripts/blogracy-mediaThumbnailViewer.js"></script>
-	
+
 	
     <style type="text/css">
-            /* Override some defaults */
+        /* Override some defaults */
         html, body {
             background-color: #eee;
         }
@@ -147,7 +147,7 @@ pageContext.setAttribute("publicChannel", userHash);
                            */
         }
 
-            /* The white background content wrapper */
+        /* The white background content wrapper */
         .content {
             background-color: #fff;
             padding: 20px;
@@ -160,20 +160,20 @@ pageContext.setAttribute("publicChannel", userHash);
             box-shadow: 0 1px 2px rgba(0, 0, 0, .15);
         }
 
-            /* Page header tweaks */
+        /* Page header tweaks */
         .page-header {
             background-color: #f5f5f5;
             padding: 20px 20px 10px;
             margin: -20px -20px 20px;
         }
 
-            /* Styles you shouldn't keep as they are for displaying this base example only */
+        /* Styles you shouldn't keep as they are for displaying this base example only */
         .content .span10,
         .content .span4 {
             min-height: 500px;
         }
 
-            /* Give a quick and non-cross-browser friendly divider */
+        /* Give a quick and non-cross-browser friendly divider */
         .content .span4 {
             margin-left: 0;
             padding-left: 19px;
@@ -184,38 +184,15 @@ pageContext.setAttribute("publicChannel", userHash);
             border: 0;
         }
         
-         .blogracy-thumbnail {
-			max-width: 80px;
-			max-height: 80px;
-		}
+        .blogracy-thumbnail {
+			      max-width: 80px;
+			      max-height: 80px;
+			  }
+			  .set {
+			      padding-top:10px;
+			      clear:both;
+			  }
 		
-		.set {
-			padding-top:10px;
-			clear:both;
-		}
-		
-		.blogracyUserGalleries {
-			padding-left:20px;
-		}
-		
-		.imageRow {
-			margin-bottom: 20px;
-		}
-		
-		.imageRowHeader {
-			width:100%;
-			margin:3px;
-		}
-		
-		.blogracyGalleryTitle
-		{
-			float:left;
-		}
-		
-		.blogracyGalleryTitle p {
-			font-weight: bold; 
-			font-size: 15px;
-		}
     </style>
 
     <!-- Le fav and touch icons -->
@@ -251,8 +228,8 @@ pageContext.setAttribute("publicChannel", userHash);
         <div class="row">
             <div id="errorPlace"></div>
         </div>
-        <div class="row">
 
+        <div class="row">
             <div class="span10">
                 <h2>Messages</h2>
                   <div class="span10" id="user-feed">
@@ -262,6 +239,7 @@ pageContext.setAttribute("publicChannel", userHash);
 	                    </c:forEach>
 	                </ul>
                 </div>
+
 					
                 <h2>New message</h2>
                 <form class="span10" id="message-send">
@@ -330,13 +308,13 @@ pageContext.setAttribute("publicChannel", userHash);
                     
                   </div>
                 </div>
+
             </div>
             <div class="span4">
                 <h3>Local user</h3>
                 <ul>
 					<li><a href="/user.jsp?user=${localUser.hash}">${localUser.localNick}</a><span class="userDelegateMarker" onclick="dialogHelper.openDialogWithLink('/BullyDelegateStatus.jsp?&channel=${localUser.localNick}', 'Delegate status', 600, 700, true, true );"> (D)</span></li>
 				</ul>
-                
                 <h3>Followers</h3>
 
                 <h3>Followees</h3>
@@ -361,6 +339,7 @@ pageContext.setAttribute("publicChannel", userHash);
 				   </c:if>
 				</ul>
 
+
             </div>
         </div>
       
@@ -370,11 +349,10 @@ pageContext.setAttribute("publicChannel", userHash);
         <p>&copy; University of Parma 2011</p>
     </footer>
 
-
-
 </div>
 <!-- /container -->
 	<div id="pop"  style="display:none;"></div>
+
 
 </body>
 </html>

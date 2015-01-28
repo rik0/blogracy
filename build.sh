@@ -8,5 +8,5 @@ mvn exec:exec &
 cd ../blogracy-web
 mvn clean install compile
 mvn eclipse:eclipse
-mvn jetty:run &
+mvn exec:exec &
 
