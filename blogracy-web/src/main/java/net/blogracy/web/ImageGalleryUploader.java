@@ -34,8 +34,7 @@ public class ImageGalleryUploader extends HttpServlet {
     /***
      * Retrieves the images that belong to the album
      */
-    protected void doGet(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         // Obtaining the current userId and albumId
         String userId = request.getParameter("userId");
@@ -43,8 +42,7 @@ public class ImageGalleryUploader extends HttpServlet {
 
         if (userId != null && albumId != null) {
             // Getting the media items from user's record db
-			List<MediaItem> list = MediaController.getSingleton()
-                    .getMediaItemsWithCachedImages(userId, albumId);
+			List<MediaItem> list = MediaController.getSingleton().getMediaItemsWithCachedImages(userId, albumId);
             response.setContentType("application/json");
 
             List<String> imageUrlList = new ArrayList<String>();
@@ -63,8 +61,7 @@ public class ImageGalleryUploader extends HttpServlet {
      * "user" and "albumId" as parameters alongside the actual files, request
      * should be multipart content)
      */
-    protected void doPost(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 
         if (!ServletFileUpload.isMultipartContent(request))
             createNewPhotoAlbum(request);
@@ -76,8 +73,7 @@ public class ImageGalleryUploader extends HttpServlet {
      * A certain mediaId is removed from an album. It requires "mediaId",
      * "albumId" and "userId" as parameters
      */
-    protected void doDelete(HttpServletRequest request,
-            HttpServletResponse response) throws ServletException, IOException {
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String mediaId = request.getParameter("mediaId");
         String albumId = request.getParameter("albumId");
         String userId = request.getParameter("userId");
@@ -148,7 +144,6 @@ public class ImageGalleryUploader extends HttpServlet {
             if (galleryName != null) {
                 // Gallery creation
 				MediaController.getSingleton().createPhotoAlbum(user, galleryName);
-
             }
         } catch (Exception e) {
             System.out.println(e.getMessage());
