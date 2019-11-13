@@ -3,7 +3,6 @@ package net.blogracy.web;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -14,23 +13,34 @@ import net.blogracy.controller.ActivitiesController;
 import net.blogracy.controller.FileSharing;
 
 public class FileUpload extends HttpServlet {
-
+	
     protected void doPost(HttpServletRequest req, HttpServletResponse resp)
             throws ServletException, IOException {
 
         File attachment = (File) req.getAttribute("userfile");
         String text = req.getParameter("usertext").trim();
-
+        
+        // Retrieve the policy for the current message, from the Web Interface
+        String textPolicy = req.getParameter("policytext").trim();
+        
         FileSharing sharing = FileSharing.getSingleton();
         // String id = sharing.hash("mic");
-        String id = Configurations.getUserConfig().getUser().getHash()
-                .toString();
-
+        String id = Configurations.getUserConfig().getUser().getHash().toString();
+        
         // TODO recipient of message/files? the publishing user or the profile's
         // user?
         // String dest = req.getParameter("user");
         ActivitiesController activities = ActivitiesController.getSingleton();
-        activities.addFeedEntry(id, text, attachment);
+
+        if( textPolicy.isEmpty() ) {
+        	// NON-CIPHER Message
+        	System.out.println(" DEBUG | FileUpload.java :: Published a message");
+        	activities.addFeedEntry(id, text, attachment);
+        } else {
+        	// CIPHER Message
+	        System.out.println(" DEBUG | FileUpload.java :: Published a CHIPER message");
+	        activities.addFeedEntry(id, text, attachment, textPolicy);
+    	}        
 
         PrintWriter outp = resp.getWriter();
         outp.write("<html>");

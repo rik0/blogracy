@@ -1,8 +1,6 @@
 <%@ page import="net.blogracy.model.hashes.Hashes" %>
 <%@ page import="net.blogracy.model.users.Users" %>
 <%@ page import="net.blogracy.controller.FileSharing" %>
-<%@ page import="net.blogracy.controller.ActivitiesController" %>
-<%@ page import="net.blogracy.controller.ChatController" %>
 <%@ page import="net.blogracy.config.Configurations" %>
 <%@ page import="java.util.List" %>
 <%@ page import="java.util.Map" %>
@@ -16,18 +14,15 @@ if (userHash == null || userHash.length() == 0) {
 	  userHash = Hashes.hash(userHash); // TODO: remove
 }
 
-String channel = ChatController.getPrivateChannel(localUserHash, userHash);
+//String channel = ChatController.getPrivateChannel(localUserHash, userHash);
 //ChatController.getSingleton().joinChannel(channel);
 
 pageContext.setAttribute("localUserHash",  localUserHash);
 pageContext.setAttribute("userHash", userHash);
 pageContext.setAttribute("application", "Blogracy");
 pageContext.setAttribute("user", Users.newUser(Hashes.fromString(userHash)));
-pageContext.setAttribute("feed", ActivitiesController.getFeed(userHash));
 pageContext.setAttribute("friends", Configurations.getUserConfig().getFriends());
 pageContext.setAttribute("localUser", Configurations.getUserConfig().getUser());
-pageContext.setAttribute("privateChannel", channel);
-pageContext.setAttribute("publicChannel", userHash);
 %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 
@@ -35,7 +30,7 @@ pageContext.setAttribute("publicChannel", userHash);
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>${application}</title>
+    <title>${application} - Set Attribute</title>
     <meta name="description" content="">
     <meta name="author" content="">
 
@@ -55,8 +50,8 @@ pageContext.setAttribute("publicChannel", userHash);
     <script type="text/javascript">
         // wait for the DOM to be loaded
         jQuery(function() {
-            jQuery('#message-send').ajaxForm({
-                url: '/fileupload',
+            jQuery('#attribute-send').ajaxForm({
+                url: '/attributeupload',
                 clearForm: true,
                 type: 'POST',
                 success: function() {
@@ -181,81 +176,36 @@ pageContext.setAttribute("publicChannel", userHash);
 
         <div class="row">
             <div class="span10">
-                <h2>Messages</h2>
-                <ul>
-                    <c:forEach var="entry" items="${feed}">
-                    <li>${entry.content}</li>
-                    </c:forEach>
-                </ul>
-					
-                <h2>New message</h2>
-                <form class="span10" id="message-send">
+                				
+                <form class="span10" id="attribute-send">
                     <input type="hidden" name="user" value="${user.hash}" />
                     <fieldset class="form-stacked">
                         <div class="clearfix">
-                            <label for="messageArea">Send a new message</label>
                             <div class="input">
-                                <textarea class="xxlarge" name="usertext" id="messageArea" rows="3"></textarea>
-                            </div>
-                            <label for="policyArea">Set a policy for your message</label>
-                            <div class="input">
-                            	<textarea class="xxlarge" name="policytext" id="policyArea" rows="1"
-                            				placeholder="Example: circle:friends circle:university 1of2"></textarea>
-                            	<br>
-                            	<p>
-                            	<b>ATTENTION</b>: The local user "mic" has the following attribute:
-                            	<ul>
-                            		<li>circle:friends</li>
-                            		<li>circle:work</li>
-                            		<li>circle:university</li>
-								</ul>
-								The policy must be a combination of the above attributes.
+                            	<h2>Set attributes for your friends</h2>
+								<ul id="user-friends-attr">
+                    				<c:forEach var="friend" items="${friends}">
+					                    <li>
+					                    <p>${friend.localNick}
+					                    <textarea class="xxlarge" name="${friend.localNick}" rows="1"></textarea>
+					                    </p>
+					                    </li>
+                    				</c:forEach>
+                				</ul>
+                				<p>
+                            	<b>ATTENTION</b>: The attribute must follow this scheme: "attribute:value"
                             	</p>
-                            </div>
-						</div>
-                    </fieldset>
-                    <fieldset class="form-stacked">
-                        <div class="clearfix">
-                            <label for="fileArea">Share a new file</label>
-                            <div class="input">
-                                <input class="xylarge" name="userfile" id="fileArea" type="file" />
                             </div>
                         </div>
                     </fieldset>
                     <fieldset>
                         <div class="actions">
-                            <input type="submit" class="btn primary" value="Send message">&nbsp;
+                            <input type="submit" class="btn primary" value="Set attribute">&nbsp;
                             <button type="reset" class="btn">Cancel</button>
                         </div>
                     </fieldset>
                 </form>
                 
-            </div>
-            <div class="span4">
-                <h3>Local user</h3>
-                <ul>
-                    <li><a href="/user.jsp?user=${localUser.hash}">${localUser.localNick}</a></li>
-                </ul>
-                
-                <h3>Followers</h3>
-
-                <h3>Followees</h3>
-                <ul id="user-friends">
-                    <c:forEach var="friend" items="${friends}">
-                    <li><a href="/user.jsp?user=${friend.hash}">${friend.localNick}</a></li>
-                    </c:forEach>
-                </ul>
-                <h3>Attribute</h3>
-                <a target="_blank" href="attribute.jsp">Set attributes page</a>
-                <h3>Tags</h3>
-                
-                <h3>Chat</h3>
-                <ul>
-				            <li><a target="_blank" href="chat.jsp?channel=${publicChannel}&nick=${localUser.localNick}">Public chat</a></li>
-				            <c:if test="${localUser.hash != user.hash}">
-				            <li><a target="_blank" href="chat.jsp?channel=${privateChannel}&nick=${localUser.localNick}">Private chat</a></li>
-				            </c:if>
-				        </ul>
             </div>
         </div>
       

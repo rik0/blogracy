@@ -144,6 +144,15 @@
         <servlet-name>fileupload</servlet-name>
         <url-pattern>/fileupload</url-pattern>
     </servlet-mapping>
+    
+    <servlet>
+        <servlet-name>attributeupload</servlet-name>
+        <servlet-class>net.blogracy.web.AttributeUpload</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>attributeupload</servlet-name>
+        <url-pattern>/attributeupload</url-pattern>
+    </servlet-mapping>
  
     <filter>
         <filter-name>fileuploadfilter</filter-name>

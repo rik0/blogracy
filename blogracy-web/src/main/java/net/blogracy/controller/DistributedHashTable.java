@@ -138,6 +138,7 @@ public class DistributedHashTable {
                 JSONObject keyValue = new JSONObject(msgText);
                 String value = keyValue.getString("value");
                 PublicKey signerKey = JsonWebSignature.getSignerKey(value);
+                // TODO: Add the publicKey to the local keystore
                 JSONObject record = new JSONObject(JsonWebSignature.verify(
                         value, signerKey));
                 String version = record.getString("version");

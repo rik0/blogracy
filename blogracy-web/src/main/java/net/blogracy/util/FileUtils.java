@@ -22,14 +22,20 @@
 
 package net.blogracy.util;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.channels.FileChannel;
+
+import org.json.JSONException;
+import org.json.JSONTokener;
+import org.json.JSONObject;
 
 public class FileUtils {
     /*
@@ -141,6 +147,32 @@ public class FileUtils {
         // Close the input stream and return bytes
         is.close();
         return bytes;
+    }
+    
+    public static String getContentFromFile(File file) throws IOException {
+
+    	FileReader r = new FileReader(file);
+		BufferedReader br = new BufferedReader(r);
+		try{
+			String temp = null;
+			String text = "";
+			while( (temp = br.readLine()) != null) {
+				text += temp + "\n";
+			}
+						
+			return text;
+		} finally {
+			if(r != null) r.close();
+			if(br != null) br.close();
+		}
+    }
+    
+    public static JSONObject getJSONFromFile(File file) throws IOException, JSONException {
+    	JSONTokener tokener = new JSONTokener(new FileReader(file));
+    	
+    	JSONObject obj = new JSONObject(tokener);
+    	
+    	return obj;
     }
     
 }

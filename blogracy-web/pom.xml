@@ -17,6 +17,27 @@
       <version>4.9</version>
       <scope>test</scope>
     </dependency>
+    <!-- JAR CPABE :: MANUAL INSTALL IN MAVEN -->
+    <dependency>
+    	<groupId>cpabe</groupId>
+    	<artifactId>cpabe</artifactId>
+    	<version>1.0</version>
+    </dependency>
+    <!-- JAR CPABE -->
+    <!-- JAR JPBC-API :: MANUAL INSTALL IN MAVEN -->
+    <dependency>
+    	<groupId>it.unisa.dia.gas.jpbc</groupId>
+    	<artifactId>jpbc-api</artifactId>
+    	<version>1.2.1</version>
+    </dependency>
+    <!-- JAR JPBC-API -->
+    <!-- JAR JPBC-PLAF :: MANUAL INSTALL IN MAVEN -->
+    <dependency>
+    	<groupId>it.unisa.dia.gas.plaf.jpbc</groupId>
+    	<artifactId>jpbc-plaf</artifactId>
+    	<version>1.2.1</version>
+    </dependency>
+    <!-- JAR JPBC-PLAF -->
     <dependency>
       <groupId>org.eclipse.jetty.aggregate</groupId>
       <artifactId>jetty-all-server</artifactId>
