@@ -51,6 +51,7 @@ import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.download.Download;
 import org.gudy.azureus2.plugins.download.DownloadCompletionListener;
 import org.gudy.azureus2.plugins.download.DownloadException;
+import org.gudy.azureus2.plugins.download.DownloadStats;
 import org.gudy.azureus2.plugins.torrent.Torrent;
 import org.gudy.azureus2.plugins.torrent.TorrentException;
 import org.gudy.azureus2.plugins.utils.resourcedownloader.ResourceDownloader;
@@ -70,6 +71,7 @@ import org.json.JSONObject;
  * ...
  */
 public class DownloadService implements MessageListener {
+
 	class CompletionListener implements DownloadCompletionListener {
 		private TextMessage request;
 		private long cron;
@@ -114,16 +116,17 @@ public class DownloadService implements MessageListener {
 	private MessageConsumer consumer;
 
 	public DownloadService(Connection connection, PluginInterface vuze) {
-        try {
-            log = java.util.logging.Logger.getLogger("net.blogracy.services.download");
+		try {
+			log = java.util.logging.Logger.getLogger("net.blogracy.services.download");
 			log.addHandler(new java.util.logging.FileHandler("download.log"));
-	        log.getHandlers()[0].setFormatter(new SimpleFormatter());
+			log.getHandlers()[0].setFormatter(new SimpleFormatter());
+
 		} catch (SecurityException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-        
+
 		this.vuze = vuze;
 		try {
 			session = connection.createSession(false, Session.AUTO_ACKNOWLEDGE);
@@ -151,9 +154,10 @@ public class DownloadService implements MessageListener {
 						URL magnetUri = new URL(entry.getString("uri"));
 						File file = new File(entry.getString("file"));
 						File folder = file.getParentFile();
+
 						String hash = entry.getString("hash");
 
-                        Torrent torrent = null;
+            Torrent torrent = null;
 						if (I2PHelper.isEnabled()) {
 						    torrent = I2PHelper.getTorrent(hash, vuze);
 						} else {
@@ -162,6 +166,7 @@ public class DownloadService implements MessageListener {
                         }
 
 						Download download = vuze.getDownloadManager().addDownload(torrent, null, folder);
+
 						if (download != null && file != null) {
 							download.renameDownload(file.getName());
 							download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
@@ -171,21 +176,19 @@ public class DownloadService implements MessageListener {
 							Logger.info(magnetUri + " *not* added to download list");
 						}
 					} catch (ResourceDownloaderException e) {
-						Logger.error("Torrent download error: download service: "
-								+ text);
-					    e.printStackTrace();
+						Logger.error("Torrent download error: download service: " + text + " " + e.getMessage());
 					} catch (TorrentException e) {
-						Logger.error("Torrent error: download service: " + text);
-                        e.printStackTrace();
+						Logger.error("Torrent error: download service: " + text + " " + e.getMessage());
 					} catch (DownloadException e) {
-						Logger.error("File download error: download service: " + text);
-                        e.printStackTrace();
+						Logger.error("File download error: download service: " + text + " " + e.getMessage());
+					} catch (MalformedURLException e) {
+						Logger.error("Malformed URL error: download service: " + text + " " + e.getMessage());
 					} catch (IOException e) {
 						Logger.error("IO error: download service: " + text);
-                        e.printStackTrace();
 					}
 				} catch (JMSException e) {
-					Logger.error("JMS error: download service");
+					Logger.error("JMS error: download service" + " " + e.getMessage());
+
 				} catch (JSONException e) {
 					e.printStackTrace();
 				}

@@ -68,6 +68,7 @@ import org.json.JSONObject;
  * ...
  */
 public class SeedService implements MessageListener {
+
 	class CompletionListener implements DownloadCompletionListener {
 		private TextMessage request;
 		private long cron;
@@ -95,7 +96,7 @@ public class SeedService implements MessageListener {
 	}
 
     private PluginInterface vuze;
-	private java.util.logging.Logger log;
+    private java.util.logging.Logger log;
 
     private Session session;
     private Destination queue;
@@ -130,8 +131,9 @@ public class SeedService implements MessageListener {
     public void onMessage(Message request) {
         try {
             String text = ((TextMessage) request).getText();
-			final long cron = System.currentTimeMillis();
-			log.info("seed-requested " + text);
+            final long cron = System.currentTimeMillis();
+
+			      log.info("seed-requested " + text);
             Logger.info("seed service:" + text + ";");
             JSONObject entry = new JSONObject(text);
             try {
@@ -148,6 +150,7 @@ public class SeedService implements MessageListener {
         			torrent.setComplete(file.getParentFile());
         	    }
 
+
                 String name = Base32.encode(torrent.getHash());
                 int index = file.getName().lastIndexOf('.');
                 if (0 < index && index <= file.getName().length() - 2) {
@@ -159,9 +162,11 @@ public class SeedService implements MessageListener {
                         file.getParentFile());
                 if (download != null) {
                     download.renameDownload(name);
-					download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
+
+                    download.addCompletionListener(new CompletionListener((TextMessage) request, cron));
                     download.setForceStart(true);
                     download.requestTrackerAnnounce(true);
+
                 }
                 entry.put("uri", torrent.getMagnetURI().toExternalForm());
 

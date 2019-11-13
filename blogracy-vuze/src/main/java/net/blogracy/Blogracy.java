@@ -3,7 +3,9 @@
  */
 package net.blogracy;
 
+
 import java.io.File;
+
 import java.io.FileWriter;
 import java.io.Writer;
 import java.util.ArrayList;
@@ -19,6 +21,7 @@ import net.blogracy.logging.Logger;
 import net.blogracy.services.ChatService;
 import net.blogracy.services.DownloadService;
 import net.blogracy.services.LookupService;
+import net.blogracy.services.SalmonContentService;
 import net.blogracy.services.SeedService;
 import net.blogracy.services.StoreService;
 
@@ -49,8 +52,13 @@ public class Blogracy implements Plugin {
     private SeedService seedService;
     private DownloadService downloadService;
     private ChatService chatService;
+    private SalmonContentService salmonService;
+
     private static final List<String> argList = new ArrayList<String>();
 
+
+    
+    
     /*
      * (non-Javadoc)
      * 
@@ -109,8 +117,10 @@ public class Blogracy implements Plugin {
             lookupService = new LookupService(connection, vuze);
             seedService = new SeedService(connection, vuze);
             downloadService = new DownloadService(connection, vuze);
-            
+
             chatService = new ChatService(connection, vuze);
+                        
+            salmonService = new SalmonContentService(connection, vuze);
             Logger.info("Blogracy Vuze plugin has started correctly");
             
         } catch (Exception e) {
@@ -157,8 +167,26 @@ public class Blogracy implements Plugin {
             e.printStackTrace();
         }
 
+        try {
+        	(new java.io.File("plugins/chat")).mkdirs();
+        	Properties chatProp = new Properties();
+        	chatProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/chat/plugin.properties"));
+        	chatProp.store(new FileWriter("plugins/chat/plugin.properties"), "Chat plugin");
+        	(new java.io.File("plugins/blogracy")).mkdirs();
+        	Properties blogracyProp = new Properties();
+        	blogracyProp.load(Blogracy.class.getClassLoader().getResourceAsStream("plugins/blogracy/plugin.properties"));
+        	blogracyProp.store(new FileWriter("plugins/blogracy/plugin.properties"), "Blogracy plugin");
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
+
+        
+        List<String> argList = new ArrayList<String>();
+        argList.addAll(Arrays.asList(args));
+
         argList.add("--ui=console");
         argList.addAll(Arrays.asList(args));
+
         org.gudy.azureus2.ui.common.Main.main(argList.toArray(args));
         //PluginManager.startAzureus(PluginManager.UI_NONE, new java.util.Properties());
     }

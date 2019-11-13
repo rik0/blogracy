@@ -1,6 +1,6 @@
 <%@ page import="net.blogracy.model.hashes.Hashes"%>
 <%@ page import="net.blogracy.model.users.Users"%>
-<%@ page import="net.blogracy.controller.FileSharing"%>
+<%@ page import="net.blogracy.controller.FileSharingImpl"%>
 <%@ page import="net.blogracy.config.Configurations"%>
 <%
 	String userHash = request.getParameter("user");
@@ -28,7 +28,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
 <title>ImageGallery</title>
 
-    <script src="/scripts/jquery-1.7.js"></script>
+    <script src="/scripts/jquery-1.8.2.js"></script>
     <script src="/scripts/jquery.form.js"></script>
     <script src="/scripts/bootstrap-alerts.js"></script>
 

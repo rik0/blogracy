@@ -52,6 +52,8 @@ import javax.jms.Session;
 import javax.jms.TextMessage;
 
 import net.blogracy.config.Configurations;
+import net.blogracy.model.users.UserData;
+
 import net.blogracy.util.FileUtils;
 
 import org.apache.activemq.ActiveMQConnection;
@@ -78,135 +80,106 @@ import com.google.inject.Guice;
 import com.google.inject.Module;
 import com.google.inject.name.Names;
 
-/**
- * Generic functions to manipulate feeds are defined in this class.
- */
 public class ActivitiesController {
 
-    static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat(
-            "yyyy-MM-dd'T'HH:mm:ss'Z'");
-    static final String CACHE_FOLDER = Configurations.getPathConfig()
-            .getCachedFilesDirectoryPath();
+	static final DateFormat ISO_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	static final String CACHE_FOLDER = Configurations.getPathConfig().getCachedFilesDirectoryPath();
 
-    private static final FileSharing sharing = FileSharing.getSingleton();
-    private static final DistributedHashTable dht = DistributedHashTable
-            .getSingleton();
-    private static final ActivitiesController theInstance = new ActivitiesController();
+	private static final FileSharingImpl sharing = FileSharingImpl.getSingleton();
+	private static final DistributedHashTable dht = DistributedHashTable.getSingleton();
+	private static final ActivitiesController theInstance = new ActivitiesController();
 
-    private static BeanJsonConverter CONVERTER = new BeanJsonConverter(
-            Guice.createInjector(new Module() {
-                @Override
-                public void configure(Binder b) {
-                    b.bind(BeanConverter.class)
-                            .annotatedWith(
-                                    Names.named("shindig.bean.converter.json"))
-                            .to(BeanJsonConverter.class);
-                }
-            }));
+	private static BeanJsonConverter CONVERTER = new BeanJsonConverter(Guice.createInjector(new Module() {
+		@Override
+		public void configure(Binder b) {
+			b.bind(BeanConverter.class).annotatedWith(Names.named("shindig.bean.converter.json")).to(BeanJsonConverter.class);
+		}
+	}));
 
-    public static ActivitiesController getSingleton() {
-        return theInstance;
-    }
+	public static ActivitiesController getSingleton() {
+		return theInstance;
+	}
 
-    public ActivitiesController() {
-        ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
-    }
+	private ActivitiesController() {
+		ISO_DATE_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
+	}
 
-    static public List<ActivityEntry> getFeed(String user) {
-        List<ActivityEntry> result = new ArrayList<ActivityEntry>();
-        System.out.println("Getting feed: " + user);
-        JSONObject record = dht.getRecord(user);
-        if (record != null) {
-            try {
-                String latestHash = FileSharing.getHashFromMagnetURI(record
-                        .getString("uri"));
-                File dbFile = new File(CACHE_FOLDER + File.separator
-                        + latestHash + ".json");
-                if (!dbFile.exists() && record.has("prev")) {
-                    latestHash = FileSharing.getHashFromMagnetURI(record
-                            .getString("prev"));
-                    dbFile = new File(CACHE_FOLDER + File.separator
-                            + latestHash + ".json");
-                }
-                if (dbFile.exists()) {
-                    System.out.println("Getting feed: "
-                            + dbFile.getAbsolutePath());
-                    JSONObject db = new JSONObject(new JSONTokener(
-                            new FileReader(dbFile)));
+	/**
+	 * Fetched the user ActivityStream from the User's DB
+	 * 
+	 * @param user
+	 * @return
+	 */
+	static public List<ActivityEntry> getFeed(String user) {
+		List<ActivityEntry> result = new ArrayList<ActivityEntry>();
+		System.out.println("Getting feed: " + user);
+		JSONObject record = dht.getRecord(user);
+		if (record != null) {
+			try {
+				String latestHash = FileSharingImpl.getHashFromMagnetURI(record.getString("uri"));
 
-                    JSONArray items = db.getJSONArray("items");
-                    for (int i = 0; i < items.length(); ++i) {
-                        JSONObject item = items.getJSONObject(i);
-                        ActivityEntry entry = (ActivityEntry) CONVERTER
-                                .convertToObject(item, ActivityEntry.class);
-                        result.add(entry);
-                    }
-                    System.out.println("Feed loaded");
-                } else {
-                    System.out.println("Feed not found");
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        return result;
-    }
+				File dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
+				if (!dbFile.exists() && record.has("prev")) {
+					latestHash = FileSharingImpl.getHashFromMagnetURI(record.getString("prev"));
+					dbFile = new File(CACHE_FOLDER + File.separator + latestHash + ".json");
+				}
+				if (dbFile.exists()) {
+					System.out.println("Getting feed: " + dbFile.getAbsolutePath());
+					JSONObject db = new JSONObject(new JSONTokener(new FileReader(dbFile)));
 
-    public void addFeedEntry(String id, String text, File attachment) {
-        try {
-            String hash = sharing.hash(text);
-            File textFile = new File(CACHE_FOLDER + File.separator + hash
-                    + ".txt");
+					JSONArray items = db.getJSONArray("items");
+					for (int i = 0; i < items.length(); ++i) {
+						JSONObject item = items.getJSONObject(i);
+						ActivityEntry entry = (ActivityEntry) CONVERTER.convertToObject(item, ActivityEntry.class);
+						result.add(entry);
+					}
+					System.out.println("Feed loaded");
+				} else {
+					System.out.println("Feed not found");
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		return result;
+	}
 
-            FileWriter w = new FileWriter(textFile);
-            w.write(text);
-            w.close();
+	/**
+	 * Adds a new message / attachment to the user's ActivityStream (verb
+	 * "POST")
+	 * 
+	 * @param userId
+	 * @param text
+	 * @param attachment
+	 */
+	public void addFeedEntry(String userId, String text, File attachment) {
+		try {
+			String hash = sharing.hash(text);
+			File textFile = new File(CACHE_FOLDER + File.separator + hash + ".txt");
 
-            String textUri = sharing.seed(textFile);
-            String attachmentUri = null;
-            if (attachment != null) {
-                attachmentUri = sharing.seed(attachment);
-            }
+			FileWriter w = new FileWriter(textFile);
+			w.write(text);
+			w.close();
 
-            final List<ActivityEntry> feed = getFeed(id);
-            final ActivityEntry entry = new ActivityEntryImpl();
-            entry.setVerb("post");
-            entry.setUrl(textUri);
-            entry.setPublished(ISO_DATE_FORMAT.format(new Date()));
-            entry.setContent(text);
-            if (attachment != null) {
-                ActivityObject enclosure = new ActivityObjectImpl();
-                enclosure.setUrl(attachmentUri);
-                entry.setObject(enclosure);
-            }
-            feed.add(0, entry);
-            String feedUri = seedActivityStream(id, feed);
-            DistributedHashTable.getSingleton().store(id, feedUri,
-                    entry.getPublished());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+			String textUri = sharing.seed(textFile);
+			String attachmentUri = null;
+			if (attachment != null) {
+				attachmentUri = sharing.seed(attachment);
+			}
 
-    public String seedActivityStream(String userId,
-            final List<ActivityEntry> feed) throws JSONException, IOException {
-        final File feedFile = new File(CACHE_FOLDER + File.separator + userId
-                + ".json");
+			final String publishDate = ISO_DATE_FORMAT.format(new Date());
 
-        JSONArray items = new JSONArray();
-        for (int i = 0; i < feed.size(); ++i) {
-            JSONObject item = new JSONObject(feed.get(i));
-            items.put(item);
-        }
-        JSONObject db = new JSONObject();
+			UserData userData = sharing.getUserData(userId);
+			userData.addFeedEntry(text, textUri, attachmentUri, publishDate);
 
-        db.put("items", items);
+			String dbUri = this.sharing.seedUserData(userData);
 
-        FileWriter writer = new FileWriter(feedFile);
-        db.write(writer);
-        writer.close();
+			DistributedHashTable.getSingleton().store(userId, userId, dbUri, publishDate);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-        String feedUri = sharing.seed(feedFile);
-        return feedUri;
-    }
+
+
 }

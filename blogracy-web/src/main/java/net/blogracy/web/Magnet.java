@@ -9,7 +9,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import net.blogracy.config.Configurations;
-import net.blogracy.controller.FileSharing;
+import net.blogracy.controller.FileSharingImpl;
 
 public class Magnet extends HttpServlet {
 
@@ -29,7 +29,7 @@ public class Magnet extends HttpServlet {
             if (dot >= 0) {
                 hash = hash.substring(0, dot);
             }
-            FileSharing.getSingleton().downloadByHash(hash);
+            FileSharingImpl.getSingleton().downloadByHash(hash);
             response.sendError(503);
         }
     }

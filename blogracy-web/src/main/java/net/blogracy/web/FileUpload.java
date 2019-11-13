@@ -11,7 +11,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import net.blogracy.config.Configurations;
 import net.blogracy.controller.ActivitiesController;
-import net.blogracy.controller.FileSharing;
+import net.blogracy.controller.FileSharingImpl;
 
 public class FileUpload extends HttpServlet {
 
@@ -21,7 +21,7 @@ public class FileUpload extends HttpServlet {
         File attachment = (File) req.getAttribute("userfile");
         String text = req.getParameter("usertext").trim();
 
-        FileSharing sharing = FileSharing.getSingleton();
+		 ActivitiesController activities = ActivitiesController.getSingleton();
         // String id = sharing.hash("mic");
         String id = Configurations.getUserConfig().getUser().getHash()
                 .toString();
@@ -29,7 +29,7 @@ public class FileUpload extends HttpServlet {
         // TODO recipient of message/files? the publishing user or the profile's
         // user?
         // String dest = req.getParameter("user");
-        ActivitiesController activities = ActivitiesController.getSingleton();
+		activities.addFeedEntry(id, text, attachment);
         activities.addFeedEntry(id, text, attachment);
 
         PrintWriter outp = resp.getWriter();

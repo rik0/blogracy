@@ -87,15 +87,16 @@ public class LookupService implements MessageListener {
                     value = (String) event.getValue().getValue(String.class);
                     JSONObject record = new JSONObject(request.getText());
                     record.put("value", value);
-                    Logger.info("lookup record received: " + record.getString("id"));
+                    Logger.info("lookup record received: " + record.getString("ddbKey"));
+
                     TextMessage response = session.createTextMessage();
                     response.setText(record.toString());
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
                     producer.send(request.getJMSReplyTo(), response);
                 } catch (JMSException e) {
-                    Logger.error("JMS error: lookup " + value);
+                    Logger.error("JMS error: lookup " + value + " Exception: " + e.getMessage());
                 } catch (DistributedDatabaseException e) {
-                    Logger.error("DDB error: lookup " + value);
+                    Logger.error("DDB error: lookup " + value+ " Exception: " + e.getMessage());
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -134,10 +135,10 @@ public class LookupService implements MessageListener {
             JSONObject record = new JSONObject(text);
 
 			if (I2PHelper.isEnabled()) {
-			    String value = I2PHelper.lookup(record.getString("id"));
+			    String value = I2PHelper.lookup(record.getString("ddbKey"));
 			    if (value != null && value.length() > 10) {
                     record.put("value", value);
-                    Logger.info("lookup record received: " + record.getString("id"));
+                    Logger.info("lookup record received: " + record.getString("ddbKey"));
                     TextMessage response = session.createTextMessage();
                     response.setText(record.toString());
                     response.setJMSCorrelationID(request.getJMSCorrelationID());
@@ -150,6 +151,7 @@ public class LookupService implements MessageListener {
                         ddb.createKey(record.getString("id")), TIMEOUT,
                         DistributedDatabase.OP_EXHAUSTIVE_READ);
             }
+
         } catch (DistributedDatabaseException e) {
             Logger.error("DDB error: lookup service: " + text);
         } catch (JMSException e) {

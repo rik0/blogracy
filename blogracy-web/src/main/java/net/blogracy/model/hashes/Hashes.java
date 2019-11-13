@@ -22,8 +22,12 @@
 
 package net.blogracy.model.hashes;
 
+import net.blogracy.util.FileUtils;
+
 import org.apache.commons.codec.binary.Base32;
 
+import java.io.File;
+import java.io.IOException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -34,140 +38,163 @@ import java.util.Arrays;
 public class Hashes {
 
 	private static Base32 base32 = new Base32();
-	
+
 	public static String hash(String text) {
-	    String result = null;
-	    try {
-            MessageDigest digester = MessageDigest.getInstance("SHA-1");
-            byte[] digest = digester.digest(text.getBytes());
-            result = base32.encodeAsString(digest);
+		String result = null;
+		try {
+			MessageDigest digester = MessageDigest.getInstance("SHA-1");
+			byte[] digest = digester.digest(text.getBytes());
+			result = base32.encodeAsString(digest);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
 		return result;
 	}
 
-    private static class HashImpl implements Hash {
-        final byte[] hash;
-
-        HashImpl(final byte[] hash) {
-            this.hash = hash;
-        }
-
-        public String getStringValue() {
-            String stringRepr = new String(hash);
-            return stringRepr;
-        }
-
-        @Override
-        public String getPrintableValue() {
-            //return base64.encodeToString(hash);
-            return base32.encodeAsString(hash);
-        }
-
-        public byte[] getValue() {
-            return Arrays.copyOf(hash, hash.length);
-        }
-
-        @Override
-        public String toString() {
-            return base32.encodeAsString(hash);
-            /*final StringBuilder sb = new StringBuilder();
-            sb.append("HashImpl");
-            sb.append("{hash=").append(hash == null ? "null" : "");
-            for (int i = 0; hash != null && i < hash.length; ++i)
-                sb.append(i == 0 ? "" : ", ").append(hash[i]);
-            sb.append('}');
-            return sb.toString();*/
-        }
-
-        @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            HashImpl hash1 = (HashImpl) o;
-
-            if (!Arrays.equals(hash, hash1.hash)) return false;
-
-            return true;
-        }
-
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(hash);
-        }
-    }
-
-    /**
-     * Creates an hash from a {@code String}
-     *
-     * @param value is the {@code String} to be hashed
-     * @return the Hash of {@param value}
-     */
-    static public Hash newHash(String value) {
-    	Hash result = null;
+	public static String hash(File file) throws IOException {
+		String result = null;
 		try {
 			MessageDigest digester = MessageDigest.getInstance("SHA-1");
-	        final byte[] hash = digester.digest(value.getBytes());
-	        result = new HashImpl(hash);
+			byte[] digest = digester.digest(FileUtils.getBytesFromFile(file));
+			result = base32.encodeAsString(digest);
 		} catch (NoSuchAlgorithmException e) {
 			e.printStackTrace();
 		}
-        return result;
-    }
+		return result;
+	}
 
-    /**
-     * Decodes an hash from a Base32 {@code String}
-     *
-     * @param value is the {@code String} to be decoded
-     * @return the Hash of {@param value}
-     */
-    static public Hash fromString(String value) {
-        final byte[] hash = base32.decode(value);
-        return new HashImpl(hash);
-    }
+	private static class HashImpl implements Hash {
+		final byte[] hash;
 
-    /**
-     * Creates an hash from a generic {@code Object}
-     *
-     * @param o is the {@code Object} to be hashed
-     * @return the Hash of {@param o}
-     */
-    static public Hash newHash(Object o) {
-        // TODO: implement it properly.
-        throw new UnsupportedOperationException();
-    }
+		HashImpl(final byte[] hash) {
+			this.hash = hash;
+		}
 
-    /**
-     * Checks if the hash is a valid hash
-     *
-     * @param hash is the hash to be validated
-     * @return false if we know for sure it is not a valid hash
-     */
-    static public boolean validateHash(Hash hash) {
-        byte[] theHash;
-        if (hash instanceof HashImpl) {
-            theHash = ((HashImpl) hash).hash;
-        } else {
-            theHash = hash.getValue();
-        }
-        if (theHash.length != 20) {
-            return false;
-        }
-        return true;
-    }
+		public String getStringValue() {
+			String stringRepr = new String(hash);
+			return stringRepr;
+		}
 
-    /**
-     * Private constructor: no instances shall be created.
-     */
-    private Hashes() {
-        /* no instances, thanks */
-    }
-    
-    public static void main(String[] args) {
+		@Override
+		public String getPrintableValue() {
+			// return base64.encodeToString(hash);
+			return base32.encodeAsString(hash);
+		}
+
+		public byte[] getValue() {
+			return Arrays.copyOf(hash, hash.length);
+		}
+
+		@Override
+		public String toString() {
+			return base32.encodeAsString(hash);
+			/*
+			 * final StringBuilder sb = new StringBuilder();
+			 * sb.append("HashImpl"); sb.append("{hash=").append(hash == null ?
+			 * "null" : ""); for (int i = 0; hash != null && i < hash.length;
+			 * ++i) sb.append(i == 0 ? "" : ", ").append(hash[i]);
+			 * sb.append('}'); return sb.toString();
+			 */
+		}
+
+		@Override
+		public boolean equals(Object o) {
+			if (this == o)
+				return true;
+			if (o == null || getClass() != o.getClass())
+				return false;
+
+			HashImpl hash1 = (HashImpl) o;
+
+			if (!Arrays.equals(hash, hash1.hash))
+				return false;
+
+			return true;
+		}
+
+		@Override
+		public int hashCode() {
+			return Arrays.hashCode(hash);
+		}
+	}
+
+	/**
+	 * Creates an hash from a {@code String}
+	 * 
+	 * @param value
+	 *            is the {@code String} to be hashed
+	 * @return the Hash of
+	 * @param value
+	 */
+	static public Hash newHash(String value) {
+		Hash result = null;
+		try {
+			MessageDigest digester = MessageDigest.getInstance("SHA-1");
+			final byte[] hash = digester.digest(value.getBytes());
+			result = new HashImpl(hash);
+		} catch (NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
+		return result;
+	}
+
+	/**
+	 * Decodes an hash from a Base32 {@code String}
+	 * 
+	 * @param value
+	 *            is the {@code String} to be decoded
+	 * @return the Hash of
+	 * @param value
+	 */
+	static public Hash fromString(String value) {
+		final byte[] hash = base32.decode(value);
+		return new HashImpl(hash);
+	}
+
+	/**
+	 * Creates an hash from a generic {@code Object}
+	 * 
+	 * @param o
+	 *            is the {@code Object} to be hashed
+	 * @return the Hash of
+	 * @param o
+	 */
+	static public Hash newHash(Object o) {
+		// TODO: implement it properly.
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Checks if the hash is a valid hash
+	 * 
+	 * @param hash
+	 *            is the hash to be validated
+	 * @return false if we know for sure it is not a valid hash
+	 */
+	static public boolean validateHash(Hash hash) {
+		byte[] theHash;
+		if (hash instanceof HashImpl) {
+			theHash = ((HashImpl) hash).hash;
+		} else {
+			theHash = hash.getValue();
+		}
+		if (theHash.length != 20) {
+			return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Private constructor: no instances shall be created.
+	 */
+	private Hashes() {
+		/* no instances, thanks */
+	}
+	
+	public static void main(String[] args) {
         for (String arg : args) {
             System.out.println(hash(arg) + " " + arg);
         }
     }
+
 }

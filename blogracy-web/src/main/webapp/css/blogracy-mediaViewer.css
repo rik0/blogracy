@@ -1,0 +1,80 @@
+.commentator
+{
+    font-weight: bold;
+    text-align: center;
+    float: left;
+}
+
+.commentator p
+{
+	font-weight: bold;
+}
+
+.commentText
+{
+    clear: both;
+    text-align: justify;
+}
+
+.commentText p
+{
+	font-style: italic;
+}
+
+.commentsPane
+{
+    width: 530px;
+    padding-top:3px;
+}
+
+.commentsList {
+	width: 345px;
+    float: left;
+    margin-right: 7px;
+}
+.likePane 
+{
+	float: left;
+	width: 165px;
+	margin-left: 7px;
+}
+
+.inputComment 
+{
+	clear:both;
+	
+}
+
+.commentDate
+{
+    float: right;
+    font-style: italic;
+}
+
+.blogracyImage
+{
+    max-height: 400px;
+    max-width: 530px;
+}
+
+.blogracyMedia
+{
+    max-height: 400px;
+    max-width: 530px;
+	
+}
+
+#comment-send .action {
+    margin-top: 5px;
+}
+
+#comment-send fieldset {
+    margin-top: 5px;
+    padding-top: 5px;
+}
+
+#comment-send fieldset.clearfix {
+    padding-left: 0px;
+}
+
+

@@ -21,6 +21,11 @@
  */
 package net.blogracy.logging;
 
+import java.io.IOException;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.SimpleFormatter;
+
 import org.gudy.azureus2.plugins.PluginInterface;
 import org.gudy.azureus2.plugins.logging.LoggerChannel;
 
@@ -37,12 +42,13 @@ public class Logger {
         void error(String msg);
     }
 
+
+    
+    static java.util.logging.Logger defaultLogger = java.util.logging.Logger.getAnonymousLogger();
     static LoggerChannel loggerChannel = null;
     static org.gudy.azureus2.plugins.logging.Logger logger = null;
     static SimpleChannel simpleChannel = new SimpleChannel() {
-        java.util.logging.Logger defaultLogger =
-                java.util.logging.Logger.getAnonymousLogger();
-
+                
         @Override
         public void info(String s) {
             defaultLogger.info(s);
@@ -58,6 +64,19 @@ public class Logger {
             defaultLogger.severe(s);
         }
     };
+    
+    static {
+		try {
+			FileHandler fh = new FileHandler("Blogracy.log");
+			fh.setFormatter(new SimpleFormatter());
+			defaultLogger.addHandler(fh);
+			defaultLogger.addHandler(new ConsoleHandler());
+		} catch (SecurityException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+    }
 
     /**
      * Initializes the default logger so that it can be used afterwards.
